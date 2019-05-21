@@ -9,13 +9,13 @@ from tensorflow.python.client import device_lib
 
 #import torch
 
-from tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
-from tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
+from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
+from submodules.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
 
 #from struct2depth.inference import _run_inference as run_struct2depth
-from struct2depth.model import Model as struct2depth_net
-from struct2depth.nets import RESNET
-from struct2depth.util import get_vars_to_save_and_restore
+from submodules.tf_models.research.struct2depth.model import Model as struct2depth_net
+from submodules.tf_models.research.struct2depth.nets import RESNET
+from submodules.tf_models.research.struct2depth.util import get_vars_to_save_and_restore
 
 #from depth_pred import senet_model as se_net
 

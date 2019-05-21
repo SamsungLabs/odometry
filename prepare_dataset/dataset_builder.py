@@ -7,15 +7,15 @@ import numpy as np
 import pandas as pd
 import PIL
 
-from estimator import (
+from prepare_dataset.estimator import (
     PWCOpticalFlowEstimator,
     Struct2DepthEstimator,
     SENetDepthEstimator
 )
-from image_manager import ImageManager
-from data_parser import DISCOMANParser, TUMParser
-from video_parser import VideoParser
-from computation_utils import make_memory_safe, set_computation
+from prepare_dataset.image_manager import ImageManager
+from prepare_dataset.data_parser import DISCOMANParser, TUMParser
+from prepare_dataset.video_parser import VideoParser
+from prepare_dataset.computation_utils import make_memory_safe, set_computation
 
 
 VIDEO = 'VIDEO'
@@ -36,7 +36,7 @@ class BaseDatasetBuilder():
         PWC: PWCOpticalFlowEstimator,
     }
     OPTICAL_FLOW_CHECKPOINT = {
-        PWC: 'tfoptflow/tfoptflow/models/pwcnet-lg-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-595000'
+        PWC: 'weights/pwcnet.ckpt-595000'
     }
 
     STRUCT2DEPTH = 'struct2depth'
@@ -46,8 +46,8 @@ class BaseDatasetBuilder():
         SENET: SENetDepthEstimator,
     }
     DEPTH_CHECKPOINT = {
-        STRUCT2DEPTH: 'struct2depth/model/model-199160',
-        SENET: 'depth_pred/senet154_5'
+        STRUCT2DEPTH: 'weights/model-199160',
+        SENET: 'weights/senet154_5'
     }
 
     def __init__(self,
