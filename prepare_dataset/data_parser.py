@@ -8,7 +8,7 @@ import pandas as pd
 import math
 import pyquaternion
 
-from conversion_utils import find_relative_rotations_translations
+from prepare_dataset.conversion_utils import find_relative_rotations_translations
 
 
 class BaseParser:
