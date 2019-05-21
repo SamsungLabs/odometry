@@ -9,8 +9,8 @@ from tensorflow.python.client import device_lib
 
 #import torch
 
-from FlavorNet.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
-from FlavorNet.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
+from tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
+from tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
 
 #from struct2depth.inference import _run_inference as run_struct2depth
 from struct2depth.model import Model as struct2depth_net
@@ -194,26 +194,24 @@ class PWCOpticalFlowEstimator(BaseEstimator):
 
         self._set_input_size()
         first_input = None
-        for path_to_rgb, path_to_next_rgb in zip(self.image_manager.image_filenames, 
-                                                 self.image_manager.next_image_filenames):
-            print(path_to_rgb, path_to_next_rgb)
-            if path_to_next_rgb is None:
-                continue
 
-            if first_input is None:
-                first_image = self.image_manager.load_image(path_to_rgb, self.input_size)
-                first_input = self._convert_image_to_model_input(first_image)
+        pairs = [image_pair for image_pair \
+                 in zip(self.image_manager.image_filenames, self.image_manager.next_image_filenames) \
+                 if image_pair[1] is not None]
 
-            second_image = self.image_manager.load_image(path_to_next_rgb, self.input_size)
-            second_input = self._convert_image_to_model_input(second_image)
-            inputs = np.stack([first_input, second_input])[None]
-            optical_flow = self.model.predict_from_img_pairs(inputs, batch_size=1, verbose=False)[0]
-                
-            #path_to_optical_flow = self._create_path_to_save(path_to_next_rgb)
-            #self.model.predict_from_img_pairs_save(inputs, path_to_optical_flow, batch_size=1, verbose=False)
-                        
-            path_to_optical_flow = self._create_path_to_save(path_to_next_rgb)
-            np.save(path_to_optical_flow, optical_flow)
-            self.mapping[path_to_rgb] = path_to_optical_flow
+        with tqdm.tqdm(pairs, total=len(pairs), desc='Optical flow estimation') as tbar:
+            for path_to_rgb, path_to_next_rgb in tbar:
+                if first_input is None:
+                    first_image = self.image_manager.load_image(path_to_rgb, self.input_size)
+                    first_input = self._convert_image_to_model_input(first_image)
 
-            first_input = second_input
+                second_image = self.image_manager.load_image(path_to_next_rgb, self.input_size)
+                second_input = self._convert_image_to_model_input(second_image)
+                inputs = np.stack([first_input, second_input])[None]
+                optical_flow = self.model.predict_from_img_pairs(inputs, batch_size=1, verbose=False)[0]
+
+                path_to_optical_flow = self._create_path_to_save(path_to_next_rgb)
+                np.save(path_to_optical_flow, optical_flow)
+                self.mapping[path_to_rgb] = path_to_optical_flow
+
+                first_input = second_input
