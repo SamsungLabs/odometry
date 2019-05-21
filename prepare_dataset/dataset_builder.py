@@ -36,7 +36,7 @@ class BaseDatasetBuilder():
         PWC: PWCOpticalFlowEstimator,
     }
     OPTICAL_FLOW_CHECKPOINT = {
-        PWC: '/Vol0/user/f.konokhov/tfoptflow/tfoptflow/models/pwcnet-lg-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-595000'
+        PWC: 'tfoptflow/tfoptflow/models/pwcnet-lg-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-595000'
     }
 
     STRUCT2DEPTH = 'struct2depth'
@@ -300,8 +300,11 @@ class ParserDatasetBuilder(BaseDatasetBuilder):
 
         self.dataframe = self.parser.relative_dataframe
         self.image_directory = self.parser.image_directory
-        self._create_image_manager(self.dataframe.path_to_rgb.apply(os.path.basename).values,
-                                   stride=1)
+        image_filenames = self.dataframe.path_to_rgb.apply(os.path.basename).values
+        if 'path_to_next_rgb' in self.dataframe.columns:
+            next_image_filenames = self.dataframe.path_to_next_rgb.apply(os.path.basename).values
+            image_filenames = np.concatenate((image_filenames, next_image_filenames))
+        self._create_image_manager(np.unique(image_filenames), stride=1)
         self.dataframe = self.dataframe[self.dataframe.path_to_rgb.apply(os.path.exists)]
         
         
