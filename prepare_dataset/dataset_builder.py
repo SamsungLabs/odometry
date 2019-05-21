@@ -31,14 +31,6 @@ class BaseDatasetBuilder():
     TRAIN = 'train'
     TEST = 'test'
 
-#     VIDEO = 'VIDEO'
-#     DIRECTORY = 'DIRECTORY'
-#     CSV = 'CSV'
-
-#     DISCOMAN = 'DISCOMAN'
-#     TUM = 'TUM'
-#     KITTI = 'KITTI'
-
     PWC = 'pwc'
     OPTICAL_FLOW_ESTIMATOR = {
         PWC: PWCOpticalFlowEstimator,
@@ -173,11 +165,9 @@ class BaseDatasetBuilder():
                                   self.image_manager,
                                   checkpoint)
             estimator.run()
-            #print(self.dataframe.columns)
             self.dataframe[dataframe_col] = (self.dataframe.path_to_rgb.apply(os.path.basename)).map(estimator.mapping)
             if next_dataframe_col is not None:
                 self.dataframe[next_dataframe_col] = (self.dataframe.path_to_next_rgb.apply(os.path.basename)).map(estimator.mapping)
-            #print(self.dataframe.columns)
             self._save_dataframe()
 
         if self.memory_safe:
@@ -190,8 +180,7 @@ class BaseDatasetBuilder():
         columns = self.dataframe.columns
         add_next_rgb = not 'path_to_next_rgb' in columns
         add_next_depth = 'path_to_depth' in columns and not 'path_to_next_rgb' in columns
-        #print('path_to_depth' in columns, 'path_to_next_rgb' in columns, add_next_depth)
-        if not (add_next or add_next_depth):
+        if not (add_next_rgb or add_next_depth):
             return
         
         if add_next_rgb: 
@@ -330,4 +319,3 @@ class TUMDatasetBuilder(ParserDatasetBuilder):
 
         assert self.txt_path is not None
         self.parser = TUMParser(self.sequence_directory, txt_path=self.txt_path)
-        
