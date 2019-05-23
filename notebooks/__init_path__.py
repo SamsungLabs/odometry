@@ -7,5 +7,6 @@ project_path = cur_path
 
 while len(list(project_path.glob('.gitmodules'))) == 0:
     project_path = project_path.parent
+    print(project_path)
 
 sys.path.insert(0, str(project_path))
