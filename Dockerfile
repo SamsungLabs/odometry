@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM nvidia/cuda:9.2-devel
 
 RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install -y wget bzip2
