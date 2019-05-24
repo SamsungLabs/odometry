@@ -2,6 +2,6 @@ import os
 import sys
 
 DATASET_PATH = "/dbstore/datasets/"
-print(os.path.join(os.path.abspath(os.pardir)))
-sys.path.append(os.path.join(os.path.abspath(os.pardir), 'submodules/tf_models/research/struct2depth'))
-sys.path.append(os.path.join(os.path.abspath(os.pardir), 'submodules', 'tfoptflow/tfoptflow'))
+PROJECT_PATH = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(PROJECT_PATH, 'submodules/tf_models/research/struct2depth'))
+sys.path.append(os.path.join(PROJECT_PATH, 'submodules', 'tfoptflow/tfoptflow'))
