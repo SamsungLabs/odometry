@@ -100,54 +100,54 @@ class TestDatasets(unittest.TestCase):
         for path in df["path_to_depth"]:
             os.path.isfile(path)
 
-    def test_discoman(self) -> None:
-        print(sys.path)
-        print("Started DISCOMAN test")
-        builder = prepare_builder(db.DISCOMAN)
-        builder.build()
-        df = builder.dataframe
-
-        for path in df["path_to_rgb"]:
-            os.path.isfile(path)
-
-        for path in df["path_to_depth"]:
-            os.path.isfile(path)
-
-    def test_kitti(self) -> None:
-        print(sys.path)
-        print("Started KITTI test")
-        builder = prepare_builder(db.KITTI)
-        builder.build()
-        df = builder.dataframe
-
-        for path in df["path_to_rgb"]:
-            os.path.isfile(path)
-
-        for path in df["path_to_depth"]:
-            os.path.isfile(path)
-
-    def test_csv(self) -> None:
-        print(sys.path)
-        print("Started CSV test")
-        builder = prepare_builder(db.KITTI)
-        builder.build()
-        df = builder.dataframe
-
-        for path in df["path_to_rgb"]:
-            os.path.isfile(path)
-
-        for path in df["path_to_depth"]:
-            os.path.isfile(path)
-
-    def test_video(self) -> None:
-        print(sys.path)
-        print("Started VIDEO test")
-        builder = prepare_builder(db.VIDEO)
-        builder.build()
-        df = builder.dataframe
-
-        for path in df["path_to_rgb"]:
-            os.path.isfile(path)
-
-        for path in df["path_to_depth"]:
-            os.path.isfile(path)
+    # def test_discoman(self) -> None:
+    #     print(sys.path)
+    #     print("Started DISCOMAN test")
+    #     builder = prepare_builder(db.DISCOMAN)
+    #     builder.build()
+    #     df = builder.dataframe
+    #
+    #     for path in df["path_to_rgb"]:
+    #         os.path.isfile(path)
+    #
+    #     for path in df["path_to_depth"]:
+    #         os.path.isfile(path)
+    #
+    # def test_kitti(self) -> None:
+    #     print(sys.path)
+    #     print("Started KITTI test")
+    #     builder = prepare_builder(db.KITTI)
+    #     builder.build()
+    #     df = builder.dataframe
+    #
+    #     for path in df["path_to_rgb"]:
+    #         os.path.isfile(path)
+    #
+    #     for path in df["path_to_depth"]:
+    #         os.path.isfile(path)
+    #
+    # def test_csv(self) -> None:
+    #     print(sys.path)
+    #     print("Started CSV test")
+    #     builder = prepare_builder(db.KITTI)
+    #     builder.build()
+    #     df = builder.dataframe
+    #
+    #     for path in df["path_to_rgb"]:
+    #         os.path.isfile(path)
+    #
+    #     for path in df["path_to_depth"]:
+    #         os.path.isfile(path)
+    #
+    # def test_video(self) -> None:
+    #     print(sys.path)
+    #     print("Started VIDEO test")
+    #     builder = prepare_builder(db.VIDEO)
+    #     builder.build()
+    #     df = builder.dataframe
+    #
+    #     for path in df["path_to_rgb"]:
+    #         os.path.isfile(path)
+    #
+    #     for path in df["path_to_depth"]:
+    #         os.path.isfile(path)

@@ -1,9 +1,4 @@
 pipeline {
-    agent {
-        dockerfile {
-        args '--runtime=nvidia -v /datasets:/datasets'
-        }
-    }
     stages {
         stage('Build') {
             steps {
