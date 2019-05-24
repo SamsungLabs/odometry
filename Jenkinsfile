@@ -1,6 +1,9 @@
 pipeline {
-    agent any
-
+    agent {
+        dockerfile {
+        args '-v /datasets:/datasets'
+        }
+    }
     stages {
         stage('Build') {
             steps {
@@ -10,8 +13,6 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing..'
-                sh 'ls /datasets'
-                sh 'nvidia-smi'
                 sh '~/miniconda/bin/activate ~/miniconda/envs/odometry'
                 sh '~/miniconda/envs/odometry/bin/python -m unittest discover -s tests'
             }
