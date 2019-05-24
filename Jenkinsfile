@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        docker {image "odometry"}
+        dockerfile true
     }
     stages {
         stage('Build') {
