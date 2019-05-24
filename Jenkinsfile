@@ -1,7 +1,8 @@
 pipeline {
     agent {
-        dockerfile {
-        args '--runtime=nvidia -v /datasets:/datasets'
+        nvidia-docker {
+        image 'odometry'
+        args '-v /datasets:/datasets'
         }
     }
     stages {
