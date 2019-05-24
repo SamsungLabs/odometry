@@ -6,6 +6,9 @@ import os
 import prepare_dataset.dataset_builder as db
 
 
+env.DATASET_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'minidataset')
+
+
 def prepare_builder(build_from) -> db.BaseDatasetBuilder:
     image_directory = None
     depth_directory = None
@@ -45,8 +48,8 @@ def prepare_builder(build_from) -> db.BaseDatasetBuilder:
 
     if build_from == db.KITTI:
         sequence_directory = 'test_build_kitti'
-        image_directory = os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012_test/dataset/sequences/00/image_2')
-        depth_directory = os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012_test/dataset/sequences/00/depth_2')
+        image_directory = os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012/dataset/sequences/00/image_2')
+        depth_directory = os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012/dataset/sequences/00/depth_2')
         depth_estimator_name = None
         dataset_builder = db.KITTIDatasetBuilder
 
@@ -88,7 +91,6 @@ def prepare_builder(build_from) -> db.BaseDatasetBuilder:
 class TestDatasets(unittest.TestCase):
 
     def test_tum(self) -> None:
-        print(sys.path)
         print("Started TUM test")
         builder = prepare_builder(db.TUM)
         builder.build()
@@ -96,48 +98,56 @@ class TestDatasets(unittest.TestCase):
 
         for path in df["path_to_rgb"]:
             os.path.isfile(path)
+        os.path.isfile(df['path_to_next_rgb'].iloc[-1])
 
         for path in df["path_to_depth"]:
             os.path.isfile(path)
+        os.path.isfile(df['path_to_next_depth'].iloc[-1])
 
-    def test_discoman(self) -> None:
-        print(sys.path)
-        print("Started DISCOMAN test")
-        builder = prepare_builder(db.DISCOMAN)
-        builder.build()
-        df = builder.dataframe
+    # def test_discoman(self) -> None:
+    #     print(sys.path)
+    #     print("Started DISCOMAN test")
+    #     builder = prepare_builder(db.DISCOMAN)
+    #     builder.build()
+    #     df = builder.dataframe
+    #
+    #     for path in df["path_to_rgb"]:
+    #         os.path.isfile(path)
+    #     os.path.isfile(df['path_to_next_rgb'].iloc[-1])
+    #
+    #     for path in df["path_to_depth"]:
+    #         os.path.isfile(path)
+    #     os.path.isfile(df['path_to_next_depth'].iloc[-1])
+    #
+    # def test_kitti(self) -> None:
+    #     print(sys.path)
+    #     print("Started KITTI test")
+    #     builder = prepare_builder(db.KITTI)
+    #     builder.build()
+    #     df = builder.dataframe
+    #
+    #     for path in df["path_to_rgb"]:
+    #         os.path.isfile(path)
+    #     os.path.isfile(df['path_to_next_rgb'].iloc[-1])
+    #
+    #     for path in df["path_to_depth"]:
+    #         os.path.isfile(path)
+    #     os.path.isfile(df['path_to_next_depth'].iloc[-1])
 
-        for path in df["path_to_rgb"]:
-            os.path.isfile(path)
-
-        for path in df["path_to_depth"]:
-            os.path.isfile(path)
-
-    def test_kitti(self) -> None:
-        print(sys.path)
-        print("Started KITTI test")
-        builder = prepare_builder(db.KITTI)
-        builder.build()
-        df = builder.dataframe
-
-        for path in df["path_to_rgb"]:
-            os.path.isfile(path)
-
-        for path in df["path_to_depth"]:
-            os.path.isfile(path)
-
-    def test_csv(self) -> None:
-        print(sys.path)
-        print("Started CSV test")
-        builder = prepare_builder(db.KITTI)
-        builder.build()
-        df = builder.dataframe
-
-        for path in df["path_to_rgb"]:
-            os.path.isfile(path)
-
-        for path in df["path_to_depth"]:
-            os.path.isfile(path)
+    # def test_csv(self) -> None:
+    #     print(sys.path)
+    #     print("Started CSV test")
+    #     builder = prepare_builder(db.KITTI)
+    #     builder.build()
+    #     df = builder.dataframe
+    #
+    #     for path in df["path_to_rgb"]:
+    #         os.path.isfile(path)
+    #     os.path.isfile(df['path_to_next_rgb'].iloc[-1])
+    #
+    #     for path in df["path_to_depth"]:
+    #         os.path.isfile(path)
+    #     os.path.isfile(df['path_to_next_depth'].iloc[-1])
 
     # def test_video(self) -> None:
     #     print(sys.path)
