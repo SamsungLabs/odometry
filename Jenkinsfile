@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
         image 'odometry'
-        args '-v /datasets:/datasets'
+        args '--runtime=nvidia -v /datasets:/datasets'
         }
     }
     stages {
@@ -15,6 +15,7 @@ pipeline {
             steps {
                 echo 'Testing..'
                 sh 'ls /datasets'
+                sh 'nvidia-smi'
                 sh '~/miniconda/bin/activate ~/miniconda/envs/odometry'
                 sh '~/miniconda/envs/odometry/bin/python -m unittest discover -s tests'
             }
