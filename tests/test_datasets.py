@@ -25,7 +25,7 @@ def prepare_builder(build_from) -> db.BaseDatasetBuilder:
     # depth_estimator_name = 'senet'
 
     computation_kwargs = dict(
-        cuda_visible_devices=1,
+        cuda_visible_devices=0,
     )
 
     if build_from == db.VIDEO:
