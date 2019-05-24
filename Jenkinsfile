@@ -11,8 +11,8 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing..'
-                source activate ~/miniconda/envs/odometry
-                python -m unittest discover -s tests
+                sh 'source activate ~/miniconda/envs/odometry'
+                sh 'python -m unittest discover -s tests'
             }
         }
         stage('Deploy') {
