@@ -12,7 +12,7 @@ pipeline {
             steps {
                 echo 'Testing..'
                 sh '~/miniconda/bin/activate ~/miniconda/envs/odometry'
-                sh 'python -m unittest discover -s tests'
+                sh '~/miniconda/envs/odometry/bin/python -m unittest discover -s tests'
             }
         }
         stage('Deploy') {
