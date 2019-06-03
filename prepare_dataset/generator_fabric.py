@@ -8,7 +8,7 @@ from prepare_dataset.generator import ExtendedDataFrameIterator
 from keras_preprocessing.image import ImageDataGenerator
 
 
-class GeneratorFabric:
+class GeneratorFactory:
     def __init__(self,
                  dataset_root,
                  csv_name,
