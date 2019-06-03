@@ -96,33 +96,23 @@ class DISCOMANParser(BaseParser):
         self.depth_directory = os.path.dirname(json_path)
         self.json_path = json_path
 
-        self._set_parsers()
-
-    def _set_parsers(self):
-        self.parsers = [
-            self.get_timestamp,
-            self.get_path_to_rgb,
-            self.get_path_to_depth,
-            self.get_global_quaternion,
-            self.get_global_translation,
-        ]
 
     def _load_data(self):
-        with open(self.json_path, 'r') as read_file:
+        with open(self.json_path) as read_file:
             data = json.load(read_file)
         self.trajectory = data['trajectory']['frames']
 
     @staticmethod    
-    def get_path_to_rgb(self, item):
+    def get_path_to_rgb(item):
         return '{}_raycast.jpg'.format(item['id'])
 
     @staticmethod
-    def get_path_to_depth(self, item):
+    def get_path_to_depth(item):
         return '{}_depth.png'.format(item['id'])
 
     @staticmethod
     def get_timestamp(item):
-        return [item['timestamp']]
+        return item['timestamp']
 
     @staticmethod
     def get_global_quaternion(item):
@@ -137,16 +127,18 @@ class DISCOMANParser(BaseParser):
         return pyquaternion.Quaternion(item['state']['global']['orientation']).rotation_matrix
 
     def _create_global_dataframe(self):
-        global_data_list = [self.flatten([func(item) for func in self.parsers]) \
-                            for item in self.trajectory]
+        trajectory_parsed = []
 
-        self.global_dataframe = pd.DataFrame(
-            data=global_data_list,
-            columns=[
-                'timestamp', 'path_to_rgb', 'path_to_depth',
-                'qw', 'qx', 'qy', 'qz',
-                'x', 'y', 'z'
-            ])
+        for point in self.trajectory:
+            parsed_point = {}
+            parsed_point['timestamp'] = self.get_timestamp(point)
+            parsed_point['path_to_rgb'] = self.get_path_to_rgb(point)
+            parsed_point['path_to_depth'] = self.get_path_to_depth(point)
+            parsed_point.update(dict(zip(['qw', 'qx', 'qy', 'qz'], self.get_global_quaternion(point))))
+            parsed_point.update(dict(zip(['x', 'y', 'z'], self.get_global_translation(point))))
+            trajectory_parsed.append(parsed_point)
+
+        self.global_dataframe = pd.DataFrame.from_dict(trajectory_parsed)
 
     def _calculate_global_pose_matrices(self):
         self.global_pose_matrices = np.array([self.get_global_pose_matrix(item) for item in self.trajectory])
