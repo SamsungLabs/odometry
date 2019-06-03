@@ -40,7 +40,7 @@ class BaseEstimator:
         pass
 
     def _convert_image_to_model_input(self, image):
-        return np.array(image, dtype=np.float32) / 255.
+        return np.array(image, dtype=np.float32)
 
     def _convert_model_output_to_prediction(self, output):
         return output
@@ -74,6 +74,9 @@ class Struct2DepthEstimator(BaseEstimator):
                                     joint_encoder=True)
         vars_to_restore = get_vars_to_save_and_restore(self.checkpoint)
         self.saver = tf.train.Saver(vars_to_restore)
+
+    def _convert_image_to_model_input(self, image):
+        return np.array(image, dtype=np.float32) / 255.
 
     def run(self):
 #         run_struct2depth(output_dir=self.directory,
@@ -174,8 +177,8 @@ class PWCOpticalFlowEstimator(BaseEstimator):
         self.model = pwc_net(mode='test', options=nn_opts)
         print(self)
 
-    def _convert_model_output_to_prediction(self, output):
-        optical_flow = output * 20.0 / 4
+    def _convert_model_output_to_prediction(self, optical_flow):
+        optical_flow *= 4
         optical_flow[..., 0] /= optical_flow.shape[1]
         optical_flow[..., 1] /= optical_flow.shape[0]
         return optical_flow
@@ -207,9 +210,9 @@ class PWCOpticalFlowEstimator(BaseEstimator):
 
                 second_image = self.image_manager.load_image(path_to_next_rgb, self.input_size)
                 second_input = self._convert_image_to_model_input(second_image)
-                inputs = np.stack([first_input, second_input])[None]
+                inputs = [[first_input, second_input]]
                 optical_flow = self.model.predict_from_img_pairs(inputs, batch_size=1, verbose=False)[0]
-
+                optical_flow = self._convert_model_output_to_prediction(optical_flow)
                 path_to_optical_flow = self._create_path_to_save(path_to_next_rgb)
                 np.save(path_to_optical_flow, optical_flow)
                 self.mapping[path_to_rgb] = path_to_optical_flow
