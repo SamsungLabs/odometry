@@ -19,6 +19,8 @@ from submodules.tf_models.research.struct2depth.util import get_vars_to_save_and
 
 #from depth_pred import senet_model as se_net
 
+import cv2
+
 
 class BaseEstimator:
     def __init__(self,
@@ -45,11 +47,16 @@ class BaseEstimator:
     def _convert_model_output_to_prediction(self, output):
         return output
 
-    def _create_path_to_save(self, reference_path):
+    def _construct_filename(self, reference_path):
         if reference_path is None:
             return None
         filename = ''.join((os.path.splitext(os.path.basename(reference_path))[0], self.ext))
-        path_to_save = os.path.join(self.directory, filename)
+        return filename
+
+    def _create_path_to_save(self, reference_path):
+        if reference_path is None:
+            return None
+        path_to_save = os.path.join(self.directory, self. _construct_filename(reference_path))
         return path_to_save
 
     def run(self):
@@ -178,24 +185,15 @@ class PWCOpticalFlowEstimator(BaseEstimator):
         print(self)
 
     def _convert_model_output_to_prediction(self, optical_flow):
-        optical_flow *= 4
-        optical_flow[..., 0] /= optical_flow.shape[1]
-        optical_flow[..., 1] /= optical_flow.shape[0]
-        return optical_flow
-
-    @staticmethod
-    def make_divisible_by_64(number):
-        divisor = 64.
-        return int(np.ceil(number / divisor) * divisor)
-
-    def _set_input_size(self):
-        self.input_size = (self.make_divisible_by_64(self.image_manager.width),
-                           self.make_divisible_by_64(self.image_manager.height))
+        size = optical_flow.shape
+        optical_flow_small = cv2.resize(optical_flow, (int(size[1] / 4), int(size[0] / 4)), cv2.INTER_LINEAR)
+        optical_flow_small[..., 0] /= size[1]
+        optical_flow_small[..., 1] /= size[0]
+        return optical_flow_small
 
     def run(self):
         self._load_model()
 
-        self._set_input_size()
         first_input = None
 
         pairs = [image_pair for image_pair \
@@ -205,15 +203,17 @@ class PWCOpticalFlowEstimator(BaseEstimator):
         with tqdm.tqdm(pairs, total=len(pairs), desc='Optical flow estimation') as tbar:
             for path_to_rgb, path_to_next_rgb in tbar:
                 if first_input is None:
-                    first_image = self.image_manager.load_image(path_to_rgb, self.input_size)
+                    first_image = self.image_manager.load_image(path_to_rgb)
                     first_input = self._convert_image_to_model_input(first_image)
 
-                second_image = self.image_manager.load_image(path_to_next_rgb, self.input_size)
+                second_image = self.image_manager.load_image(path_to_next_rgb)
                 second_input = self._convert_image_to_model_input(second_image)
                 inputs = [[first_input, second_input]]
                 optical_flow = self.model.predict_from_img_pairs(inputs, batch_size=1, verbose=False)[0]
+
                 optical_flow = self._convert_model_output_to_prediction(optical_flow)
-                path_to_optical_flow = self._create_path_to_save(path_to_next_rgb)
+
+                path_to_optical_flow = self._create_path_to_save(path_to_rgb)
                 np.save(path_to_optical_flow, optical_flow)
                 self.mapping[path_to_rgb] = path_to_optical_flow
 
