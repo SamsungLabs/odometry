@@ -13,7 +13,7 @@ from prepare_dataset.estimator import (
     SENetDepthEstimator
 )
 from prepare_dataset.image_manager import ImageManager
-from prepare_dataset.data_parser import DISCOMANParser, TUMParser
+from prepare_dataset.data_parser import DISCOMANParser, OldDISCOMANParser, TUMParser
 from prepare_dataset.video_parser import VideoParser
 from prepare_dataset.computation_utils import make_memory_safe, set_computation
 
@@ -108,7 +108,7 @@ class BaseDatasetBuilder():
                 self.optical_flow_checkpoint
                 or BaseDatasetBuilder.OPTICAL_FLOW_CHECKPOINT[self.optical_flow_estimator_name])
             self.optical_flow_estimator = self.OPTICAL_FLOW_ESTIMATOR[self.optical_flow_estimator_name]
-            self.optical_flow_directory = os.path.join(self.sequence_directory, 
+            self.optical_flow_directory = os.path.join(self.sequence_directory,
                                                        'optical_flow_stride{}'.format(self.stride))
 
         if self.estimate_depth:
@@ -314,6 +314,14 @@ class DISCOMANDatasetBuilder(ParserDatasetBuilder):
 
         assert self.json_path is not None
         self.parser = DISCOMANParser(self.sequence_directory, json_path=self.json_path)
+
+
+class OldDISCOMANDatasetBuilder(ParserDatasetBuilder):
+    def __init__(self, *args, **kwargs):
+        super(OldDISCOMANDatasetBuilder, self).__init__(*args, **kwargs)
+
+        assert self.json_path is not None
+        self.parser = OldDISCOMANParser(self.sequence_directory, json_path=self.json_path)
         
 
 class TUMDatasetBuilder(ParserDatasetBuilder):

@@ -87,7 +87,7 @@ class DISCOMANParser(BaseParser):
                  global_csv_filename='global.csv',
                  relative_csv_filename='relative.csv',
                  stride=1):
-        super(DISCOMANParser, self).__init__(sequence_directory, 
+        super(DISCOMANParser, self).__init__(sequence_directory,
                                              global_csv_filename,
                                              relative_csv_filename,
                                              stride)
@@ -147,6 +147,49 @@ class DISCOMANParser(BaseParser):
         return 'JSONParser(dir={}, json_path={}, global_csv_filename={}, relative_csv_filename={}, stride={})'.format(
             self.sequence_directory, self.json_path, self.global_csv_filename, self.relative_csv_filename,
             self.stride)
+
+
+class OldDISCOMANParser(DISCOMANParser):
+    def __init__(self,
+                 sequence_directory,
+                 json_path,
+                 global_csv_filename='global.csv',
+                 relative_csv_filename='relative.csv',
+                 stride=1):
+        super(OldDISCOMANParser, self).__init__(sequence_directory,
+                                                json_path,
+                                                global_csv_filename,
+                                                relative_csv_filename,
+                                                stride)
+
+    def _load_data(self):
+        with open(self.json_path) as read_file:
+            data = json.load(read_file)
+            self.trajectory = data['data']
+
+    @staticmethod
+    def get_path_to_rgb(item):
+        return '{}_raycast.jpg'.format(str(item['time']).zfill(6))
+
+    @staticmethod
+    def get_path_to_depth(item):
+        return '{}_depth.png'.format(str(item['time']).zfill(6))
+
+    @staticmethod
+    def get_timestamp(item):
+        return item['time']
+
+    @staticmethod
+    def get_global_quaternion(item):
+        return item['info']['agent_state']['orientation']
+
+    @staticmethod
+    def get_global_translation(item):
+        return item['info']['agent_state']['position']
+
+    @staticmethod
+    def get_global_pose_matrix(item):
+        return pyquaternion.Quaternion(item['info']['agent_state']['orientation']).rotation_matrix
 
 
 class TUMParser(BaseParser):
