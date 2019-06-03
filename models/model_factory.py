@@ -78,7 +78,7 @@ class ModelFactory:
         self.model_name = model_name
         self.img_resized_size = img_resized_size
         self.channels_counts = channels_counts
-        self.optimizer = Adam(lr=lr, amsgrad=True)`
+        self.optimizer = Adam(lr=lr, amsgrad=True)
         self.loss_fn = _get_loss_function(loss)
         self.loss = [self.loss_fn] * 6
         self.loss_weights = [scale_rotation] * 3 + [scale_translation] * 3
