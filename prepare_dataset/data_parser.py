@@ -8,7 +8,9 @@ import pandas as pd
 import math
 import pyquaternion
 
-from prepare_dataset.conversion_utils import find_relative_rotations_translations
+from linalg.linalg_utils import (form_se3,
+                                 convert_global_se3_matrices_to_relative,
+                                 convert_relative_se3_matrices_to_euler)
 
 
 class BaseParser:
@@ -47,8 +49,11 @@ class BaseParser:
     def _create_relative_dataframe(self):
         self._calculate_global_pose_matrices()
         global_translations = self.global_dataframe[['x', 'y', 'z']].values
+        se3_matrices = [form_se3(rotation_matrix, translation) \
+                        for rotation_matrix, translation in zip(self.global_pose_matrices, global_translations)]
+        relative_se3_matrices = convert_global_se3_matrices_to_relative(np.array(se3_matrices), self.stride)
         relative_rotations_euler, relative_translations_euler = \
-            find_relative_rotations_translations(self.global_pose_matrices, global_translations)
+            convert_relative_se3_matrices_to_euler(relative_se3_matrices)
 
         relative_data_list = [list(row[:-2]) + self.flatten(row[-2:]) for row in (
             zip(self.global_dataframe.path_to_rgb[:-self.stride],
@@ -95,7 +100,6 @@ class DISCOMANParser(BaseParser):
         self.image_directory = os.path.dirname(json_path)
         self.depth_directory = os.path.dirname(json_path)
         self.json_path = json_path
-
 
     def _load_data(self):
         with open(self.json_path) as read_file:
