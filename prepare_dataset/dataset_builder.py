@@ -15,7 +15,7 @@ from prepare_dataset.estimator import (
 from prepare_dataset.image_manager import ImageManager
 from prepare_dataset.data_parser import DISCOMANParser, OldDISCOMANParser, TUMParser
 from prepare_dataset.video_parser import VideoParser
-from prepare_dataset.computation_utils import make_memory_safe, set_computation
+from computation.computation_utils import make_memory_safe, set_computation
 
 
 VIDEO = 'VIDEO'
