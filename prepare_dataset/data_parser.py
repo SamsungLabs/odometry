@@ -251,10 +251,11 @@ class TUMParser(BaseParser):
         return dataframe
 
     def _load_txt(self, txt_path, columns):
-        dataframe = pd.read_csv(txt_path, skiprows=2, sep=' ')
-        dataframe.drop(dataframe.columns[-1], axis=1, inplace=True)
+        dataframe = pd.read_csv(txt_path, skiprows=2, sep=' ', index_col=False, names=columns)
+        #dataframe.drop(dataframe.columns[-1], axis=1, inplace=True)
         dataframe.columns = columns
         timestamp_col = columns[0]
+        
         dataframe[timestamp_col] = dataframe[timestamp_col].apply(float)
         return dataframe
 
