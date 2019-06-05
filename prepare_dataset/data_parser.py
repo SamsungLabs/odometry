@@ -116,7 +116,7 @@ class DISCOMANParser(BaseParser):
 
     @staticmethod
     def get_timestamp(item):
-        return item['timestamp']
+        return item['id']
 
     @staticmethod
     def get_global_quaternion(item):
