@@ -47,16 +47,16 @@ class BaseEstimator:
     def _convert_model_output_to_prediction(self, output):
         return output
 
-    def _construct_filename(self, reference_path):
-        if reference_path is None:
-            return None
-        filename = ''.join((os.path.splitext(os.path.basename(reference_path))[0], self.ext))
-        return filename
+    def _construct_filename(self, reference_path, reference_path_next=None):
+        filename = os.path.splitext(os.path.basename(reference_path))[0]
+        if reference_path_next is not None:
+            filename += '_' + os.path.splitext(os.path.basename(reference_path_next))[0]
+        return filename + self.ext
 
-    def _create_path_to_save(self, reference_path):
+    def _create_path_to_save(self, reference_path, reference_path_next=None):
         if reference_path is None:
             return None
-        path_to_save = os.path.join(self.directory, self. _construct_filename(reference_path))
+        path_to_save = os.path.join(self.directory, self. _construct_filename(reference_path, reference_path_next))
         return path_to_save
 
     def run(self):
@@ -182,7 +182,6 @@ class PWCOpticalFlowEstimator(BaseEstimator):
         nn_opts['flow_pred_lvl'] = 2
         nn_opts['adapt_info'] = (1, self.image_manager.height, self.image_manager.width, 2)
         self.model = pwc_net(mode='test', options=nn_opts)
-        print(self)
 
     def _convert_model_output_to_prediction(self, optical_flow):
         size = optical_flow.shape
@@ -213,7 +212,7 @@ class PWCOpticalFlowEstimator(BaseEstimator):
 
                 optical_flow = self._convert_model_output_to_prediction(optical_flow)
 
-                path_to_optical_flow = self._create_path_to_save(path_to_rgb)
+                path_to_optical_flow = self._create_path_to_save(path_to_rgb, path_to_next_rgb)
                 np.save(path_to_optical_flow, optical_flow)
                 self.mapping[path_to_rgb] = path_to_optical_flow
 
