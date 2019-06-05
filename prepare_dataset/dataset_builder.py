@@ -313,7 +313,7 @@ class DISCOMANDatasetBuilder(ParserDatasetBuilder):
         super(DISCOMANDatasetBuilder, self).__init__(*args, **kwargs)
 
         assert self.json_path is not None
-        self.parser = DISCOMANParser(self.sequence_directory, json_path=self.json_path)
+        self.parser = DISCOMANParser(self.sequence_directory, json_path=self.json_path, stride=self.stride)
 
 
 class OldDISCOMANDatasetBuilder(ParserDatasetBuilder):
@@ -321,7 +321,7 @@ class OldDISCOMANDatasetBuilder(ParserDatasetBuilder):
         super(OldDISCOMANDatasetBuilder, self).__init__(*args, **kwargs)
 
         assert self.json_path is not None
-        self.parser = OldDISCOMANParser(self.sequence_directory, json_path=self.json_path)
+        self.parser = OldDISCOMANParser(self.sequence_directory, json_path=self.json_path, stride=self.stride)
         
 
 class TUMDatasetBuilder(ParserDatasetBuilder):
@@ -329,4 +329,4 @@ class TUMDatasetBuilder(ParserDatasetBuilder):
         super(TUMDatasetBuilder, self).__init__(*args, **kwargs)
 
         assert self.txt_path is not None
-        self.parser = TUMParser(self.sequence_directory, txt_path=self.txt_path)
+        self.parser = TUMParser(self.sequence_directory, txt_path=self.txt_path, stride=self.stride)
