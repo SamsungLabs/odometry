@@ -125,12 +125,12 @@ class BaseDatasetBuilder():
         if os.path.exists(self.image_directory):
             shutil.rmtree(self.image_directory)
 
-    def _create_image_manager(self, image_filenames=None, stride=None):
+    def _create_image_manager(self, image_filenames=None):
         self.image_manager = ImageManager(self.image_directory,
                                           image_filenames,
                                           height=self.height,
                                           width=self.width,
-                                          stride=stride if stride is not None else self.stride,
+                                          stride=self.stride,
                                           sample=(self.mode == BaseDatasetBuilder.TEST))
 
     def _configure(self):
@@ -304,7 +304,7 @@ class ParserDatasetBuilder(BaseDatasetBuilder):
         if 'path_to_next_rgb' in self.dataframe.columns:
             next_image_filenames = self.dataframe.path_to_next_rgb.apply(os.path.basename).values
             image_filenames = np.concatenate((image_filenames, next_image_filenames))
-        self._create_image_manager(np.unique(image_filenames), stride=1)
+        self._create_image_manager(np.unique(image_filenames))
         self.dataframe = self.dataframe[self.dataframe.path_to_rgb.apply(os.path.exists)]
         
         
