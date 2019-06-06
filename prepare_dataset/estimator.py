@@ -193,27 +193,22 @@ class PWCOpticalFlowEstimator(BaseEstimator):
     def run(self):
         self._load_model()
 
-        first_input = None
-
         pairs = [image_pair for image_pair \
                  in zip(self.image_manager.image_filenames, self.image_manager.next_image_filenames) \
                  if image_pair[1] is not None]
 
         with tqdm.tqdm(pairs, total=len(pairs), desc='Optical flow estimation') as tbar:
             for path_to_rgb, path_to_next_rgb in tbar:
-                if first_input is None:
-                    first_image = self.image_manager.load_image(path_to_rgb)
-                    first_input = self._convert_image_to_model_input(first_image)
+                first_image = self.image_manager.load_image(path_to_rgb)
+                first_input = self._convert_image_to_model_input(first_image)
 
                 second_image = self.image_manager.load_image(path_to_next_rgb)
                 second_input = self._convert_image_to_model_input(second_image)
                 inputs = [[first_input, second_input]]
-                optical_flow = self.model.predict_from_img_pairs(inputs, batch_size=1, verbose=False)[0]
 
+                optical_flow = self.model.predict_from_img_pairs(inputs, batch_size=1, verbose=False)[0]
                 optical_flow = self._convert_model_output_to_prediction(optical_flow)
 
                 path_to_optical_flow = self._create_path_to_save(path_to_rgb, path_to_next_rgb)
                 np.save(path_to_optical_flow, optical_flow)
                 self.mapping[path_to_rgb] = path_to_optical_flow
-
-                first_input = second_input
