@@ -8,6 +8,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building..'
+                sh 'git submodule update --init --recursive'
             }
         }
         stage('Test') {
