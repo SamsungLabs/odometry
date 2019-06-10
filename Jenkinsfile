@@ -10,9 +10,7 @@ pipeline {
                 echo 'Building..'
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId:'df9eaa47-de60-4e76-b6f8-8a490ce0bd49',
                                   usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                    sh 'git config user.name $USERNAME'
-                    sh 'git config user.password $PASSWORD'
-                    sh 'git submodule update --init --depth 1'
+                    sh 'git config user.name $USERNAME && git config user.password $PASSWORD && git submodule update --init --depth 1'
                 }
             }
         }
