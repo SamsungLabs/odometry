@@ -97,12 +97,12 @@ class TestDatasets(unittest.TestCase):
         df = builder.dataframe
 
         for path in df["path_to_rgb"]:
-            os.path.isfile(path)
-        os.path.isfile(df['path_to_next_rgb'].iloc[-1])
+            self.assertTrue(os.path.isfile(path))
+        self.assertTrue(os.path.isfile(df['path_to_next_rgb'].iloc[-1]))
 
         for path in df["path_to_depth"]:
-            os.path.isfile(path)
-        os.path.isfile(df['path_to_next_depth'].iloc[-1])
+            self.assertTrue(os.path.isfile(path))
+        self.assertTrue(os.path.isfile(df['path_to_next_depth'].iloc[-1]))
 
     # def test_discoman(self) -> None:
     #     print(sys.path)
