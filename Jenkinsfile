@@ -1,13 +1,15 @@
 pipeline {
     agent {
         dockerfile {
-        args '--runtime=nvidia -v /datasets:/datasets'
+        args '--runtime=nvidia -v /datasets:/datasets -v /weights:/weights'
         }
     }
     stages {
         stage('Build') {
             steps {
                 echo 'Building..'
+                sh 'rm -rf weights'
+                sh 'ln -s /weights weights'
             }
         }
         stage('Test') {
