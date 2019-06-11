@@ -13,9 +13,9 @@ from prepare_dataset.estimator import (
     SENetDepthEstimator
 )
 from prepare_dataset.image_manager import ImageManager
-from prepare_dataset.data_parser import DISCOMANParser, TUMParser
+from prepare_dataset.data_parser import DISCOMANParser, OldDISCOMANParser, TUMParser
 from prepare_dataset.video_parser import VideoParser
-from prepare_dataset.computation_utils import make_memory_safe, set_computation
+from computation.computation_utils import make_memory_safe, set_computation
 
 
 VIDEO = 'VIDEO'
@@ -108,7 +108,7 @@ class BaseDatasetBuilder():
                 self.optical_flow_checkpoint
                 or BaseDatasetBuilder.OPTICAL_FLOW_CHECKPOINT[self.optical_flow_estimator_name])
             self.optical_flow_estimator = self.OPTICAL_FLOW_ESTIMATOR[self.optical_flow_estimator_name]
-            self.optical_flow_directory = os.path.join(self.sequence_directory, 
+            self.optical_flow_directory = os.path.join(self.sequence_directory,
                                                        'optical_flow_stride{}'.format(self.stride))
 
         if self.estimate_depth:
@@ -125,12 +125,12 @@ class BaseDatasetBuilder():
         if os.path.exists(self.image_directory):
             shutil.rmtree(self.image_directory)
 
-    def _create_image_manager(self, image_filenames=None, stride=None):
+    def _create_image_manager(self, image_filenames=None):
         self.image_manager = ImageManager(self.image_directory,
                                           image_filenames,
                                           height=self.height,
                                           width=self.width,
-                                          stride=stride if stride is not None else self.stride,
+                                          stride=self.stride,
                                           sample=(self.mode == BaseDatasetBuilder.TEST))
 
     def _configure(self):
@@ -304,7 +304,7 @@ class ParserDatasetBuilder(BaseDatasetBuilder):
         if 'path_to_next_rgb' in self.dataframe.columns:
             next_image_filenames = self.dataframe.path_to_next_rgb.apply(os.path.basename).values
             image_filenames = np.concatenate((image_filenames, next_image_filenames))
-        self._create_image_manager(np.unique(image_filenames), stride=1)
+        self._create_image_manager(np.unique(image_filenames))
         self.dataframe = self.dataframe[self.dataframe.path_to_rgb.apply(os.path.exists)]
         
         
@@ -313,7 +313,15 @@ class DISCOMANDatasetBuilder(ParserDatasetBuilder):
         super(DISCOMANDatasetBuilder, self).__init__(*args, **kwargs)
 
         assert self.json_path is not None
-        self.parser = DISCOMANParser(self.sequence_directory, json_path=self.json_path)
+        self.parser = DISCOMANParser(self.sequence_directory, json_path=self.json_path, stride=self.stride)
+
+
+class OldDISCOMANDatasetBuilder(ParserDatasetBuilder):
+    def __init__(self, *args, **kwargs):
+        super(OldDISCOMANDatasetBuilder, self).__init__(*args, **kwargs)
+
+        assert self.json_path is not None
+        self.parser = OldDISCOMANParser(self.sequence_directory, json_path=self.json_path, stride=self.stride)
         
 
 class TUMDatasetBuilder(ParserDatasetBuilder):
@@ -321,4 +329,4 @@ class TUMDatasetBuilder(ParserDatasetBuilder):
         super(TUMDatasetBuilder, self).__init__(*args, **kwargs)
 
         assert self.txt_path is not None
-        self.parser = TUMParser(self.sequence_directory, txt_path=self.txt_path)
+        self.parser = TUMParser(self.sequence_directory, txt_path=self.txt_path, stride=self.stride)

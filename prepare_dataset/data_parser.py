@@ -8,7 +8,9 @@ import pandas as pd
 import math
 import pyquaternion
 
-from prepare_dataset.conversion_utils import find_relative_rotations_translations
+from linalg.linalg_utils import (form_se3,
+                                 convert_global_se3_matrices_to_relative,
+                                 convert_relative_se3_matrices_to_euler)
 
 
 class BaseParser:
@@ -47,8 +49,11 @@ class BaseParser:
     def _create_relative_dataframe(self):
         self._calculate_global_pose_matrices()
         global_translations = self.global_dataframe[['x', 'y', 'z']].values
+        se3_matrices = [form_se3(rotation_matrix, translation) \
+                        for rotation_matrix, translation in zip(self.global_pose_matrices, global_translations)]
+        relative_se3_matrices = convert_global_se3_matrices_to_relative(np.array(se3_matrices), self.stride)
         relative_rotations_euler, relative_translations_euler = \
-            find_relative_rotations_translations(self.global_pose_matrices, global_translations)
+            convert_relative_se3_matrices_to_euler(relative_se3_matrices)
 
         relative_data_list = [list(row[:-2]) + self.flatten(row[-2:]) for row in (
             zip(self.global_dataframe.path_to_rgb[:-self.stride],
@@ -87,7 +92,7 @@ class DISCOMANParser(BaseParser):
                  global_csv_filename='global.csv',
                  relative_csv_filename='relative.csv',
                  stride=1):
-        super(DISCOMANParser, self).__init__(sequence_directory, 
+        super(DISCOMANParser, self).__init__(sequence_directory,
                                              global_csv_filename,
                                              relative_csv_filename,
                                              stride)
@@ -96,33 +101,22 @@ class DISCOMANParser(BaseParser):
         self.depth_directory = os.path.dirname(json_path)
         self.json_path = json_path
 
-        self._set_parsers()
-
-    def _set_parsers(self):
-        self.parsers = [
-            self.get_timestamp,
-            self.get_path_to_rgb,
-            self.get_path_to_depth,
-            self.get_global_quaternion,
-            self.get_global_translation,
-        ]
-
     def _load_data(self):
-        with open(self.json_path, 'r') as read_file:
+        with open(self.json_path) as read_file:
             data = json.load(read_file)
         self.trajectory = data['trajectory']['frames']
 
     @staticmethod    
-    def get_path_to_rgb(self, item):
+    def get_path_to_rgb(item):
         return '{}_raycast.jpg'.format(item['id'])
 
     @staticmethod
-    def get_path_to_depth(self, item):
+    def get_path_to_depth(item):
         return '{}_depth.png'.format(item['id'])
 
     @staticmethod
     def get_timestamp(item):
-        return [item['timestamp']]
+        return item['id']
 
     @staticmethod
     def get_global_quaternion(item):
@@ -137,16 +131,18 @@ class DISCOMANParser(BaseParser):
         return pyquaternion.Quaternion(item['state']['global']['orientation']).rotation_matrix
 
     def _create_global_dataframe(self):
-        global_data_list = [self.flatten([func(item) for func in self.parsers]) \
-                            for item in self.trajectory]
+        trajectory_parsed = []
 
-        self.global_dataframe = pd.DataFrame(
-            data=global_data_list,
-            columns=[
-                'timestamp', 'path_to_rgb', 'path_to_depth',
-                'qw', 'qx', 'qy', 'qz',
-                'x', 'y', 'z'
-            ])
+        for point in self.trajectory:
+            parsed_point = {}
+            parsed_point['timestamp'] = self.get_timestamp(point)
+            parsed_point['path_to_rgb'] = self.get_path_to_rgb(point)
+            parsed_point['path_to_depth'] = self.get_path_to_depth(point)
+            parsed_point.update(dict(zip(['qw', 'qx', 'qy', 'qz'], self.get_global_quaternion(point))))
+            parsed_point.update(dict(zip(['x', 'y', 'z'], self.get_global_translation(point))))
+            trajectory_parsed.append(parsed_point)
+
+        self.global_dataframe = pd.DataFrame.from_dict(trajectory_parsed)
 
     def _calculate_global_pose_matrices(self):
         self.global_pose_matrices = np.array([self.get_global_pose_matrix(item) for item in self.trajectory])
@@ -155,6 +151,49 @@ class DISCOMANParser(BaseParser):
         return 'JSONParser(dir={}, json_path={}, global_csv_filename={}, relative_csv_filename={}, stride={})'.format(
             self.sequence_directory, self.json_path, self.global_csv_filename, self.relative_csv_filename,
             self.stride)
+
+
+class OldDISCOMANParser(DISCOMANParser):
+    def __init__(self,
+                 sequence_directory,
+                 json_path,
+                 global_csv_filename='global.csv',
+                 relative_csv_filename='relative.csv',
+                 stride=1):
+        super(OldDISCOMANParser, self).__init__(sequence_directory,
+                                                json_path,
+                                                global_csv_filename,
+                                                relative_csv_filename,
+                                                stride)
+
+    def _load_data(self):
+        with open(self.json_path) as read_file:
+            data = json.load(read_file)
+            self.trajectory = data['data']
+
+    @staticmethod
+    def get_path_to_rgb(item):
+        return '{}_raycast.jpg'.format(str(item['time']).zfill(6))
+
+    @staticmethod
+    def get_path_to_depth(item):
+        return '{}_depth.png'.format(str(item['time']).zfill(6))
+
+    @staticmethod
+    def get_timestamp(item):
+        return item['time']
+
+    @staticmethod
+    def get_global_quaternion(item):
+        return item['info']['agent_state']['orientation']
+
+    @staticmethod
+    def get_global_translation(item):
+        return item['info']['agent_state']['position']
+
+    @staticmethod
+    def get_global_pose_matrix(item):
+        return pyquaternion.Quaternion(item['info']['agent_state']['orientation']).rotation_matrix
 
 
 class TUMParser(BaseParser):
@@ -212,10 +251,11 @@ class TUMParser(BaseParser):
         return dataframe
 
     def _load_txt(self, txt_path, columns):
-        dataframe = pd.read_csv(txt_path, skiprows=2, sep=' ')
-        dataframe.drop(dataframe.columns[-1], axis=1, inplace=True)
+        dataframe = pd.read_csv(txt_path, skiprows=2, sep=' ', index_col=False, names=columns)
+        #dataframe.drop(dataframe.columns[-1], axis=1, inplace=True)
         dataframe.columns = columns
         timestamp_col = columns[0]
+        
         dataframe[timestamp_col] = dataframe[timestamp_col].apply(float)
         return dataframe
 
