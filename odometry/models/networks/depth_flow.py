@@ -113,24 +113,23 @@ def construct_depth_flow_model(imgs,
                                c_x=0.5,
                                c_y=0.5,
                                kernel_initializer='glorot_normal'):
-    print('Constructing Depth-flow model...', end='')
     flatten = construct_encoder(frames_concatenated,
-                                       use_depth=use_depth,
-                                       use_flow=use_flow,
-                                       use_association_layer=use_association_layer,
-                                       concat_axis=concat_axis,
-                                       merge_filters=merge_filters,
-                                       merge_stride=merge_stride,
-                                       regularization_depth=regularization_depth,
-                                       depth_multiplicator=depth_multiplicator,
-                                       use_batchnorm_depth=use_batchnorm_depth,
-                                       use_batchnorm_flow=use_batchnorm_flow,
-                                       add_grid_layer=add_grid_layer,
-                                       f_x=f_x,
-                                       f_y=f_y,
-                                       c_x=c_x,
-                                       c_y=c_y,
-                                       kernel_initializer=kernel_initializer)
+                                use_depth=use_depth,
+                                use_flow=use_flow,
+                                use_association_layer=use_association_layer,
+                                concat_axis=concat_axis,
+                                merge_filters=merge_filters,
+                                merge_stride=merge_stride,
+                                regularization_depth=regularization_depth,
+                                depth_multiplicator=depth_multiplicator,
+                                use_batchnorm_depth=use_batchnorm_depth,
+                                use_batchnorm_flow=use_batchnorm_flow,
+                                add_grid_layer=add_grid_layer,
+                                f_x=f_x,
+                                f_y=f_y,
+                                c_x=c_x,
+                                c_y=c_y,
+                                kernel_initializer=kernel_initializer)
 
     fc_rotation = construct_fc(flatten, hidden_size=128,
                                kernel_initializer=kernel_initializer, name='fc1_rotation')
@@ -145,6 +144,5 @@ def construct_depth_flow_model(imgs,
 
     outputs = construct_outputs(fc_rotation, fc_translation, regularization=regularization_fc)
     model = Model(inputs=imgs, outputs=outputs)
-    print('OK')
     return model
 
