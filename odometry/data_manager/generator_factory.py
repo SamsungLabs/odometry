@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 import pickle
 
-from prepare_dataset.generator import ExtendedDataFrameIterator
+from odometry.data_manager.generator import ExtendedDataFrameIterator
 from keras_preprocessing.image import ImageDataGenerator
 
 

@@ -10,11 +10,11 @@ from keras.layers import (Input, BatchNormalization, Flatten,
                           Concatenate, ZeroPadding2D)
 from keras import regularizers
 
-from models.layers import (conv2d,
-                           construct_fc,
-                           construct_outputs,
-                           AssociationLayer,
-                           AddGridLayer)
+from odometry.models.layers import (conv2d,
+                                    construct_fc,
+                                    construct_outputs,
+                                    AssociationLayer,
+                                    AddGridLayer)
 
 
 def construct_encoder(frames_concatenated,

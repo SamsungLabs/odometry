@@ -10,14 +10,13 @@ from keras.layers import (Input, BatchNormalization, Flatten,
                           Dense, Layer, Cropping2D, Activation,
                           Concatenate)
 
-from models.layers import (conv2d,
-                           conv2d_transpose,
-                           gated_conv2d,
-                           gated_conv2d_transpose,
-                           construct_fc,
-                           construct_double_fc,
-                           construct_outputs)
-
+from odometry.models.layers import (conv2d,
+                                    conv2d_transpose,
+                                    gated_conv2d,
+                                    gated_conv2d_transpose,
+                                    construct_fc,
+                                    construct_double_fc,
+                                    construct_outputs)
 
 
 def construct_encoder(frames_concatenated,
