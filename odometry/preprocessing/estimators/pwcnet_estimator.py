@@ -10,10 +10,11 @@ from tensorflow.python.client import device_lib
 from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
 from submodules.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
 
-from preprocessing.estimators.network_estimator import NetworkEstimator
+from odometry.preprocessing.estimators.network_estimator import NetworkEstimator
+from odometry.utils import resize_image
 
 
-class PWCOpticalFlowEstimator(NetworkEstimator):
+class PWCNetEstimator(NetworkEstimator):
 
     def _load_model(self):
         nn_opts = copy.deepcopy(_DEFAULT_PWCNET_TEST_OPTIONS)
@@ -31,23 +32,14 @@ class PWCOpticalFlowEstimator(NetworkEstimator):
         nn_opts['use_res_cx'] = True
         nn_opts['pyr_lvls'] = 6
         nn_opts['flow_pred_lvl'] = 2
-        nn_opts['adapt_info'] = (1, self.image_manager.height, self.image_manager.width, 2)
         self.model = pwc_net(mode='test', options=nn_opts)
-        print(self)
 
     def _convert_model_output_to_prediction(self, optical_flow):
         size = optical_flow.shape
-        optical_flow_small = cv2.resize(optical_flow, (int(size[1] / 4), int(size[0] / 4)), cv2.INTER_LINEAR)
+        optical_flow_small = resize_image(optical_flow, (int(size[1] / 4), int(size[0] / 4)))
         optical_flow_small[..., 0] /= size[1]
         optical_flow_small[..., 1] /= size[0]
         return optical_flow_small
 
-    def run(self, row, dataset_root=None):
-        assert dataset_root is not None
-        next_input_col = input_col + '_next'
-        inputs = [self._load_model_input(row, dataset_root, input_col),
-                  self._load_model_input(row, dataset_root, next_input_col)]
-        model_output = self.model.predict_from_img_pairs(inputs, batch_size=1, verbose=False)[0]
-        self._save_model_output(model_output, row, dataset_root)    
-        row[self.output_col] = output_path
-        return row
+    def _run_model_inference(self, model_input):
+        return self.model.predict_from_img_pairs(model_input, batch_size=1, verbose=False)

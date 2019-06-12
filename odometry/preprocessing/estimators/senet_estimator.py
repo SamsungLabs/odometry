@@ -3,8 +3,8 @@ import tqdm
 import numpy as np
 import torch
 
-from depth_pred import senet_model as se_net
-from preprocessing.estimators.network_estimator import NetworkEstimator
+from submodules.depth_pred import senet_model as se_net
+from odometry.preprocessing.estimators.network_estimator import NetworkEstimator
 
 
 class SENetDepthEstimator(NetworkEstimator):
@@ -45,10 +45,5 @@ class SENetDepthEstimator(NetworkEstimator):
             imagenet_stats['std'])
         ])
 
-    def run(self, row, dataset_root=None):
-        assert dataset_root is not None
-        inputs = self._load_model_input(row, dataset_root)
-        model_output = self.model(inputs)[-1][0, 0]
-        self._save_model_output(model_output, row, dataset_root)    
-        row[self.output_col] = output_path
-        return row
+    def _run_model_inference(self, model_input):
+        return self.model(inputs)[-1][0]
