@@ -8,9 +8,6 @@ import pandas as pd
 import math
 import pyquaternion
 from functools import partial
-from odometry.linalg.linalg_utils import (form_se3,
-                                 convert_global_se3_matrices_to_relative,
-                                 convert_relative_se3_matrices_to_euler)
 
 
 class BaseParser:
@@ -37,12 +34,13 @@ class BaseParser:
     def _create_global_dataframe(self):
         pass
 
-    def parse(self):
+    def run(self):
         self._load_data()
         self._create_global_dataframe()
         self._make_absolute_filepath()
         self.global_dataframe.to_csv(self.global_csv_path, index=False)
         print('Parse ok...')
+        return self.global_dataframe
 
 
 class TUMParser(BaseParser):
@@ -102,7 +100,7 @@ class TUMParser(BaseParser):
         return dataframe
 
     def _load_data(self):
-        gt_dataframe = self._load_txt(self.gt_txt_path, columns=['timestamp_gt', 'x', 'y', 'z', 'qx', 'qy', 'qz', 'qw'])
+        gt_dataframe = self._load_txt(self.gt_txt_path, columns=['timestamp_gt', 't_x', 't_y', 't_z', 'q_x', 'q_y', 'q_z', 'qw'])
         depth_dataframe = self._load_txt(self.depth_txt_path, columns=['timestamp_depth', 'path_to_depth'])
         rgb_dataframe = self._load_txt(self.rgb_txt_path, columns=['timestamp_rgb', 'path_to_rgb'])
         self.dataframes = [depth_dataframe, rgb_dataframe, gt_dataframe]
@@ -147,7 +145,7 @@ class RetailBotParser(TUMParser):
         return dataframe
     
     def _load_data(self):
-        gt_dataframe = self._load_txt(self.gt_txt_path, columns=['timestamp_gt', 'x', 'y', 'z', 'qx', 'qy', 'qz', 'qw'])
+        gt_dataframe = self._load_txt(self.gt_txt_path, columns=['timestamp_gt', 't_x', 't_y', 't_z', 'q_x', 'q_y', 'q_z', 'q_w'])
         depth_dataframe = self._load_pic(self.depth_txt_path, columns=['timestamp_depth', 'path_to_depth'])
         rgb_dataframe = self._load_pic(self.rgb_txt_path, columns=['timestamp_rgb', 'path_to_rgb'])
         self.dataframes = [depth_dataframe, rgb_dataframe, gt_dataframe]
@@ -203,8 +201,8 @@ class DISCOMANParser(BaseParser):
             parsed_point['timestamp'] = self.get_timestamp(point)
             parsed_point['path_to_rgb'] = self.get_path_to_rgb(point)
             parsed_point['path_to_depth'] = self.get_path_to_depth(point)
-            parsed_point.update(dict(zip(['qw', 'qx', 'qy', 'qz'], self.get_global_quaternion(point))))
-            parsed_point.update(dict(zip(['x', 'y', 'z'], self.get_global_translation(point))))
+            parsed_point.update(dict(zip(['q_w', 'q_x', 'q_y', 'q_z'], self.get_global_quaternion(point))))
+            parsed_point.update(dict(zip(['t_x', 't_y', 't_z'], self.get_global_translation(point))))
             trajectory_parsed.append(parsed_point)
 
         self.global_dataframe = pd.DataFrame.from_dict(trajectory_parsed)
@@ -263,8 +261,8 @@ class OldDISCOMANParser(DISCOMANParser):
             parsed_point['timestamp'] = self.get_timestamp(point)
             parsed_point['path_to_rgb'] = self.get_path_to_rgb(point)
             parsed_point['path_to_depth'] = self.get_path_to_depth(point)
-            parsed_point.update(dict(zip(['qw', 'qx', 'qy', 'qz'], self.get_global_quaternion(point))))
-            parsed_point.update(dict(zip(['x', 'y', 'z'], self.get_global_translation(point))))
+            parsed_point.update(dict(zip(['q_w', 'q_x', 'q_y', 'q_z'], self.get_global_quaternion(point))))
+            parsed_point.update(dict(zip(['t_x', 't_y', 't_z'], self.get_global_translation(point))))
             trajectory_parsed.append(parsed_point)
 
         self.global_dataframe = pd.DataFrame.from_dict(trajectory_parsed)
@@ -309,7 +307,7 @@ class KITTIParser(BaseParser):
             global_translation = pose[:3, 3]
             parsed_point = {}
             parsed_point['path_to_rgb'] = rgb
-            parsed_point.update(dict(zip(['qw', 'qx', 'qy', 'qz'], global_quaternion)))
-            parsed_point.update(dict(zip(['x', 'y', 'z'], global_translation)))
+            parsed_point.update(dict(zip(['q_w', 'q_x', 'q_y', 'q_z'], global_quaternion)))
+            parsed_point.update(dict(zip(['t_x', 't_y', 't_z'], global_translation)))
             trajectory_parsed.append(parsed_point)
         self.global_dataframe = pd.DataFrame.from_dict(trajectory_parsed)
