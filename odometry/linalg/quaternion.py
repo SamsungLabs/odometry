@@ -1,8 +1,7 @@
 import math
 import numpy as np
-
-from pyquaternion import Quaternion
 from collections import namedtuple
+from pyquaternion import Quaternion
 
 from odometry.linalg.linalg_utils import (convert_euler_angles_to_rotation_matrix,
                                           convert_rotation_matrix_to_euler_angles)

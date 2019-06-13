@@ -1,12 +1,10 @@
 import numpy as np
-
-from pyquaternion import Quaternion
-from linalg.quaternion import QuaternionWithTranslation
-from linalg.align import align
-
 import plotly.offline as ply
 import plotly.graph_objs as go
+from pyquaternion import Quaternion
 
+from odometry.linalg.quaternion import QuaternionWithTranslation
+from odometry.linalg.align import align
 from odometry.linalg.linalg_utils import (convert_euler_angles_to_rotation_matrix,
                                           convert_rotation_matrix_to_euler_angles)
 
