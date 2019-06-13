@@ -46,13 +46,8 @@ def convert_euler_angles_to_rotation_matrix(theta) :
     return R
 
 
-def convert_global_se3_matrices_to_relative(se3_matrices, stride=1):
-    for index in range(len(se3_matrices) - stride):
-        se3_matrices[index] = np.linalg.inv(se3_matrices[index]) @ se3_matrices[index + stride]
-
-    initial_matrix = np.eye(4)
-    relative_se3_matrices = np.insert(se3_matrices, 0, initial_matrix, axis=0)
-    return relative_se3_matrices[:len(se3_matrices)]
+def get_relative_se3_matrix(global_se3_matrix, next_global_se3_matrix):
+    return np.linalg.inv(global_se3_matrix) @ next_global_se3_matrix
 
 
 def form_se3(rotation_matrix, translation):
@@ -63,12 +58,8 @@ def form_se3(rotation_matrix, translation):
     return se3
 
 
-def convert_relative_se3_matrices_to_euler(relative_se3_matrices):
-    relative_rotations_euler = []
-    relative_translations_euler = []
-    for relative_se3_matrix in relative_se3_matrices:
-        rotation_matrix = relative_se3_matrix[:3, :3]
-        translation = relative_se3_matrix[:3, 3]
-        relative_rotations_euler.append(convert_rotation_matrix_to_euler_angles(rotation_matrix))
-        relative_translations_euler.append(translation)
-    return np.array(relative_rotations_euler), np.array(relative_translations_euler)
+def split_se3(se3):
+    '''Split SE3 matrix into rotation matrix and translation vector'''
+    rotation_matrix = se3[:3, :3]
+    translation = se3[:3, 3:4].ravel()
+    return rotation_matrix, translation

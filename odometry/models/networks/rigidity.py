@@ -5,7 +5,7 @@ from keras.models import Model
 from keras.layers.convolutional import Conv2D
 from keras.layers import GlobalAveragePooling2D, Lambda
 
-from models.layers import conv2d, AddGridLayer
+from odometry.models.layers import conv2d, AddGridLayer
 
 
 def construct_rigidity_model(imgs, 

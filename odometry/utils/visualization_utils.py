@@ -20,8 +20,8 @@ def make_trace_and_start(xyz, is_gt, showlegend=True, is_3d=True):
 
         start_pred = go.Scatter3d(
             x=[xyz[0, 0]],
-            y=[xyz[1, 0]],
-            z=[xyz[2, 0]],
+            y=[xyz[0, 1]],
+            z=[xyz[0, 2]],
             mode='markers',
             marker={'size': 3, 'color': 'red'},
             showlegend=False)
@@ -37,7 +37,7 @@ def make_trace_and_start(xyz, is_gt, showlegend=True, is_3d=True):
 
         start_pred = go.Scatter(
             x=[xyz[0, 0]],
-            y=[xyz[2, 0]],
+            y=[xyz[0, 2]],
             mode='markers',
             marker={'size': 6, 'color': 'red'},
             showlegend=False)

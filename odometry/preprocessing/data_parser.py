@@ -8,9 +8,9 @@ import pandas as pd
 import math
 import pyquaternion
 
-from linalg.linalg_utils import (form_se3,
-                                 convert_global_se3_matrices_to_relative,
-                                 convert_relative_se3_matrices_to_euler)
+from odometry.linalg.linalg_utils import (form_se3,
+                                          convert_global_se3_matrices_to_relative,
+                                          convert_relative_se3_matrices_to_euler)
 
 
 class BaseParser:

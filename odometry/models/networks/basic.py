@@ -6,7 +6,7 @@ from keras.layers.convolutional import Conv2D
 from keras.layers import Input, Flatten, Dense, Layer
 from keras import regularizers
 
-from models.layers import ConstLayer, conv2d
+from odometry.models.layers import ConstLayer, conv2d
 
 from keras.applications.resnet50 import ResNet50
 

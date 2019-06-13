@@ -7,8 +7,8 @@ from linalg.align import align
 import plotly.offline as ply
 import plotly.graph_objs as go
 
-from linalg.linalg_utils import (convert_euler_angles_to_rotation_matrix, 
-                                 convert_rotation_matrix_to_euler_angles)
+from odometry.linalg.linalg_utils import (convert_euler_angles_to_rotation_matrix,
+                                          convert_rotation_matrix_to_euler_angles)
 
 class AbstractTrajectory:
     def __init__(self):

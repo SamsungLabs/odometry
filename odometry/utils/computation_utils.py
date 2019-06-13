@@ -76,28 +76,28 @@ def set_computation(random_seed=42, *args, **kwargs):
     return session
 
 
-def apply_packed_function(dumped_function, args, kwargs):
+def apply_dumped_function(dumped_function, args, kwargs):
     target_function = dill.loads(dumped_function)
     res = target_function(*args, **kwargs)
     return res
 
 
-def pack_function(target_function, *args, **kwargs):
+def dump_function(target_function, *args, **kwargs):
     dumped_function = dill.dumps(target_function)
-    return apply_packed_function, (dumped_function, args, kwargs)
+    return apply_dumped_function, (dumped_function, args, kwargs)
 
 
-def with_gpu(f, *computation_args, **computation_kwargs):
+def with_gpu(f, **computation_kwargs):
     def gpu_wrapper(*args, **kwargs):
-        session = set_computation(*computation_args, **computation_kwargs)
+        session = set_computation(**computation_kwargs)
         f(*args, **kwargs)
         session.close()
     return gpu_wrapper
 
 
-def make_memory_safe(f, *computation_args, **computation_kwargs):
+def make_memory_safe(f, **computation_kwargs):
     def multiprocessing_wrapper(*args, **kwargs):
-        f_with_gpu = with_gpu(f, *computation_args, **computation_kwargs)
+        f_with_gpu = with_gpu(f, **computation_kwargs)
         with Pool(1) as pool:
-            pool.apply(*pack_function(f_with_gpu, *args, **kwargs))
+            pool.apply(*dump_function(f_with_gpu, *args, **kwargs))
     return multiprocessing_wrapper
