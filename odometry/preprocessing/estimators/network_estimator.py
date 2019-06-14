@@ -46,8 +46,8 @@ class NetworkEstimator(BaseEstimator):
 
     def _save_model_output(self, model_output, row, dataset_root):
         os.makedirs(os.path.join(dataset_root, self.directory), exist_ok=True)
-        output_path = os.path.join(dataset_root, self.directory, self._create_output_filename(row))
-        np.save(output_path, self._convert_model_output_to_prediction(model_output))
+        output_path = os.path.join(self.directory, self._create_output_filename(row))
+        np.save(os.path.join(dataset_root, output_path), self._convert_model_output_to_prediction(model_output))
         return output_path
 
     def _run_model_inference(self, model_input):

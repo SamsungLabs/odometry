@@ -12,11 +12,8 @@ from functools import partial
 
 class BaseParser:
     def __init__(self,
-                 sequence_directory,
-                 global_csv_filename):
+                 sequence_directory):
         self.sequence_directory = sequence_directory
-        self.global_csv_filename = global_csv_filename
-        self.global_csv_path = os.path.join(self.sequence_directory, self.global_csv_filename)
         self.cols = ['path_to_rgb', 'path_to_depth']
     
     def _load_data(self):
@@ -38,19 +35,14 @@ class BaseParser:
         self._load_data()
         self._create_global_dataframe()
         self._make_absolute_filepath()
-        self.global_dataframe.to_csv(self.global_csv_path, index=False)
-        print('Parse ok...')
         return self.global_dataframe
 
 
 class TUMParser(BaseParser):
     def __init__(self,
                  sequence_directory,
-                 directory,
-                 global_csv_filename='global.csv'):
-        super(TUMParser, self).__init__(sequence_directory, 
-                                        global_csv_filename
-                                        )
+                 directory):
+        super(TUMParser, self).__init__(sequence_directory)
         self.directory = directory
         self.gt_txt_path = os.path.join(self.directory, 'groundtruth.txt')
         self.depth_txt_path = os.path.join(self.directory, 'depth.txt')
@@ -110,20 +102,14 @@ class TUMParser(BaseParser):
         self.global_dataframe = self.associate_dataframes(self.dataframes, self.timestamp_cols)
 
     def __repr__(self):
-        return 'TUMParser(dir={}, txt_path={}, global_csv_filename={})'.format(
-            self.sequence_directory, self.gt_txt_path, self.global_csv_filename
-            )
+        return 'TUMParser(dir={}, txt_path={})'.format(self.sequence_directory, self.gt_txt_path)
     
 class RetailBotParser(TUMParser):
     
     def __init__(self,
                  sequence_directory,
-                 directory,
-                 global_csv_filename='global.csv'):
-        super(RetailBotParser, self).__init__(sequence_directory, 
-                                        global_csv_filename
-                                        )
-        self.directory = directory
+                 directory):
+        super(RetailBotParser, self).__init__(sequence_directory, directory)
         self.gt_txt_path = os.path.join(self.directory, 'pose.txt')
         self.depth_txt_path = os.path.join(self.directory, 'depth.txt')
         self.rgb_txt_path = os.path.join(self.directory, 'rgb.txt')
@@ -155,10 +141,8 @@ class RetailBotParser(TUMParser):
 class DISCOMANParser(BaseParser):
     def __init__(self,
                  sequence_directory,
-                 json_path,
-                 global_csv_filename='global.csv'):
-        super(DISCOMANParser, self).__init__(sequence_directory,
-                                             global_csv_filename,)
+                 json_path):
+        super(DISCOMANParser, self).__init__(sequence_directory)
         self.directory = os.path.dirname(json_path)
         self.image_directory = os.path.dirname(json_path)
         self.depth_directory = os.path.dirname(json_path)
@@ -211,18 +195,15 @@ class DISCOMANParser(BaseParser):
         self.global_pose_matrices = np.array([self.get_global_pose_matrix(item) for item in self.trajectory])
 
     def __repr__(self):
-        return 'JSONParser(dir={}, json_path={}, global_csv_filename={})'.format(
-            self.sequence_directory, self.json_path, self.global_csv_filename)
+        return 'JSONParser(dir={}, json_path={})'.format(self.sequence_directory, self.json_path)
     
     
 class OldDISCOMANParser(DISCOMANParser):
     def __init__(self,
                  sequence_directory,
-                 json_path,
-                 global_csv_filename='global.csv'):
+                 json_path):
         super(OldDISCOMANParser, self).__init__(sequence_directory,
-                                                json_path,
-                                                global_csv_filename)
+                                                json_path)
 
     def _load_data(self):
         with open(self.json_path) as read_file:
@@ -272,14 +253,11 @@ class KITTIParser(BaseParser):
     def __init__(self, 
              sequence_directory,
              seq_id, 
-             dataset_root='/dbstore/datasets/KITTI_odometry_2012/dataset/sequences',    
-             global_csv_filename='global_csv'):
+             dataset_root='/dbstore/datasets/KITTI_odometry_2012/dataset/sequences'):
         self.sequence_directory = sequence_directory
-        self.global_csv_filename = global_csv_filename
         self.dataset_root = dataset_root
         self.seq_id = seq_id
         self.directory = os.path.join(self.dataset_root, self.seq_id)
-        self.global_csv_path = os.path.join(self.sequence_directory, self.global_csv_filename)
         self.cols = ['path_to_rgb']
         
     def read_poses_file(self):

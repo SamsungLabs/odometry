@@ -11,22 +11,20 @@ def force_make_dir(column_dst_dir):
 
 
 def work_with_parser(root, parser):
-    os.makedirs(root, exist_ok=True)
-
     single_frame_df = parser.run()
     single_frame_df.reset_index(drop=True, inplace=True)
 
     image_column_prefix = 'path_to_'
     for column in single_frame_df.columns:
         if column.startswith(image_column_prefix):
-            column_dst_dir = os.path.join(root, column.lstrip(image_column_prefix))
-            force_make_dir(column_dst_dir)
+            column_dst_dir = column.lstrip(image_column_prefix)
+            force_make_dir(os.path.join(root, column_dst_dir))
 
             for index, elem in enumerate(single_frame_df[column]):
                 _, file_extension = os.path.splitext(elem)
                 assert os.path.exists(elem), elem
-                symlink_path = os.path.abspath(os.path.join(column_dst_dir, '{}{}'.format(index, file_extension)))
-                os.symlink(elem, symlink_path)
+                symlink_path = os.path.join(column_dst_dir, '{}{}'.format(index, file_extension))
+                os.symlink(elem, os.path.abspath(os.path.join(root, symlink_path)))
                 single_frame_df.at[index, column] = symlink_path
 
     return single_frame_df
