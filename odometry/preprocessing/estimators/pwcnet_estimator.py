@@ -16,6 +16,10 @@ from odometry.utils import resize_image
 
 class PWCNetEstimator(NetworkEstimator):
 
+    def __init__(self, *args, **kwargs):
+        super(PWCNetEstimator, self).__init__(*args, **kwargs)
+        self.name = 'PWCNet'
+
     def _load_model(self):
         nn_opts = copy.deepcopy(_DEFAULT_PWCNET_TEST_OPTIONS)
         nn_opts['verbose'] = True

@@ -13,6 +13,10 @@ from odometry.linalg.linalg_utils import (form_se3,
 
 class Global2RelativeEstimator(BaseEstimator):
 
+    def __init__(self, *args, **kwargs):
+        super(Global2RelativeEstimator, self).__init__(*args, **kwargs)
+        self.name = 'Global2Relative'
+
     def run(self, row, dataset_root=None):
         dof = row[self.input_col[:6]].values
         next_dof = row[self.input_col[6:]].values

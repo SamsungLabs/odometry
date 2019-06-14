@@ -11,6 +11,7 @@ class BaseEstimator:
         self.input_col = input_col
         self.output_col = output_col
         self.ext = 'npy'
+        self.name = 'Base'
 
     def _create_output_filename(self, row):
         input_col = self.input_col if isinstance(self.input_col, str) else self.input_col[-1]
@@ -30,4 +31,4 @@ class BaseEstimator:
         pass
 
     def __repr__(self):
-        return 'Estimator(input_col={}, output_col={})'.format(self.input_col, self.output_col)
+        return '{}Estimator(input_col={}, output_col={})'.format(self.name, self.input_col, self.output_col)

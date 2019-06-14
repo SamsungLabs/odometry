@@ -12,6 +12,10 @@ from odometry.preprocessing.estimators.network_estimator import NetworkEstimator
 
 class Struct2DepthEstimator(NetworkEstimator):
 
+    def __init__(self, *args, **kwargs):
+        super(Struct2DepthEstimator, self).__init__(*args, **kwargs)
+        self.name = 'Struct2Depth'
+
     def _load_model(self):
         assert self.height is not None and self.width is not None
         self.model = struct2depth_net(is_training=False,

@@ -25,6 +25,8 @@ class NetworkEstimator(BaseEstimator):
         self.checkpoint = checkpoint
         self._load_model()
 
+        self.name = 'Network'
+
     def _load_model(self):
         raise NotImplementedError
 
@@ -62,5 +64,5 @@ class NetworkEstimator(BaseEstimator):
         return row
 
     def __repr__(self):
-        return 'Estimator(dir={}, input_col={}, output_col={}, checkpoint={})'.format(
-            self.directory, self.input_col, self.output_col, self.checkpoint)
+        return '{}Estimator(dir={}, input_col={}, output_col={}, checkpoint={})'.format(
+            self.name, self.directory, self.input_col, self.output_col, self.checkpoint)

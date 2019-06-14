@@ -7,7 +7,11 @@ from submodules.depth_pred import senet_model as se_net
 from odometry.preprocessing.estimators.network_estimator import NetworkEstimator
 
 
-class SENetDepthEstimator(NetworkEstimator):
+class SENetEstimator(NetworkEstimator):
+
+    def __init__(self, *args, **kwargs):
+        super(SENetEstimator, self).__init__(*args, **kwargs)
+        self.name = 'SENet'
 
     def _load_model(self):
         self.model = se_net.senet154()
