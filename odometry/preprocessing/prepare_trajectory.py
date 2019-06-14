@@ -11,6 +11,8 @@ def force_make_dir(column_dst_dir):
 
 
 def work_with_parser(root, parser):
+    os.makedirs(root, exist_ok=True)
+
     single_frame_df = parser.run()
     single_frame_df.reset_index(drop=True, inplace=True)
 
