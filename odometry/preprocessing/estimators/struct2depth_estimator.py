@@ -37,9 +37,4 @@ class Struct2DepthEstimator(NetworkEstimator):
         return np.array(image, dtype=np.float32) / 255.
 
     def _run_model_inference(self, model_input):
-        # tf.train.Supervisor is deprecated!
-        # supervisor = tf.train.Supervisor(logdir='/tmp/', saver=None)
-        # with supervisor.managed_session() as sess:
-        #    self.saver.restore(sess, self.checkpoint)
-        #    model_output = self.model.inference_depth(model_input, sess)
         return self.model.inference_depth(model_input, self.sess)
