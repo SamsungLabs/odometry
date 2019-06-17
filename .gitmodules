@@ -1,6 +1,7 @@
-[submodule "submodules/tf_models"]
-	path = submodules/tf_models
-	url = https://github.com/tensorflow/models.git
 [submodule "submodules/tfoptflow"]
 	path = submodules/tfoptflow
 	url = https://github.com/philferriere/tfoptflow.git
+[submodule "submodules/tf_models"]
+	path = submodules/tf_models
+	url = https://github.com/tensorflow/models.git
+
