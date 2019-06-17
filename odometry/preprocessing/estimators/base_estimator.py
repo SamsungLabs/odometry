@@ -14,12 +14,10 @@ class BaseEstimator:
         self.name = 'Base'
 
     def _create_output_filename(self, row):
-        input_col = self.input_col if isinstance(self.input_col, str) else self.input_col[-1]
-        input_path = row[input_col]
-        if input_path is None:
-            return None
-
-        output_filename = '.'.join((os.path.splitext(os.path.basename(input_path))[0], self.ext))
+        input_col_as_list = [self.input_col] if isinstance(self.input_col, str) else self.input_col
+        input_basenames = [os.path.basename(filepath) for filepath in row[input_col_as_list]]
+        output_filename = '_'.join([os.path.splitext(basename)[0] for basename in input_basenames])
+        output_filename = '.'.join((output_filename, self.ext))
         return output_filename
 
     def _add_output(self, row, values):
