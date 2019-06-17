@@ -71,14 +71,14 @@ class Struct2DepthEstimator(BaseEstimator):
 
     def _load_model(self):
         self.model = struct2depth_net(is_training=False,
-                                    batch_size=1,
-                                    img_height=self.image_manager.height,
-                                    img_width=self.image_manager.width,
-                                    seq_length=3,
-                                    architecture=RESNET,
-                                    imagenet_norm=True,
-                                    use_skip=True,
-                                    joint_encoder=True)
+                                      batch_size=1,
+                                      img_height=self.image_manager.height,
+                                      img_width=self.image_manager.width,
+                                      seq_length=3,
+                                      architecture=RESNET,
+                                      imagenet_norm=True,
+                                      use_skip=True,
+                                      joint_encoder=True)
         vars_to_restore = get_vars_to_save_and_restore(self.checkpoint)
         self.saver = tf.train.Saver(vars_to_restore)
 
@@ -97,6 +97,7 @@ class Struct2DepthEstimator(BaseEstimator):
 #                          img_width=self.image_manager.width)
 
         self._load_model()
+        print("debug_1")
         supervisor = tf.train.Supervisor(logdir='/tmp/', saver=None)
         with supervisor.managed_session() as sess:
             self.saver.restore(sess, self.checkpoint)

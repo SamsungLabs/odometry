@@ -1,0 +1,4 @@
+from odometry.preprocessing.parsers.tum_parser import TUMParser
+from odometry.preprocessing.parsers.retailbot_parser import RetailBotParser
+from odometry.preprocessing.parsers.discoman_parser import DISCOMANParser, OldDISCOMANParser
+from odometry.preprocessing.parsers.kitti_parser import KITTIParser
