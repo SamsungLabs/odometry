@@ -12,7 +12,7 @@ class NetworkEstimator(BaseEstimator):
                  input_col,
                  output_col,
                  checkpoint,
-                 directory,
+                 sub_dir,
                  height=None,
                  width=None):
         super(NetworkEstimator, self).__init__(input_col, output_col)
@@ -20,7 +20,7 @@ class NetworkEstimator(BaseEstimator):
         self.height = height
         self.width = width
 
-        self.directory = directory
+        self.dir = sub_dir
 
         self.checkpoint = checkpoint
         self._load_model()
@@ -47,8 +47,8 @@ class NetworkEstimator(BaseEstimator):
         return model_input
 
     def _save_model_output(self, model_output, row, dataset_root):
-        os.makedirs(os.path.join(dataset_root, self.directory), exist_ok=True)
-        output_path = os.path.join(self.directory, self._create_output_filename(row))
+        os.makedirs(os.path.join(dataset_root, self.dir), exist_ok=True)
+        output_path = os.path.join(self.dir, self._create_output_filename(row))
         np.save(os.path.join(dataset_root, output_path), self._convert_model_output_to_prediction(model_output))
         return output_path
 
@@ -65,4 +65,4 @@ class NetworkEstimator(BaseEstimator):
 
     def __repr__(self):
         return '{}Estimator(dir={}, input_col={}, output_col={}, checkpoint={})'.format(
-            self.name, self.directory, self.input_col, self.output_col, self.checkpoint)
+            self.name, self.dir, self.input_col, self.output_col, self.checkpoint)
