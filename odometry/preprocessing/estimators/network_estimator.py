@@ -8,6 +8,7 @@ from odometry.preprocessing.estimators.base_estimator import BaseEstimator
 
 
 class NetworkEstimator(BaseEstimator):
+
     def __init__(self,
                  input_col,
                  output_col,

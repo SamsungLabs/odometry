@@ -5,6 +5,7 @@ import numpy as np
 
 
 class BaseEstimator:
+
     def __init__(self,
                  input_col,
                  output_col):

@@ -6,7 +6,7 @@ import numpy as np
 from pyquaternion import Quaternion
 
 from odometry.preprocessing.estimators.base_estimator import BaseEstimator
-from odometry.linalg.linalg_utils import convert_rotation_matrix_to_euler_angles
+from odometry.linalg import convert_rotation_matrix_to_euler_angles
 
 
 class Quaternion2EulerEstimator(BaseEstimator):

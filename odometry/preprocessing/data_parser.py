@@ -9,7 +9,7 @@ import math
 import pyquaternion
 from functools import partial
 
-from odometry.linalg.linalg_utils import split_se3
+from odometry.linalg import split_se3
 
 
 class BaseParser:
