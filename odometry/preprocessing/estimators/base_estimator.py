@@ -22,9 +22,14 @@ class BaseEstimator:
         output_filename = '.'.join((os.path.splitext(os.path.basename(input_path))[0], self.ext))
         return output_filename
 
-    def _extend(self, row, values):
+    def _add_output(self, row, values):
         for key, value in zip(self.output_col, values):
             row[key] = value
+        return row
+
+    def _drop_input(self, row):
+        for key in self.input_col:
+            del row[key]
         return row
 
     def run(self, row, dataset_root=None):

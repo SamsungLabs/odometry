@@ -34,4 +34,5 @@ class Global2RelativeEstimator(BaseEstimator):
         relative_euler_angles = convert_rotation_matrix_to_euler_angles(relative_rotation_matrix)
 
         relative_dof = np.concatenate([relative_euler_angles, relative_translation])
-        return self._extend(row, relative_dof)
+        row = self._drop_input(row)
+        return self._add_output(row, relative_dof)
