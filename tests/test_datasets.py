@@ -108,10 +108,10 @@ class TestDatasets(unittest.TestCase):
     def test_kitti(self) -> None:
         print("Started KITTI test")
         trajectory_dir = 'kitti'
-        seq_id = '00'
+        trajectory_id = '00'
         height, width = 94, 300
         dataset_root = os.path.join(env.DATASET_PATH, "KITTI_odometry_2012/dataset/sequences")
-        parser = KITTIParser(trajectory_dir, trajectory_id=seq_id, dataset_root=dataset_root)
+        parser = KITTIParser(trajectory_dir, trajectory_id=trajectory_id, dataset_root=dataset_root)
         num_files = 10
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
