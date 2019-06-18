@@ -8,8 +8,10 @@ RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 RUN bash /home/odometry/miniconda.sh -b -p /home/odometry/miniconda
 RUN rm /home/odometry/miniconda.sh
 
-ADD odometry.yml odometry.yml
+ADD conda.yml conda.yml
 
-RUN /home/odometry/miniconda/bin/conda env create -n odometry -f odometry.yml
+RUN /home/odometry/miniconda/bin/conda env create -n odometry -f conda.yml
 
 RUN apt-get install -y git
+RUN apt-get install locales
+RUN locale-gen en_US
