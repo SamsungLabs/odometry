@@ -10,6 +10,6 @@ RUN rm /home/odometry/miniconda.sh
 
 ADD odometry.yml odometry.yml
 
-RUN /home/odometry/miniconda/bin/conda env create -n odometry -f odometry.yml
+RUN /home/odometry/miniconda/bin/conda env create -n odometry -f conda.yml
 
 RUN apt-get install -y git
