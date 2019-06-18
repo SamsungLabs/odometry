@@ -4,10 +4,10 @@ import __init_path__
 import env
 import os
 from pathlib import Path
-from odometry.preprocessing.data_parser import (KITTIParser,
-                                                TUMParser,
-                                                RetailBotParser,
-                                                DISCOMANParser)
+from odometry.preprocessing.parsers import (KITTIParser,
+                                            TUMParser,
+                                            RetailBotParser,
+                                            DISCOMANParser)
 from odometry.preprocessing import estimators as est
 from odometry.preprocessing.prepare_trajectory import prepare_trajectory
 
