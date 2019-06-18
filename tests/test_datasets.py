@@ -32,7 +32,7 @@ class TestDatasets(unittest.TestCase):
 
         struct2depth_estimator = est.Struct2DepthEstimator(input_col='path_to_rgb',
                                                            output_col='path_to_depth',
-                                                           directory='depth',
+                                                           sub_dir='depth',
                                                            checkpoint=depth_checkpoint,
                                                            height=height,
                                                            width=width)
@@ -44,7 +44,7 @@ class TestDatasets(unittest.TestCase):
 
         pwcnet_estimator = est.PWCNetEstimator(input_col=['path_to_rgb', 'path_to_rgb_next'],
                                                output_col='path_to_optical_flow',
-                                               directory='optical_flow',
+                                               sub_dir='optical_flow',
                                                checkpoint=optical_flow_checkpoint,
                                                height=height,
                                                width=width)
