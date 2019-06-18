@@ -13,3 +13,4 @@ ADD conda.yml conda.yml
 RUN /home/odometry/miniconda/bin/conda env create -n odometry -f conda.yml
 
 RUN apt-get install -y git
+RUN locale_gen en_US
