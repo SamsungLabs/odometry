@@ -76,7 +76,7 @@ class TestDatasets(unittest.TestCase):
         sequence_directory = 'tum'
         directory = os.path.join(env.DATASET_PATH, 'tum_rgbd_flow/data/rgbd_dataset_freiburg2_coke')
         height, width = 480, 640
-        num_files = 8
+        num_files = 7
         parser = TUMParser(sequence_directory, src_dir=directory)
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
