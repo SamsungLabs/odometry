@@ -1,5 +1,4 @@
 import unittest
-import sys
 import __init_path__
 import env
 import os
