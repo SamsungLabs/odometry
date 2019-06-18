@@ -77,7 +77,7 @@ class TestDatasets(unittest.TestCase):
         directory = os.path.join(env.DATASET_PATH, 'tum_rgbd_flow/data/rgbd_dataset_freiburg2_coke')
         height, width = 480, 640
         num_files = 8
-        parser = TUMParser(sequence_directory, directory=directory)
+        parser = TUMParser(sequence_directory, src_dir=directory)
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
         df = prepare_trajectory(sequence_directory,
@@ -112,7 +112,7 @@ class TestDatasets(unittest.TestCase):
         seq_id = '00'
         height, width = 94, 300
         dataset_root = os.path.join(env.DATASET_PATH, "KITTI_odometry_2012/dataset/sequences")
-        parser = KITTIParser(sequence_directory, seq_id=seq_id, dataset_root=dataset_root)
+        parser = KITTIParser(sequence_directory, trajectory_id=seq_id, dataset_root=dataset_root)
         num_files = 10
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
@@ -130,7 +130,7 @@ class TestDatasets(unittest.TestCase):
         sequence_directory = 'retailbot'
         directory = os.path.join(env.DATASET_PATH, 'retail_bot/meetingroom_04_rgbd_ir_imu_pose')
         height, width = 480, 640
-        parser = RetailBotParser(sequence_directory, directory=directory)
+        parser = RetailBotParser(sequence_directory, src_dir=directory)
         num_files = 2
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
