@@ -1,20 +1,8 @@
-import keras
-from keras import backend as K
-
 from keras.models import Model
-from keras.layers.convolutional import Conv2D, Conv2DTranspose
-from keras.layers.pooling import MaxPooling2D
-from keras.layers.merge import concatenate
-from keras.layers.core import Dropout, Lambda
-from keras.layers import (Input, BatchNormalization, Flatten,
-                          Dense, Layer, Cropping2D, Activation,
-                          Concatenate)
+from keras.layers import Flatten
 
 from odometry.models.layers import (conv2d,
-                                    conv2d_transpose,
                                     gated_conv2d,
-                                    gated_conv2d_transpose,
-                                    construct_fc,
                                     construct_double_fc,
                                     construct_outputs)
 

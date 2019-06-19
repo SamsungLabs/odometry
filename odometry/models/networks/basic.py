@@ -1,21 +1,16 @@
-import keras
-from keras import backend as K
-
 from keras.models import Model
 from keras.layers.convolutional import Conv2D
-from keras.layers import Input, Flatten, Dense, Layer
-from keras import regularizers
+from keras.layers import Flatten, Dense
+from keras.regularizers import l2
+from keras.applications.resnet50 import ResNet50
 
 from odometry.models.layers import ConstLayer, conv2d
-
-from keras.applications.resnet50 import ResNet50
 
 
 def construct_resnet50_model(imgs, 
                              frames_concatenated, 
                              weights='imagenet', 
                              kernel_initializer='glorot_normal'):
-    
     conv0 = Conv2D(3, kernel_size=7, padding='same', activation='relu',
                    kernel_initializer=kernel_initializer, name='conv0')(frames_concatenated)
 
@@ -81,7 +76,7 @@ def construct_simple_model(imgs,
             kernel_initializer='glorot_normal',
             strides=strides[i],
             activation=activations[i],
-            activity_regularizer=regularizers.l2(regularizations[i]))
+            activity_regularizer=l2(regularizations[i]))
 
     layer = Flatten(name='flatten1')(layer)
 
@@ -90,7 +85,7 @@ def construct_simple_model(imgs,
             fc_sizes[i],
             kernel_initializer='glorot_normal',
             activation=activations[i + conv_layers_count],
-            activity_regularizer=regularizers.l2(regularizations[i]))(layer)
+            activity_regularizer=l2(regularizations[i]))(layer)
 
     r_x = Dense(1, name='r_x')(layer)
     r_y = Dense(1, name='r_y')(layer)

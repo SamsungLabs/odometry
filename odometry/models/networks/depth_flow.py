@@ -1,13 +1,6 @@
-import keras
-from keras import backend as K
-
 from keras.models import Model
-from keras.layers.convolutional import Conv2D, Conv2DTranspose
-from keras.layers.merge import concatenate
 from keras.layers.core import Lambda
-from keras.layers import (Input, BatchNormalization, Flatten,
-                          Dense, Layer, Cropping2D,
-                          Concatenate, ZeroPadding2D)
+from keras.layers import BatchNormalization, Flatten, Dense, Concatenate
 from keras import regularizers
 
 from odometry.models.layers import (conv2d,

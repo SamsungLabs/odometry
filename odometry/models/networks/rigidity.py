@@ -1,6 +1,3 @@
-import keras
-from keras import backend as K
-
 from keras.models import Model
 from keras.layers.convolutional import Conv2D
 from keras.layers import GlobalAveragePooling2D, Lambda

@@ -1,12 +1,8 @@
-import keras
-from keras import backend as K
-
 from keras.models import Model
 from keras.layers.convolutional import Conv2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import concatenate
-from keras.layers.core import Dropout, Lambda
-from keras.layers import Input, Flatten, Dense, Layer, Cropping2D, Activation, Concatenate
+from keras.layers import Flatten, Cropping2D, Activation
 
 from odometry.models.layers import (conv2d,
                                     conv2d_transpose,
@@ -137,4 +133,3 @@ def construct_ls_vo_rt_no_decoder_model(imgs,
     outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization)
     model = Model(inputs=imgs, outputs=outputs)
     return model
-
