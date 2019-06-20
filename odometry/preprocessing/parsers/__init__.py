@@ -6,6 +6,7 @@ from .kitti_parser import KITTIParser
 
 from .discoman_parser import DISCOMANParser
 from .discoman_parser import OldDISCOMANParser
+from .discoman_parser import DISCOMANCSVParser
 
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     'TUMParser',
     'RetailBotParser',
     'DISCOMANParser',
-    'OldDISCOMANParser'
+    'OldDISCOMANParser',
+    'DISCOMANCSVParser'
 ]
