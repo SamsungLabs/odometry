@@ -1,5 +1,5 @@
 import numpy as np
-
+import mlflow
 
 def calculate_distances_along_trajectory(points):
     distances_along_trajectory = np.linalg.norm(points[1:] - points[:-1], axis=1)
@@ -171,4 +171,6 @@ def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full'):
        'RPE_r': rpe_r,
        'RPE_divider': divider
     }
+
+    mlflow.log_metrics(metrics)
     return metrics

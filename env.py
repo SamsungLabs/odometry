@@ -16,4 +16,4 @@ os.environ["NUMEXPR_NUM_THREADS"] = "6"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 warnings.simplefilter('ignore')
 
-mlflow.set_tracking_uri("/dbstore/datasets/robotics/mlflow_test")
+mlflow.set_tracking_uri("/dbstore/datasets/robotics/mlflow/odometry")
