@@ -14,13 +14,6 @@ class BaseEstimator:
         self.ext = 'npy'
         self.name = 'Base'
 
-    def _create_output_filename(self, row):
-        input_col_as_list = [self.input_col] if isinstance(self.input_col, str) else self.input_col
-        input_basenames = [os.path.basename(filepath) for filepath in row[input_col_as_list]]
-        output_filename = '_'.join([os.path.splitext(basename)[0] for basename in input_basenames])
-        output_filename = '.'.join((output_filename, self.ext))
-        return output_filename
-
     def _add_output(self, row, values):
         for key, value in zip(self.output_col, values):
             row[key] = value

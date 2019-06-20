@@ -1,1 +1,6 @@
-from odometry.data_manager.generator_factory import GeneratorFactory
+from .generator_factory import GeneratorFactory
+
+
+__all__ = [
+    'GeneratorFactory'
+]

@@ -1,4 +1,17 @@
-from odometry.preprocessing.parsers.tum_parser import TUMParser
-from odometry.preprocessing.parsers.retailbot_parser import RetailBotParser
-from odometry.preprocessing.parsers.discoman_parser import DISCOMANParser, OldDISCOMANParser
-from odometry.preprocessing.parsers.kitti_parser import KITTIParser
+from .tum_parser import TUMParser
+
+from .retailbot_parser import RetailBotParser
+
+from .kitti_parser import KITTIParser
+
+from .discoman_parser import DISCOMANParser
+from .discoman_parser import OldDISCOMANParser
+
+
+__all__ = [
+    'KITTIParser',
+    'TUMParser',
+    'RetailBotParser',
+    'DISCOMANParser',
+    'OldDISCOMANParser'
+]

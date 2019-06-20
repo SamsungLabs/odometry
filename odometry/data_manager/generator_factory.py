@@ -82,18 +82,15 @@ class GeneratorFactory:
             self.load_cache(self.cached_imgs)
 
         if self.df_train is not None:
-            self.channels_counts = self.get_train_generator().channels_counts
+            self.input_shapes = self.get_train_generator().input_shapes
         else:
-            self.channels_counts = self.get_val_generator().channels_counts
+            self.input_shapes = self.get_val_generator().input_shapes
 
     def _get_multi_df_dataset(self, sequences):
         df = None
-
-        img_columns = self.image_columns
-
         for sequence_name in tqdm(sequences):
             current_df = pd.read_csv(os.path.join(self.dataset_root, sequence_name, self.csv_name))
-            current_df[img_columns] = current_df[img_columns].apply(lambda x: sequence_name + '/' + x)
+            current_df[self.image_columns] = sequence_name + '/' + current_df[self.image_columns]
             current_df['trajectory_id'] = sequence_name
             if df is None:
                 df = current_df

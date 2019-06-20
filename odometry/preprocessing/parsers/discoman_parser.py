@@ -80,3 +80,30 @@ class OldDISCOMANParser(DISCOMANParser):
     
     def __repr__(self):
         return 'OldDISCOMANParser(dir={}, json_path={})'.format(self.dir, self.json_path)
+    
+    
+class DISCOMANCSVParser(BaseParser):
+
+    def __init__(self,
+                 trajectory_dir,
+                 csv_path):
+        super(DISCOMANCSVParser, self).__init__(trajectory_dir)
+        self.src_dir = os.path.dirname(csv_path)
+        self.csv_path = csv_path
+        
+    def _load_data(self):
+        self.df = pd.read_csv(self.csv_path, index_col=False)
+    
+    def _create_dataframe(self):
+        self.df = self.df[::5].reset_index(drop=True)
+        self.df = self.df.rename(columns={'id': 'timestamp', 
+                                          'position.x':'t_x',
+                                          'position.y': 't_y',
+                                          'position.z':'t_z',
+                                          'quaternion.w' : 'q_w',
+                                          'quaternion.x': 'q_x',
+                                          'quaternion.y' :'q_y',
+                                          'quaternion.z' : 'q_z'})
+        self.df.timestamp = self.df.timestamp.apply(lambda x: str(x).zfill(6))
+        self.df['path_to_depth'] = self.df.timestamp + '_depth.png'
+        self.df['path_to_rgb'] = self.df.timestamp + '_raycast.jpg'
