@@ -91,7 +91,7 @@ def construct_double_fc(inputs,
 
 def construct_outputs(fc_rotation, fc_translation, regularization=0, name=None):
     outputs = []
-    for layer_name in ['r_x', 'r_y', 'r_z', 't_x', 't_y', 't_z']:
+    for layer_name in ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']:
         if name is not None:
             layer_name = layer_name + '_' + name
         input = fc_rotation if layer_name.startswith('r') else fc_translation
