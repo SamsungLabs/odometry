@@ -94,7 +94,7 @@ def construct_outputs(fc_rotation, fc_translation, regularization=0, name=None):
     for layer_name in ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']:
         if name is not None:
             layer_name = layer_name + '_' + name
-        input = fc_rotation if layer_name.startswith('r') else fc_translation
+        input = fc_rotation if layer_name.startswith('euler') else fc_translation
         output = Dense(1, kernel_regularizer=regularizers.l2(regularization), name=layer_name)(input)
         outputs.append(output)
             
