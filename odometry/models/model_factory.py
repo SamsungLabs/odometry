@@ -113,8 +113,7 @@ class ModelFactory:
 class ModelWithDecoderFactory(ModelFactory):
     def __init__(self,
                  construct_graph_fn,
-                 input_size=(60, 80),
-                 channels_counts=(3, 3),
+                 input_shapes=((60, 80, 3), (60, 80, 3)),
                  lr=0.001,
                  loss=mean_squared_error,
                  scale_rotation=1.,
@@ -122,8 +121,7 @@ class ModelWithDecoderFactory(ModelFactory):
                  flow_loss_weight=1.,
                  flow_reconstruction_loss=mean_squared_logarithmic_error):
         super().__init__(construct_graph_fn=construct_graph_fn,
-                         input_size=input_size,
-                         channels_counts=channels_counts,
+                         input_shapes=input_shapes,
                          lr=lr,
                          loss=loss,
                          scale_rotation=scale_rotation,
@@ -135,10 +133,8 @@ class ModelWithDecoderFactory(ModelFactory):
 class ConstantModelFactory(ModelFactory):
     def __init__(self,
                  rot_and_trans_array,
-                 input_size=(60, 80),
-                 channels_counts=(3, 3)):
+                 input_shapes=((60, 80, 3), (60, 80, 3))):
         from odometry.models.networks.basic import construct_constant_model
         super().__init__(construct_graph_fn=partial(construct_constant_model,
                                                     rot_and_trans_array=rot_and_trans_array),
-                         input_size=input_size,
-                         channels_counts=channels_counts)
+                         input_shapes=input_shapes)
