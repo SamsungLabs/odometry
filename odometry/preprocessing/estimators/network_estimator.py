@@ -37,6 +37,13 @@ class NetworkEstimator(BaseEstimator):
     def _convert_model_output_to_prediction(self, output):
         return output
 
+    def _create_output_filename(self, row):
+        input_col_as_list = [self.input_col] if isinstance(self.input_col, str) else self.input_col
+        input_basenames = [os.path.basename(filepath) for filepath in row[input_col_as_list]]
+        output_filename = '_'.join([os.path.splitext(basename)[0] for basename in input_basenames])
+        output_filename = '.'.join((output_filename, self.ext))
+        return output_filename
+
     def _load_model_input(self, row, dataset_root):
         if isinstance(self.input_col, str):
             model_input = self._convert_image_to_model_input(

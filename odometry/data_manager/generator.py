@@ -184,6 +184,12 @@ class ExtendedDataFrameIterator(keras_img.iterator.BatchFromFilesMixin, keras_im
                                 for image_column in self.x_cols if image_column in self.image_cols]
         self.image_shapes = dict((image_column, self.target_size + (num_channels,))
                                  for image_column, num_channels in channels_counts_dict.items())
+        self.input_shapes = []
+        for col in self.x_cols:
+            if col in self.image_cols:
+                self.input_shapes.append(self.image_shapes[col])
+            else:
+                self.input_shapes.append((1,))
 
         self.flow_multiplicator = flow_multiplicator
         self._fill_flow = _get_fill_flow_function(flow_fill_method)

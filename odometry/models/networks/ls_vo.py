@@ -1,25 +1,21 @@
-import keras
-from keras import backend as K
-
-from keras.models import Model
 from keras.layers.convolutional import Conv2D
-from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import concatenate
-from keras.layers.core import Dropout, Lambda
-from keras.layers import Input, Flatten, Dense, Layer, Cropping2D, Activation, Concatenate
+from keras.layers.pooling import MaxPooling2D
+from keras.layers import Flatten, Cropping2D, Activation
 
-from odometry.models.layers import (conv2d,
+from odometry.models.layers import (concat,
+                                    conv2d,
                                     conv2d_transpose,
                                     construct_fc,
                                     construct_double_fc,
                                     construct_outputs)
 
 
-def construct_encoder(frames_concatenated,
+def construct_encoder(inputs,
                       strides=[2, 1, 4, 1],
                       dilation_rates=[1, 1, 1, 1],
                       kernel_initializer='glorot_normal'):
-    conv1 = conv2d(frames_concatenated, 64, kernel_size=7, strides=strides[0], dilation_rate=dilation_rates[0],
+    conv1 = conv2d(inputs, 64, kernel_size=7, strides=strides[0], dilation_rate=dilation_rates[0],
                    padding='same', activation='relu',
                    kernel_initializer=kernel_initializer)
 
@@ -51,11 +47,11 @@ def construct_flow_decoder(conv4,
     return upsampling2
 
 
-def construct_st_vo_model(imgs,
-                          frames_concatenated, 
+def construct_st_vo_model(inputs,
                           kernel_initializer='glorot_normal'):
+    inputs = concat(inputs)
     conv1 = Conv2D(64, kernel_size=3, strides=2,
-                   kernel_initializer=kernel_initializer, name='conv1')(frames_concatenated)
+                   kernel_initializer=kernel_initializer, name='conv1')(inputs)
     pool1 = MaxPooling2D(pool_size=4, strides=4, name='pool1')(conv1)
     conv2 = Conv2D(20, kernel_size=3,
                    kernel_initializer=kernel_initializer, name='conv2')(pool1)
@@ -67,41 +63,40 @@ def construct_st_vo_model(imgs,
     activation = Activation('relu')(merged)
     fc = construct_fc(activation, kernel_initializer=kernel_initializer, name='fc')
     outputs = construct_outputs(fc, fc)
-    model = Model(inputs=imgs, outputs=outputs)
-    return model
+    return outputs
 
 
-def construct_ls_vo_model(imgs,
-                          frames_concatenated,
+def construct_ls_vo_model(inputs,
                           cropping=((0, 0), (0, 0)),
                           hidden_size=1000,
                           regularization=0,
                           kernel_initializer='glorot_normal'):
-    features, bottleneck = construct_encoder(frames_concatenated,
+    inputs = concat(inputs)
+    features, bottleneck = construct_encoder(inputs,
                                              kernel_initializer=kernel_initializer)
     reconstructed_flow = construct_flow_decoder(bottleneck,
                                                 cropping=cropping,
-                                                output_channels=frames_concatenated.shape[-1].value)
+                                                output_channels=inputs_concatenated.shape[-1].value)
     fc2 = construct_double_fc(features,
                               hidden_size=hidden_size,
                               regularization=regularization,
                               kernel_initializer=kernel_initializer)
     outputs = construct_outputs(fc2, fc2, regularization=regularization) + [reconstructed_flow]
-    model = Model(inputs=imgs, outputs=outputs)
+    model = Model(inputs=inputs, outputs=outputs)
     return model
 
 
-def construct_ls_vo_rt_model(imgs, 
-                             frames_concatenated,
+def construct_ls_vo_rt_model(inputs,
                              cropping=((0, 0), (0, 0)),
                              hidden_size=500,
                              regularization=0,
                              kernel_initializer='glorot_normal'):
-    features, bottleneck = construct_encoder(frames_concatenated,
+    inputs = concat(inputs)
+    features, bottleneck = construct_encoder(inputs,
                                              kernel_initializer=kernel_initializer)
     reconstructed_flow = construct_flow_decoder(bottleneck,
                                                 cropping=cropping,
-                                                output_channels=frames_concatenated.shape[-1].value)
+                                                output_channels=inputs_concatenated.shape[-1].value)
     fc2_rotation = construct_double_fc(features,
                                        hidden_size=hidden_size,
                                        regularization=regularization,
@@ -113,16 +108,15 @@ def construct_ls_vo_rt_model(imgs,
                                           kernel_initializer=kernel_initializer,
                                           name='translation')
     outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization) + [reconstructed_flow]
-    model = Model(inputs=imgs, outputs=outputs)
-    return model
+    return outputs
 
 
-def construct_ls_vo_rt_no_decoder_model(imgs,
-                                        frames_concatenated,
+def construct_ls_vo_rt_no_decoder_model(inputs,
                                         hidden_size=500,
                                         regularization=0,
                                         kernel_initializer='glorot_normal'):
-    features, _ = construct_encoder(frames_concatenated,
+    inputs = concat(inputs)
+    features, _ = construct_encoder(inputs,
                                     kernel_initializer=kernel_initializer)
     fc2_rotation = construct_double_fc(features,
                                        hidden_size=hidden_size,
@@ -135,6 +129,4 @@ def construct_ls_vo_rt_no_decoder_model(imgs,
                                           kernel_initializer=kernel_initializer,
                                           name='translation')
     outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization)
-    model = Model(inputs=imgs, outputs=outputs)
-    return model
-
+    return outputs

@@ -1,11 +1,7 @@
 from functools import partial
 
-import keras
-from keras import backend as K
-
 from keras.layers import Input
-from keras.layers.merge import concatenate
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.optimizers import Adam
 
 from odometry.models.losses import (mean_squared_error,
@@ -17,6 +13,7 @@ from odometry.models.losses import (mean_squared_error,
                                     smooth_L1)
 
 from odometry.models.layers import (activ,
+                                    concat,
                                     conv2d,
                                     conv2d_transpose,
                                     gated_conv2d,
@@ -38,7 +35,7 @@ class PretrainedModelFactory(BaseModelFactory):
         self.pretrained_path = pretrained_path
 
     def construct(self):
-        model = keras.models.load_model(
+        model = load_model(
             self.pretrained_path,
             custom_objects={'mean_squared_error': mean_squared_error,
                             'mean_absolute_error': mean_absolute_error,
@@ -46,8 +43,10 @@ class PretrainedModelFactory(BaseModelFactory):
                             'smooth_L1': smooth_L1,
                             'smoothL1': smooth_L1,
                             'flow_loss': mean_squared_logarithmic_error,
+                            'confidence_error': confidence_error,
                             'rmse': rmse,
                             'activ': activ,
+                            'concat': concat,
                             'conv2d': conv2d,
                             'conv2d_transpose': conv2d_transpose,
                             'gated_conv2d': gated_conv2d,
@@ -64,19 +63,18 @@ class PretrainedModelFactory(BaseModelFactory):
 class ModelFactory:
     def __init__(self,
                  construct_graph_fn,
-                 input_size=(60, 80),
-                 channels_counts=(3, 3),
+                 input_shapes=((60, 80, 3), (60, 80, 3)),
                  lr=0.001,
                  loss=mean_squared_error,
                  scale_rotation=1.,
                  scale_translation=1.):
         self.construct_graph_fn = construct_graph_fn
-        self.input_size = input_size
-        self.channels_counts = channels_counts
+        self.input_shapes = input_shapes
         self.optimizer = Adam(lr=lr, amsgrad=True)
         self.loss_fn = self._get_loss_function(loss)
         self.loss = [self.loss_fn] * 6
         self.loss_weights = [scale_rotation] * 3 + [scale_translation] * 3
+        self.metrics = dict(zip(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z'), [rmse] * 6))
 
     @staticmethod
     def _get_loss_function(loss):
@@ -94,36 +92,28 @@ class ModelFactory:
                 return rmse
             if loss in ('huber', 'smoothl1', 'smooth_l1'):
                 return smooth_L1
+            if loss in ('confidence', 'confidence_error'):
+                return confidence_error
         elif callable(loss):
             return loss
         else:
             raise ValueError
 
-    def _concat_inputs(self):
-        imgs = [Input((self.input_size[0], self.input_size[1], count))
-                for count in self.channels_counts]
-
-        if len(imgs) == 1:
-            return imgs, imgs[0]
-        else:
-            return imgs, concatenate(imgs)
-
     def construct(self):
-        imgs, frames_concatenated = self._concat_inputs()
-        model = self.construct_graph_fn(imgs, frames_concatenated)
+        inputs = [Input(input_shape) for input_shape in self.input_shapes]
+        outputs = self.construct_graph_fn(inputs)
+        model = Model(inputs=inputs, outputs=outputs)
         model.compile(loss=self.loss,
                       loss_weights=self.loss_weights,
                       optimizer=self.optimizer,
-                      metrics={output_name: rmse
-                               for output_name in ('r_x', 'r_y', 'r_z', 't_x', 't_y', 't_z')})
+                      metrics=self.metrics)
         return model
 
 
 class ModelWithDecoderFactory(ModelFactory):
     def __init__(self,
                  construct_graph_fn,
-                 input_size=(60, 80),
-                 channels_counts=(3, 3),
+                 input_shapes=((60, 80, 3), (60, 80, 3)),
                  lr=0.001,
                  loss=mean_squared_error,
                  scale_rotation=1.,
@@ -131,8 +121,7 @@ class ModelWithDecoderFactory(ModelFactory):
                  flow_loss_weight=1.,
                  flow_reconstruction_loss=mean_squared_logarithmic_error):
         super().__init__(construct_graph_fn=construct_graph_fn,
-                         input_size=input_size,
-                         channels_counts=channels_counts,
+                         input_shapes=input_shapes,
                          lr=lr,
                          loss=loss,
                          scale_rotation=scale_rotation,
@@ -144,10 +133,8 @@ class ModelWithDecoderFactory(ModelFactory):
 class ConstantModelFactory(ModelFactory):
     def __init__(self,
                  rot_and_trans_array,
-                 input_size=(60, 80),
-                 channels_counts=(3, 3)):
+                 input_shapes=((60, 80, 3), (60, 80, 3))):
         from odometry.models.networks.basic import construct_constant_model
         super().__init__(construct_graph_fn=partial(construct_constant_model,
                                                     rot_and_trans_array=rot_and_trans_array),
-                         input_size=input_size,
-                         channels_counts=channels_counts)
+                         input_shapes=input_shapes)
