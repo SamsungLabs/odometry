@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import plotly.offline as ply
 import plotly.graph_objs as go
 from pyquaternion import Quaternion
@@ -22,11 +23,13 @@ class AbstractTrajectory:
     def __len__(self):
         return len(self.positions)
 
-    def from_quaternions(self, qt, quaternions_with_translation):
-        self.positions = []
+    @classmethod
+    def from_quaternions(cls, quaternions_with_translation):
+        trajectory = cls()
         for quat in quaternions_with_translation:
-            qt.from_quaternion(quat)
-            self.positions.append(qt)
+            qt = QuaternionWithTranslation.from_quaternion(quat)
+            trajectory.positions.append(qt)
+        return trajectory
 
     def to_quaternions(self):
         result = []
@@ -34,12 +37,13 @@ class AbstractTrajectory:
             result.append(pos.to_quaternion())
         return result
 
-    def from_transformation_matrices(self, id, transformations):
-        self.positions = []
+    @classmethod
+    def from_transformation_matrices(cls, transformations):
+        trajectory = cls()
         for m in transformations:
-            qt = QuaternionWithTranslation()
-            qt.from_transformation_matrix(m)
-            self.positions.append(qt)
+            qt = QuaternionWithTranslation.from_transformation_matrix(m)
+            trajectory.positions.append(qt)
+        return trajectory
 
     def to_transformation_matrices(self):
         result = []
@@ -47,12 +51,14 @@ class AbstractTrajectory:
             result.append(pos.to_transformation_matrix())
         return result
 
-    def from_euler_angles(self, id, euler_angles_and_translation):
-        self.positions = []
-        for angle in euler_angles_and_translation:
-            qt = QuaternionWithTranslation()
-            qt.from_euler_angles(angle)
-            self.positions.append(qt)
+    @classmethod
+    def from_euler_angles(cls, euler_angles_with_translation):
+        trajectory = cls()
+        for angle in euler_angles_with_translation:
+            qt = QuaternionWithTranslation.from_euler_angles(angle)
+            trajectory.positions.append(qt)
+
+        return trajectory
 
     def to_euler_angles(self):
         result = []
@@ -60,18 +66,20 @@ class AbstractTrajectory:
             result.append(pos.to_euler_angles())
         return result
 
-    def from_axis_angle(self, id, axis_angle_and_translation):
-        self.positions = []
-        for angle in axis_angle_and_translation:
-            qt = QuaternionWithTranslation()
-            qt.from_axis_angle(angle)
-            self.positions.append(qt)
+    @classmethod
+    def from_dataframe(cls, df):
+        euler_angles_with_translation = df.to_dict(orient='records')
+        return cls.from_euler_angles(euler_angles_with_translation)
 
-    def to_axis_angle(self):
-        result = []
-        for pos in self.positions:
-            result.append(pos.to_axis_angle())
-        return result
+    def to_dataframe(self):
+        euler_angles_and_translation = self.to_euler_angles()
+        return pd.DataFrame(euler_angles_and_translation)
+
+    def to_global(self):
+        return self
+
+    def to_relative(self):
+        return self
 
 
 class GlobalTrajectory(AbstractTrajectory):
@@ -79,6 +87,22 @@ class GlobalTrajectory(AbstractTrajectory):
     def __init__(self):
         super().__init__()
         self.id = 'global'
+
+    @classmethod
+    def from_quaternions(cls, quaternions_with_translation):
+        return super(GlobalTrajectory, cls).from_quaternions(quaternions_with_translation)
+
+    @classmethod
+    def from_transformation_matrices(cls, transformations):
+        return super(GlobalTrajectory, cls).from_transformation_matrices(transformations)
+
+    @classmethod
+    def from_euler_angles(cls, euler_angles_with_translation):
+        return super(GlobalTrajectory, cls).from_euler_angles(euler_angles_with_translation)
+
+    @classmethod
+    def from_dataframe(cls, df):
+        return super(GlobalTrajectory, cls).from_dataframe(df)
 
     def from_tum(self, tum_file, step=1, nlines=-1):
         self.positions = []
@@ -100,21 +124,6 @@ class GlobalTrajectory(AbstractTrajectory):
             i += 1
         f.close()
 
-    def from_quaternions(self, quaternions_with_translation):
-        self.positions = []
-        for quat in quaternions_with_translation:
-            qt = QuaternionWithTranslation().from_quaternion(quat)
-            self.positions.append(qt)
-
-    def from_transformation_matrices(self, transformations):
-        super().from_transformation_matrices(self.id, transformations)
-
-    def from_euler_angles(self, euler_angles_and_translation):
-        super().from_euler_angles(self.id, euler_angles_and_translation)
-
-    def from_axis_angle(self, axis_angle_and_translation):
-        super().from_axis_angle(self.id, axis_angle_and_translation)
-
     def to_semi_global(self):
         origin = QuaternionWithTranslation(self.positions[0].quaternion, self.positions[0].translation)
         result = GlobalTrajectory()
@@ -122,7 +131,7 @@ class GlobalTrajectory(AbstractTrajectory):
             result.positions.append(pos.to_semi_global(origin))
         return result
 
-    def global_to_relative(self):
+    def to_relative(self):
         relative_trajectory = RelativeTrajectory()
         for i in range(1, len(self.positions)):
             pos_current = self.positions[i]
@@ -148,24 +157,29 @@ class GlobalTrajectory(AbstractTrajectory):
             t_relative = [transformation_relative[0, -1], transformation_relative[1, -1], transformation_relative[2, -1]]
             relative_trajectory.positions.append(QuaternionWithTranslation(q_relative, t_relative))
         return relative_trajectory
-    
+
     @property
     def points(self):
         points = np.zeros(np.array([len(self.positions), 3]))
-        i = 0
-        for pos in self.positions:
+        for i, pos in enumerate(self.positions):
             points[i, :] = pos.translation[:]
-            i += 1
         return points
 
-    def plot(self, file_name):
-        line_trajectory = go.Scatter3d(x=self.points[:, 0],
-                                 y=self.points[:, 1],
-                                 z=self.points[:, 2],
-                                 mode='lines',
-                                 name='trajectory')
+    @property
+    def rotation_matrices(self):
+        rotation_matrices = np.zeros(np.array([len(self.positions), 3, 3]))
+        for i, pos in enumerate(self.positions):
+            rotation_matrices[i, :] = pos.quaternion.rotation_matrix[:]
+        return rotation_matrices
 
-        data = [line_trajectory]
+    def plot(self, file_name):
+        line = go.Scatter3d(x=self.points[:, 0],
+                            y=self.points[:, 1],
+                            z=self.points[:, 2],
+                            mode='lines',
+                            name='trajectory')
+
+        data = [line]
         layout = go.Layout( scene=dict(
                             xaxis=dict(
                                 autorange=True),
@@ -196,25 +210,28 @@ class RelativeTrajectory(AbstractTrajectory):
         super().__init__()
         self.id = 'relative'
 
-    def from_quaternions(self, quaternions_with_translation):
-        super().from_quaternions(self.id, quaternions_with_translation)
+    @classmethod
+    def from_quaternions(cls, quaternions_with_translation):
+        return super(RelativeTrajectory, cls).from_quaternions(quaternions_with_translation)
 
-    def from_transformation_matrices(self, transformations):
-        super().from_transformation_matrices(self.id, transformations)
+    @classmethod
+    def from_transformation_matrices(cls, transformations):
+        return super(RelativeTrajectory, cls).from_transformation_matrices(transformations)
 
-    def from_euler_angles(self, euler_angles_and_translation):
-        super().from_euler_angles(self.id, euler_angles_and_translation)
+    @classmethod
+    def from_euler_angles(cls, euler_angles_with_translation):
+        return super(RelativeTrajectory, cls).from_euler_angles(euler_angles_with_translation)
 
-    def from_axis_angle(self, axis_angle_and_translation):
-        super().from_axis_angle(self.id, axis_angle_and_translation)
+    @classmethod
+    def from_dataframe(cls, df):
+        return super(RelativeTrajectory, cls).from_dataframe(df)
 
-    def relative_to_global(self):
+    def to_global(self):
         q_cumulative = Quaternion()
         t_cumulative = [0, 0, 0]
         global_trajectory = GlobalTrajectory()
         global_trajectory.positions.append(QuaternionWithTranslation(q_cumulative, t_cumulative))
         for pos in self.positions:
-
             transformation_cumulative = q_cumulative.transformation_matrix
             transformation_cumulative[0, -1] = t_cumulative[0]
             transformation_cumulative[1, -1] = t_cumulative[1]
@@ -230,4 +247,5 @@ class RelativeTrajectory(AbstractTrajectory):
             t_cumulative = [transformation_cumulative[0, -1], transformation_cumulative[1, -1], transformation_cumulative[2, -1]]
 
             global_trajectory.positions.append(QuaternionWithTranslation(q_cumulative, t_cumulative))
+
         return global_trajectory

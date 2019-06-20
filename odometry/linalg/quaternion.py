@@ -1,4 +1,3 @@
-import math
 import numpy as np
 from collections import namedtuple
 from pyquaternion import Quaternion
@@ -15,51 +14,41 @@ class QuaternionWithTranslation:
         return 'quaternion: {}, translation: {}'.format(self.quaternion, self.translation)
 
     def to_quaternion(self):
-        a = self.quaternion.elements
+        q = self.quaternion.elements
         t = self.translation
-        return {'qw': a[0], 'qx': a[1], 'qy': a[2], 'qz': a[3], 'tx': t[0], 'ty': t[1], 'tz': t[2]}
+        return {'q_w': q[0], 'q_x': q[1], 'q_y': q[2], 'q_z': q[3], 't_x': t[0], 't_y': t[1], 't_z': t[2]}
 
-    def from_quaternion(self, q):
-        self.translation = [q['tx'], q['ty'], q['tz']]
-        self.quaternion = Quaternion([q['qw'], q['qx'], q['qy'], q['qz']])
+    @classmethod
+    def from_quaternion(cls, q):
+        translation = [q['t_x'], q['t_y'], q['t_z']]
+        quaternion = Quaternion([q['q_w'], q['q_x'], q['q_y'], q['q_z']])
+        return cls(q=quaternion, t=translation)
 
     def to_transformation_matrix(self):
         T = self.quaternion.transformation_matrix
         t = self.translation
-        T[0, -1] = t[0]
-        T[1, -1] = t[1]
-        T[2, -1] = t[2]
-        return {'row0': T[0, :].tolist(), 'row1': T[1, :].tolist(), 'row2': T[2, :].tolist(), 'row3': T[3, :].tolist()}
+        T[:3, -1] = t[:]
+        return T
 
-    def from_transformation_matrix(self, transformation):
-        T = matrix = np.zeros(np.array([4,4]))
-        T[0, :] = np.array(transformation['row0'])
-        T[1, :] = np.array(transformation['row1'])
-        T[2, :] = np.array(transformation['row2'])
-        T[3, :] = np.array(transformation['row3'])
-        self.quaternion = Quaternion(matrix=T)
-        self.translation = [T[0, -1], T[1, -1], T[2, -1]]
+    @classmethod
+    def from_transformation_matrix(cls, transformation_matrix):
+        quaternion = Quaternion(matrix=transformation_matrix)
+        translation = transformation_matrix[:3, -1]
+        return cls(q=quaternion, t=translation)
 
     def to_euler_angles(self):
-        angles = convert_rotation_matrix_to_euler_angles(self.quaternion.rotation_matrix)
+        euler_angles = convert_rotation_matrix_to_euler_angles(self.quaternion.rotation_matrix)
         t = self.translation
-        return {'euler_x': angles[0], 'euler_y': angles[1], 'euler_z': angles[2], 'x': t[0], 'y': t[1], 'z': t[2]}
+        return {'euler_x': euler_angles[0], 'euler_y': euler_angles[1], 'euler_z': euler_angles[2],
+                't_x': t[0], 't_y': t[1], 't_z': t[2]}
 
-    def from_euler_angles(self, euler_angles_and_translation):
-        theta = [euler_angles_and_translation['euler_x'], euler_angles_and_translation['euler_y'], euler_angles_and_translation['euler_z']]
-        rotation_matrix = convert_euler_angles_to_rotation_matrix(theta)
-        self.quaternion = Quaternion(matrix=rotation_matrix)
-        self.translation = [euler_angles_and_translation['x'], euler_angles_and_translation['y'], euler_angles_and_translation['z']]
-
-    def to_axis_angle(self):
-        axis = self.quaternion.axis
-        theta = self.quaternion.radians
-        t = self.translation
-        return {'axis_x': axis[0], 'axis_y': axis[1], 'axis_z': axis[2], 'theta': theta, 'tx': t[0], 'ty': t[1], 'tz': t[2]}
-
-    def from_axis_angle(self, axis_angle):
-        self.translation = [axis_angle['tx'], axis_angle['ty'], axis_angle['tz']]
-        self.quaternion = Quaternion(axis=[axis_angle['axis_x'], axis_angle['axis_y'], axis_angle['axis_z']], angle=axis_angle['theta'])
+    @classmethod
+    def from_euler_angles(cls, euler_angles_and_translation):
+        euler_angles = [euler_angles_and_translation['euler_x'], euler_angles_and_translation['euler_y'], euler_angles_and_translation['euler_z']]
+        rotation_matrix = convert_euler_angles_to_rotation_matrix(euler_angles)
+        quaternion = Quaternion(matrix=rotation_matrix)
+        translation = [euler_angles_and_translation['t_x'], euler_angles_and_translation['t_y'], euler_angles_and_translation['t_z']]
+        return cls(q=quaternion, t=translation)
 
     def to_semi_global(self, origin):
         q_origin = origin.quaternion
