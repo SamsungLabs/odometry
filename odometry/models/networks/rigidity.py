@@ -1,12 +1,10 @@
-from keras.models import Model
 from keras.layers.convolutional import Conv2D
 from keras.layers import GlobalAveragePooling2D, Lambda
 
 from odometry.models.layers import conv2d, AddGridLayer
 
 
-def construct_rigidity_model(imgs, 
-                             frames_concatenated, 
+def construct_rigidity_model(inputs,
                              batchnorm=True,
                              add_grid_layer=True, 
                              f_x=1,
@@ -15,9 +13,9 @@ def construct_rigidity_model(imgs,
                              c_y=0.5, 
                              kernel_initializer='he_uniform'):
     if add_grid_layer:
-        frames_concatenated = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(frames_concatenated)
+        inputs = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(inputs)
 
-    conv1 = conv2d(frames_concatenated, 32, kernel_size=7, batchnorm=batchnorm, strides=2,
+    conv1 = conv2d(inputs, 32, kernel_size=7, batchnorm=batchnorm, strides=2,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
     conv2 = conv2d(conv1, 64, kernel_size=7, batchnorm=batchnorm, strides=2,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
@@ -41,5 +39,5 @@ def construct_rigidity_model(imgs,
     t_y = Lambda(lambda x: x[:,4:5], name='t_y')(pool)
     t_z = Lambda(lambda x: x[:,5:6], name='t_z')(pool)
 
-    model = Model(inputs=imgs, outputs=[r_x, r_y, r_z, t_x, t_y, t_z])
-    return model
+    outputs = [r_x, r_y, r_z, t_x, t_y, t_z]
+    return outputs

@@ -1,4 +1,3 @@
-from keras.models import Model
 from keras.layers.core import Lambda
 from keras.layers import BatchNormalization, Flatten, Dense, Concatenate
 from keras import regularizers
@@ -10,26 +9,26 @@ from odometry.models.layers import (conv2d,
                                     AddGridLayer)
 
 
-def construct_encoder(frames_concatenated,
-                       use_depth=True,
-                       use_flow=True,
-                       use_association_layer=True,
-                       concat_axis=3,
-                       merge_filters=256,
-                       merge_stride=2,
-                       regularization_depth=0,
-                       depth_multiplicator=None,
-                       use_batchnorm_depth=False,
-                       use_batchnorm_flow=False,
-                       add_grid_layer=False,
-                       f_x=1,
-                       f_y=1,
-                       c_x=0.5,
-                       c_y=0.5,
-                       kernel_initializer='glorot_normal'):
+def construct_encoder(inputs,
+                      use_depth=True,
+                      use_flow=True,
+                      use_association_layer=True,
+                      concat_axis=3,
+                      merge_filters=256,
+                      merge_stride=2,
+                      regularization_depth=0,
+                      depth_multiplicator=None,
+                      use_batchnorm_depth=False,
+                      use_batchnorm_flow=False,
+                      add_grid_layer=False,
+                      f_x=1,
+                      f_y=1,
+                      c_x=0.5,
+                      c_y=0.5,
+                      kernel_initializer='glorot_normal'):
     # flow convolutional branch
     if use_flow:
-        flow_xy = Lambda(lambda x: x[:, :, :, :2])(frames_concatenated)
+        flow_xy = Lambda(lambda x: x[:, :, :, :2])(inputs)
         if use_batchnorm_flow:
             flow_xy = BatchNormalization()(flow_xy)
 
@@ -48,11 +47,11 @@ def construct_encoder(frames_concatenated,
     # depth convolutional branch
     if use_depth:
         if use_association_layer: # pass flow_z as input
-            depths = AssociationLayer()(frames_concatenated)
+            depths = AssociationLayer()(inputs)
             if use_batchnorm_depth:
                 depths = BatchNormalization()(depths)
         else:
-            depths = Lambda(lambda x: x[:, :, :, 2:])(frames_concatenated)
+            depths = Lambda(lambda x: x[:, :, :, 2:])(inputs)
 
         if add_grid_layer:
             depths = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(depths)
@@ -86,8 +85,7 @@ def construct_encoder(frames_concatenated,
     return flatten
 
 
-def construct_depth_flow_model(imgs,
-                               frames_concatenated,
+def construct_depth_flow_model(inputs,
                                use_depth=True,
                                use_flow=True,
                                use_association_layer=True,
@@ -106,7 +104,7 @@ def construct_depth_flow_model(imgs,
                                c_x=0.5,
                                c_y=0.5,
                                kernel_initializer='glorot_normal'):
-    flatten = construct_encoder(frames_concatenated,
+    flatten = construct_encoder(inputs,
                                 use_depth=use_depth,
                                 use_flow=use_flow,
                                 use_association_layer=use_association_layer,
@@ -136,6 +134,4 @@ def construct_depth_flow_model(imgs,
                                       kernel_initializer=kernel_initializer, name='fc{}_translation'.format(i))
 
     outputs = construct_outputs(fc_rotation, fc_translation, regularization=regularization_fc)
-    model = Model(inputs=imgs, outputs=outputs)
-    return model
-
+    return outputs

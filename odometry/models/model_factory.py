@@ -1,11 +1,8 @@
 from functools import partial
 
-import keras
-from keras import backend as K
-
+from keras.models import Model, load_model
 from keras.layers import Input
 from keras.layers.merge import concatenate
-from keras.models import Model
 from keras.optimizers import Adam
 
 from odometry.models.losses import (mean_squared_error,
@@ -38,7 +35,7 @@ class PretrainedModelFactory(BaseModelFactory):
         self.pretrained_path = pretrained_path
 
     def construct(self):
-        model = keras.models.load_model(
+        model = load_model(
             self.pretrained_path,
             custom_objects={'mean_squared_error': mean_squared_error,
                             'mean_absolute_error': mean_absolute_error,
@@ -77,6 +74,7 @@ class ModelFactory:
         self.loss_fn = self._get_loss_function(loss)
         self.loss = [self.loss_fn] * 6
         self.loss_weights = [scale_rotation] * 3 + [scale_translation] * 3
+        self.metrics = dict(zip(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z'), [rmse] * 6))
 
     @staticmethod
     def _get_loss_function(loss):
@@ -100,22 +98,22 @@ class ModelFactory:
             raise ValueError
 
     def _concat_inputs(self):
-        imgs = [Input((self.input_size[0], self.input_size[1], count))
-                for count in self.channels_counts]
+        inputs = [Input((self.input_size[0], self.input_size[1], count))
+                  for count in self.channels_counts]
 
-        if len(imgs) == 1:
-            return imgs, imgs[0]
+        if len(inputs) == 1:
+            return inputs, inputs[0]
         else:
-            return imgs, concatenate(imgs)
+            return inputs, concatenate(inputs)
 
     def construct(self):
-        imgs, frames_concatenated = self._concat_inputs()
-        model = self.construct_graph_fn(imgs, frames_concatenated)
+        inputs, inputs_concatenated = self._concat_inputs()
+        outputs = self.construct_graph_fn(inputs_concatenated)
+        model = Model(inputs=inputs, outputs=outputs)
         model.compile(loss=self.loss,
                       loss_weights=self.loss_weights,
                       optimizer=self.optimizer,
-                      metrics={output_name: rmse
-                               for output_name in ('r_x', 'r_y', 'r_z', 't_x', 't_y', 't_z')})
+                      metrics=self.metrics)
         return model
 
 
