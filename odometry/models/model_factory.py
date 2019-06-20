@@ -43,6 +43,7 @@ class PretrainedModelFactory(BaseModelFactory):
                             'smooth_L1': smooth_L1,
                             'smoothL1': smooth_L1,
                             'flow_loss': mean_squared_logarithmic_error,
+                            'confidence_error': confidence_error,
                             'rmse': rmse,
                             'activ': activ,
                             'conv2d': conv2d,
@@ -92,6 +93,8 @@ class ModelFactory:
                 return rmse
             if loss in ('huber', 'smoothl1', 'smooth_l1'):
                 return smooth_L1
+            if loss in ('confidence', 'confidence_error'):
+                return confidence_error
         elif callable(loss):
             return loss
         else:
