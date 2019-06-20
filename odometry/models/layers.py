@@ -1,10 +1,8 @@
 import tensorflow as tf
-import numpy as np
 
-import keras
 from keras import backend as K
 from keras import activations, initializers, regularizers, constraints
-from keras.layers.advanced_activations import LeakyReLU, PReLU, ELU
+from keras.layers.advanced_activations import LeakyReLU, PReLU
 
 from keras.layers.convolutional import Conv2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Layer, Dense, Activation, Add, Subtract, Multiply
@@ -68,14 +66,7 @@ def construct_fc(inputs,
     fc = Dense(hidden_size, kernel_initializer=kernel_initializer,
                kernel_regularizer=regularizers.l2(regularization),
                bias_regularizer=regularizers.l2(regularization), name=name)(inputs)
-    if activation == 'leaky_relu':
-        activation = LeakyReLU()(fc)
-    elif activation == 'p_relu':
-        activation = PReLU()(fc)
-    elif activation == 'elu':
-        activation = ELU()(fc)
-    else:
-        activation = Activation(activation)(fc)
+    activation = activ(fc, activation)
     return activation
 
 
@@ -248,5 +239,3 @@ class AddGridLayer(Layer):
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1], input_shape[2], input_shape[3] + 2)
-
-
