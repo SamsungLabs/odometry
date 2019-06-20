@@ -1,6 +1,8 @@
+from keras.layers.merge import concatenate
 from keras.layers import Flatten
 
-from odometry.models.layers import (conv2d,
+from odometry.models.layers import (concat,
+                                    conv2d,
                                     gated_conv2d,
                                     construct_double_fc,
                                     construct_outputs)
@@ -44,6 +46,7 @@ def construct_flexible_model(inputs,
                              strides=[2, 1, 4, 1],
                              dilation_rates=None,
                              kernel_sizes = [7, 5, 3, 3]):
+    inputs = concat(inputs)
     features = construct_encoder(inputs,
                                  use_gated_convolutions=use_gated_convolutions,
                                  use_batchnorm=use_batchnorm,

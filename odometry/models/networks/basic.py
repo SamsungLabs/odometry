@@ -1,14 +1,16 @@
+from keras.applications.resnet50 import ResNet50
 from keras.layers.convolutional import Conv2D
+from keras.layers.merge import concatenate
 from keras.layers import Flatten, Dense
 from keras.regularizers import l2
-from keras.applications.resnet50 import ResNet50
 
-from odometry.models.layers import ConstLayer, conv2d
+from odometry.models.layers import concat, conv2d, ConstLayer
 
 
 def construct_resnet50_model(inputs,
                              weights='imagenet', 
                              kernel_initializer='glorot_normal'):
+    inputs = concat(inputs)
     conv0 = Conv2D(3, kernel_size=7, padding='same', activation='relu',
                    kernel_initializer=kernel_initializer, name='conv0')(inputs)
 
@@ -61,7 +63,7 @@ def construct_simple_model(inputs,
     if type(batch_norms) != list:
         batch_norms = [batch_norms] * (conv_layers_count + fc_layers_count)
 
-    layer = inputs
+    layer = concat(inputs)
 
     for i in range(conv_layers_count):
         layer = conv2d(
@@ -97,6 +99,8 @@ def construct_simple_model(inputs,
 
 def construct_constant_model(inputs,
                              rot_and_trans_array):
+    inputs = concat(inputs)
+
     mean_r_x, mean_r_y, mean_r_z, mean_t_x, mean_t_y, mean_t_z = rot_and_trans_array.mean(axis=0)
 
     r_x = ConstLayer(mean_r_x, name='r_x')(inputs)

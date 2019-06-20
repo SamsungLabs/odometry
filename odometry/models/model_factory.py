@@ -1,8 +1,7 @@
 from functools import partial
 
-from keras.models import Model, load_model
 from keras.layers import Input
-from keras.layers.merge import concatenate
+from keras.models import Model, load_model
 from keras.optimizers import Adam
 
 from odometry.models.losses import (mean_squared_error,
@@ -14,6 +13,7 @@ from odometry.models.losses import (mean_squared_error,
                                     smooth_L1)
 
 from odometry.models.layers import (activ,
+                                    concat,
                                     conv2d,
                                     conv2d_transpose,
                                     gated_conv2d,
@@ -46,6 +46,7 @@ class PretrainedModelFactory(BaseModelFactory):
                             'confidence_error': confidence_error,
                             'rmse': rmse,
                             'activ': activ,
+                            'concat': concat,
                             'conv2d': conv2d,
                             'conv2d_transpose': conv2d_transpose,
                             'gated_conv2d': gated_conv2d,
@@ -62,15 +63,13 @@ class PretrainedModelFactory(BaseModelFactory):
 class ModelFactory:
     def __init__(self,
                  construct_graph_fn,
-                 input_size=(60, 80),
-                 channels_counts=(3, 3),
+                 input_shapes=((60, 80, 3), (60, 80, 3)),
                  lr=0.001,
                  loss=mean_squared_error,
                  scale_rotation=1.,
                  scale_translation=1.):
         self.construct_graph_fn = construct_graph_fn
-        self.input_size = input_size
-        self.channels_counts = channels_counts
+        self.input_shapes = input_shapes
         self.optimizer = Adam(lr=lr, amsgrad=True)
         self.loss_fn = self._get_loss_function(loss)
         self.loss = [self.loss_fn] * 6
@@ -100,18 +99,9 @@ class ModelFactory:
         else:
             raise ValueError
 
-    def _concat_inputs(self):
-        inputs = [Input((self.input_size[0], self.input_size[1], count))
-                  for count in self.channels_counts]
-
-        if len(inputs) == 1:
-            return inputs, inputs[0]
-        else:
-            return inputs, concatenate(inputs)
-
     def construct(self):
-        inputs, inputs_concatenated = self._concat_inputs()
-        outputs = self.construct_graph_fn(inputs_concatenated)
+        inputs = [Input(input_shape) for input_shape in self.input_shapes]
+        outputs = self.construct_graph_fn(inputs)
         model = Model(inputs=inputs, outputs=outputs)
         model.compile(loss=self.loss,
                       loss_weights=self.loss_weights,

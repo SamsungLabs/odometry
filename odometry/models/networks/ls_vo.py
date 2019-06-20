@@ -1,9 +1,10 @@
 from keras.layers.convolutional import Conv2D
-from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import concatenate
+from keras.layers.pooling import MaxPooling2D
 from keras.layers import Flatten, Cropping2D, Activation
 
-from odometry.models.layers import (conv2d,
+from odometry.models.layers import (concat,
+                                    conv2d,
                                     conv2d_transpose,
                                     construct_fc,
                                     construct_double_fc,
@@ -48,6 +49,7 @@ def construct_flow_decoder(conv4,
 
 def construct_st_vo_model(inputs,
                           kernel_initializer='glorot_normal'):
+    inputs = concat(inputs)
     conv1 = Conv2D(64, kernel_size=3, strides=2,
                    kernel_initializer=kernel_initializer, name='conv1')(inputs)
     pool1 = MaxPooling2D(pool_size=4, strides=4, name='pool1')(conv1)
@@ -69,6 +71,7 @@ def construct_ls_vo_model(inputs,
                           hidden_size=1000,
                           regularization=0,
                           kernel_initializer='glorot_normal'):
+    inputs = concat(inputs)
     features, bottleneck = construct_encoder(inputs,
                                              kernel_initializer=kernel_initializer)
     reconstructed_flow = construct_flow_decoder(bottleneck,
@@ -88,6 +91,7 @@ def construct_ls_vo_rt_model(inputs,
                              hidden_size=500,
                              regularization=0,
                              kernel_initializer='glorot_normal'):
+    inputs = concat(inputs)
     features, bottleneck = construct_encoder(inputs,
                                              kernel_initializer=kernel_initializer)
     reconstructed_flow = construct_flow_decoder(bottleneck,
@@ -111,6 +115,7 @@ def construct_ls_vo_rt_no_decoder_model(inputs,
                                         hidden_size=500,
                                         regularization=0,
                                         kernel_initializer='glorot_normal'):
+    inputs = concat(inputs)
     features, _ = construct_encoder(inputs,
                                     kernel_initializer=kernel_initializer)
     fc2_rotation = construct_double_fc(features,

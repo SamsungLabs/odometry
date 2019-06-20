@@ -1,7 +1,8 @@
 from keras.layers.convolutional import Conv2D
+from keras.layers.merge import concatenate
 from keras.layers import GlobalAveragePooling2D, Lambda
 
-from odometry.models.layers import conv2d, AddGridLayer
+from odometry.models.layers import concat, conv2d, AddGridLayer
 
 
 def construct_rigidity_model(inputs,
@@ -12,6 +13,7 @@ def construct_rigidity_model(inputs,
                              c_x=0.5, 
                              c_y=0.5, 
                              kernel_initializer='he_uniform'):
+    inputs = concat(inputs)
     if add_grid_layer:
         inputs = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(inputs)
 

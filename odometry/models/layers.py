@@ -19,6 +19,12 @@ def activ(inputs, activation='relu'):
     return activation
 
 
+def concat(inputs):
+    if len(inputs) == 1:
+        return inputs[0]
+    return concatenate(inputs)
+
+
 def conv2d(inputs, filters, kernel_size, activation='linear', batchnorm=False, **kwargs):
     conv = Conv2D(filters=filters, kernel_size=kernel_size, **kwargs)(inputs)
     if batchnorm:

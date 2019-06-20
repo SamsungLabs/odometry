@@ -1,8 +1,10 @@
 from keras.layers.core import Lambda
+from keras.layers.merge import concatenate
 from keras.layers import BatchNormalization, Flatten, Dense, Concatenate
-from keras import regularizers
+from keras.regularizers import l2
 
-from odometry.models.layers import (conv2d,
+from odometry.models.layers import (concat,
+                                    conv2d,
                                     construct_fc,
                                     construct_outputs,
                                     AssociationLayer,
@@ -28,7 +30,7 @@ def construct_encoder(inputs,
                       kernel_initializer='glorot_normal'):
     # flow convolutional branch
     if use_flow:
-        flow_xy = Lambda(lambda x: x[:, :, :, :2])(inputs)
+        flow_xy = concat(inputs[:2])
         if use_batchnorm_flow:
             flow_xy = BatchNormalization()(flow_xy)
 
@@ -47,11 +49,11 @@ def construct_encoder(inputs,
     # depth convolutional branch
     if use_depth:
         if use_association_layer: # pass flow_z as input
-            depths = AssociationLayer()(inputs)
+            depths = AssociationLayer()(concat(inputs))
             if use_batchnorm_depth:
                 depths = BatchNormalization()(depths)
         else:
-            depths = Lambda(lambda x: x[:, :, :, 2:])(inputs)
+            depths = concat(inputs[2:])
 
         if add_grid_layer:
             depths = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(depths)
@@ -64,8 +66,8 @@ def construct_encoder(inputs,
                              kernel_initializer=kernel_initializer, name='conv3_depth')
         conv4_depth = conv2d(conv3_depth, 512, kernel_size=3, strides=2,
                              kernel_initializer=kernel_initializer,
-                             kernel_regularizer=regularizers.l2(regularization_depth),
-                             bias_regularizer=regularizers.l2(regularization_depth),
+                             kernel_regularizer=l2(regularization_depth),
+                             bias_regularizer=l2(regularization_depth),
                              name='conv4_depth')
 
     if depth_multiplicator is not None:

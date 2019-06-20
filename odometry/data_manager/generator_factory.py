@@ -82,9 +82,9 @@ class GeneratorFactory:
             self.load_cache(self.cached_imgs)
 
         if self.df_train is not None:
-            self.channels_counts = self.get_train_generator().channels_counts
+            self.input_shapes = self.get_train_generator().input_shapes
         else:
-            self.channels_counts = self.get_val_generator().channels_counts
+            self.input_shapes = self.get_val_generator().input_shapes
 
     def _get_multi_df_dataset(self, sequences):
         df = None
