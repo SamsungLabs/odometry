@@ -13,7 +13,7 @@ from functools import partial
 
 from odometry.models import ModelFactory, construct_flexible_model
 from odometry.linalg import RelativeTrajectory
-from odometry.evaluation import calculate_metrics
+from odometry.evaluation import calculate_metrics, average_metrics
 from odometry.utils import visualize_trajectory, visualize_trajectory_with_gt
 
 
@@ -110,6 +110,7 @@ def test(dataset, model):
                                columns=dataset.y_col)
 
     print('EVALUATE')
+    records = list()
     for trajectory_id, indices in dataset.df_val.groupby(by='trajectory_id').indices.items():
         trajectory_id = trajectory_id.replace('/', '_')
 
@@ -119,7 +120,7 @@ def test(dataset, model):
         predicted_trajectory.plot('plot_{}.html'.format(trajectory_id))
 
         metrics = calculate_metrics(gt_trajectory, predicted_trajectory, prefix='val')
-        print(metrics)
+        records.append(metrics)
 
         title = '{}: {}'.format(trajectory_id.upper(), metrics)
         visualize_trajectory(predicted_trajectory, title=title, is_3d=True,
@@ -132,7 +133,11 @@ def test(dataset, model):
         visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, is_3d=False,
                                      file_name='visualize_2d_with_gt_{}.html'.format(trajectory_id))
 
-def get_folds(dataset_root: Path):
+        averaged_metrics = average_metrics(records)
+        print(averaged_metrics)
+        
+        
+def get_configs(dataset_root: Path):
     train = list()
     for d in dataset_root.joinpath('train').iterdir():
         traj = dict()
@@ -163,8 +168,8 @@ def get_folds(dataset_root: Path):
             test.append(traj)
             break
 
-    folds = {'train_sequences': train, 'val_sequences': val, 'test_sequences': test}
-    return folds
+    configs = {'train_sequences': train, 'val_sequences': val, 'test_sequences': test}
+    return configs
 
 
 if __name__ == '__main__':
@@ -176,16 +181,16 @@ if __name__ == '__main__':
         mlflow.log_param("epochs", epochs)
         target_size = (120, 160)
 
-        folds = get_folds(Path(env.DATASET_PATH).joinpath("renderbox/v10.5/traj/output"))
+        configs = get_configs(Path(env.DATASET_PATH).joinpath("renderbox/v10.5/traj/output"))
 
-        prepare_dataset(itertools.chain(folds['train_sequences'], folds['val_sequences'], folds['test_sequences']),
+        prepare_dataset(itertools.chain(configs['train_sequences'], configs['val_sequences'], configs['test_sequences']),
                         target_size=target_size)
 
         dataset = GeneratorFactory(
             csv_name='df.csv',
             dataset_root='discoman',
-            train_sequences=[i['name'] for i in folds['train_sequences']],
-            val_sequences=[i['name'] for i in folds['val_sequences']],
+            train_sequences=[c['name'] for c in configs['train_sequences']],
+            val_sequences=[c['name'] for c in configs['val_sequences']],
             target_size=target_size,
             x_col=['path_to_optical_flow'],
             image_columns=['path_to_optical_flow'],
@@ -211,7 +216,7 @@ if __name__ == '__main__':
             csv_name='df.csv',
             dataset_root='discoman',
             train_sequences=[],
-            val_sequences=[i['name'] for i in folds['test_sequences']],
+            val_sequences=[c['name'] for c in configs['test_sequences']],
             target_size=target_size,
             x_col=['path_to_optical_flow'],
             image_columns=['path_to_optical_flow'],

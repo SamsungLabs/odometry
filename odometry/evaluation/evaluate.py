@@ -173,11 +173,10 @@ def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full', prefi
        'RPE_divider': divider
     }
 
-    mlflow.log_metrics(metrics)
     return metrics
 
 
-def get_average_metrics(records):
+def average_metrics(records):
     if len(records) == 0:
         return []
 
@@ -191,4 +190,5 @@ def get_average_metrics(records):
     total_average_metrics['RPE_t'] = total_rpe_translation / total_rpe_divider
     total_average_metrics['RPE_r'] = total_rpe_rotation / total_rpe_divider
 
+    mlflow.log_metrics(total_average_metrics)
     return total_average_metrics
