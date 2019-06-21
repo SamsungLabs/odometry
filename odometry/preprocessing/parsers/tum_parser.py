@@ -7,10 +7,8 @@ from odometry.preprocessing.parsers.base_parser import BaseParser
 
 class TUMParser(BaseParser):
 
-    def __init__(self,
-                 trajectory_dir,
-                 src_dir):
-        super(TUMParser, self).__init__(trajectory_dir)
+    def __init__(self, src_dir):
+        super(TUMParser, self).__init__()
         self.src_dir = src_dir
         self.gt_txt_path = os.path.join(self.src_dir, 'groundtruth.txt')
         self.depth_txt_path = os.path.join(self.src_dir, 'depth.txt')
@@ -77,4 +75,4 @@ class TUMParser(BaseParser):
         self.df = self.associate_dataframes(self.dataframes, self.timestamp_cols)
 
     def __repr__(self):
-        return 'TUMParser(dir={}, txt_path={})'.format(self.dir, self.gt_txt_path)
+        return 'TUMParser(txt_path={})'.format(self.gt_txt_path)

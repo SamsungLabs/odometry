@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 
 import PIL
-import keras_preprocessing.image as keras_img
+import keras_preprocessing.image as keras_image
 from keras_preprocessing.image import ImageDataGenerator
 import psutil
 
@@ -61,21 +61,21 @@ def _fill_depth_with_random(depth_plane):
     return depth_plane
 
 
-def _interpolate(img_arr):
+def _interpolate(image_arr):
     from scipy import interpolate
 
-    height, width = img_arr.shape
+    height, width = image_arr.shape
     hh, ww = np.meshgrid(np.arange(0, width), np.arange(0, height))
     grid = (hh, ww)
 
-    mask = np.isnan(img_arr)
+    mask = np.isnan(image_arr)
     if not np.any(mask):
-        return img_arr
+        return image_arr
 
     grid_valid = (hh[~mask], ww[~mask])
-    img_arr_valid = img_arr[~mask]
-    img_arr = interpolate.griddata(grid_valid, img_arr_valid.ravel(), grid)
-    return img_arr
+    image_arr_valid = image_arr[~mask]
+    image_arr = interpolate.griddata(grid_valid, image_arr_valid.ravel(), grid)
+    return image_arr
 
 
 def _get_fill_flow_function(flow_fill_method):
@@ -89,30 +89,30 @@ def _get_fill_flow_function(flow_fill_method):
     return _fill_flow_with_zeros
 
 
-def _resize(img_arr, target_size, data_format, mode):
-    if img_arr.shape[:-1] == target_size:
-        return img_arr
+def _resize(image_arr, target_size, data_format, mode):
+    if image_arr.shape[:-1] == target_size:
+        return image_arr
 
     if data_format == 'channels_last':
-        img_arr = img_arr.transpose(2, 0, 1)
+        image_arr = image_arr.transpose(2, 0, 1)
 
-    img_arr = F.interpolate(torch.Tensor(img_arr).unsqueeze_(0),
+    image_arr = F.interpolate(torch.Tensor(image_arr).unsqueeze_(0),
                             target_size,
                             mode=mode).numpy()[0]
 
     if data_format == 'channels_last':
-        img_arr = img_arr.transpose(1, 2, 0)
-    return img_arr
+        image_arr = image_arr.transpose(1, 2, 0)
+    return image_arr
 
 
-class ExtendedDataFrameIterator(keras_img.iterator.BatchFromFilesMixin, keras_img.Iterator):
+class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_image.Iterator):
     def __init__(self,
                  dataframe,
                  directory,
                  image_data_generator,
                  x_col='x_col',
                  y_col='y_col',
-                 image_columns=None,
+                 image_col=None,
                  target_size=(256, 256),
                  load_modes='rgb',
                  preprocess_modes=None,
@@ -126,7 +126,7 @@ class ExtendedDataFrameIterator(keras_img.iterator.BatchFromFilesMixin, keras_im
                  flow_multiplicator=(1,1),
                  flow_fill_method='random',
                  depth_multiplicator=1./5000., 
-                 cached_imgs=None,
+                 cached_images=None,
                  filter_invalid=True,
                  max_memory_consumption=0.8):
         super().set_processing_attrs(image_data_generator,
@@ -138,17 +138,17 @@ class ExtendedDataFrameIterator(keras_img.iterator.BatchFromFilesMixin, keras_im
                                      save_format='png',
                                      subset=subset,
                                      interpolation=interpolation)
-        if image_columns is None:
-            image_columns = []
+        if image_col is None:
+            image_col = []
 
-        assert isinstance(image_columns, list)
+        assert isinstance(image_col, list)
 
         self.df = dataframe
-        self.df[image_columns] = self.df[image_columns].astype(str)
+        self.df[image_col] = self.df[image_col].astype(str)
         self.directory = directory
         self.dtype = dtype
         self.samples = len(self.df)
-        self.df_images = self.df[image_columns]
+        self.df_images = self.df[image_col]
 
         if isinstance(x_col, str):
             self.x_cols = [x_col]
@@ -159,31 +159,31 @@ class ExtendedDataFrameIterator(keras_img.iterator.BatchFromFilesMixin, keras_im
         else:
             self.y_cols = y_col
 
-        assert set(image_columns) <= (set(self.x_cols) | set(self.y_cols))
+        self.image_cols = image_col
+
+        assert set(self.image_cols) <= (set(self.x_cols) | set(self.y_cols))
         assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
 
-        self.image_cols = image_columns
-
         if isinstance(load_modes, str):
-            self.load_modes = dict((image_column, load_modes) for image_column in self.image_cols)
+            self.load_modes = dict((col, load_modes) for col in self.image_cols)
         else:  # load_mode is iterable
             self.load_modes = dict(zip(self.image_cols, load_modes))
 
         assert len(self.load_modes) == len(self.image_cols)
 
         if isinstance(preprocess_modes, str) or preprocess_modes is None:
-            self.preprocess_modes = dict((image_column, preprocess_modes) for image_column in self.image_cols)
+            self.preprocess_modes = dict((col, preprocess_modes) for col in self.image_cols)
         else:
             self.preprocess_modes = dict(zip(self.image_cols, preprocess_modes))
 
         assert len(self.preprocess_modes) == len(self.image_cols)
 
-        channels_counts_dict = dict((image_column, _get_number_of_channels(preprocess_mode))
-                                    for image_column, preprocess_mode in self.preprocess_modes.items())
-        self.channels_counts = [channels_counts_dict[image_column] 
-                                for image_column in self.x_cols if image_column in self.image_cols]
-        self.image_shapes = dict((image_column, self.target_size + (num_channels,))
-                                 for image_column, num_channels in channels_counts_dict.items())
+        channels_counts_dict = dict((col, _get_number_of_channels(preprocess_mode))
+                                    for col, preprocess_mode in self.preprocess_modes.items())
+        self.channels_counts = [channels_counts_dict[col]
+                                for col in self.x_cols if col in self.image_cols]
+        self.image_shapes = dict((col, self.target_size + (num_channels,))
+                                 for col, num_channels in channels_counts_dict.items())
         self.input_shapes = []
         for col in self.x_cols:
             if col in self.image_cols:
@@ -197,7 +197,7 @@ class ExtendedDataFrameIterator(keras_img.iterator.BatchFromFilesMixin, keras_im
         self.depth_multiplicator = depth_multiplicator
         self._fill_depth = _fill_depth_with_random
 
-        self.set_cache(cached_imgs)
+        self.set_cache(cached_images)
         self.max_memory_consumption = max_memory_consumption
         self.stop_caching = self._check_stop_caching()
 
@@ -212,127 +212,127 @@ class ExtendedDataFrameIterator(keras_img.iterator.BatchFromFilesMixin, keras_im
     def _check_stop_caching(self):
         return psutil.virtual_memory().percent / 100 > self.max_memory_consumption
 
-    def set_cache(self, cached_imgs):
-        if cached_imgs is not None:
-            assert isinstance(cached_imgs, dict)
-            if len(cached_imgs) == 0:
+    def set_cache(self, cached_images):
+        if cached_images is not None:
+            assert isinstance(cached_images, dict)
+            if len(cached_images) == 0:
                 print('Set empty cache')
         else:
             print('No cache')
-        self.cached_imgs = cached_imgs
+        self.cached_images = cached_images
 
-    def _load_img(self, fpath, load_mode):
+    def _load_image(self, fpath, load_mode):
         if fpath.endswith('.npy'):
-            img_arr = np.load(fpath)
+            image_arr = np.load(fpath)
         else:
-            img = PIL.Image.open(fpath)
-            img.load()
+            image = PIL.Image.open(fpath)
+            image.load()
 
             if load_mode == 'grayscale':
-                if img.mode != 'L':
-                    img = img.convert('L')
+                if image.mode != 'L':
+                    image = image.convert('L')
             elif load_mode == 'rgba':
-                if img.mode != 'RGBA':
-                    img = img.convert('RGBA')
+                if image.mode != 'RGBA':
+                    image = image.convert('RGBA')
             elif load_mode == 'rgb':
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
 
-            img_arr = np.asarray(img, dtype="float32")
+            image_arr = np.asarray(image, dtype="float32")
 
-            if hasattr(img, 'close'):
-                img.close()
+            if hasattr(image, 'close'):
+                image.close()
 
-        if len(img_arr.shape) == 2:
-            img_arr = np.expand_dims(img_arr, -1)
+        if len(image_arr.shape) == 2:
+            image_arr = np.expand_dims(image_arr, -1)
 
         if load_mode == 'seven_flow':
-            img_arr = img_arr.transpose(1, 2, 0)
+            image_arr = image_arr.transpose(1, 2, 0)
 
         if load_mode == 'zt_yr_dof_flow':
-            img_arr = img_arr[[2,5],:,:].transpose(1, 2, 0)
+            image_arr = image_arr[[2,5],:,:].transpose(1, 2, 0)
 
         if load_mode == 'xyt_xyr_dof_flow':
-            img_arr = img_arr[[0,1,4,5],:,:].transpose(1, 2, 0)
+            image_arr = image_arr[[0,1,4,5],:,:].transpose(1, 2, 0)
 
-        img_arr = _resize(img_arr, self.target_size, self.data_format, mode=self.interpolation)
-        return img_arr
+        image_arr = _resize(image_arr, self.target_size, self.data_format, mode=self.interpolation)
+        return image_arr
 
-    def _preprocess_img(self, img_arr, load_mode, preprocess_mode):
+    def _preprocess_image(self, image_arr, load_mode, preprocess_mode):
         if load_mode == 'depth':
-            img_arr *= self.depth_multiplicator
+            image_arr *= self.depth_multiplicator
 
         if load_mode == 'disparity':
-            img_arr /= self.depth_multiplicator
+            image_arr /= self.depth_multiplicator
 
         if load_mode in ('flow_xy', 'flow_xy_nan'):
-            img_arr[:, :, 0] *= self.flow_multiplicator[0]
-            img_arr[:, :, 1] *= self.flow_multiplicator[1]
+            image_arr[:, :, 0] *= self.flow_multiplicator[0]
+            image_arr[:, :, 1] *= self.flow_multiplicator[1]
 
         if load_mode in ('depth', 'disparity'):
-            if (img_arr == 0).all():
+            if (image_arr == 0).all():
                 print('invalid depth')
                 if self.filter_invalid:
                     return None
 
                 max_depth = 100.
                 if load_mode == 'depth':
-                    img_arr = np.ones_like(img_arr) * max_depth
+                    image_arr = np.ones_like(image_arr) * max_depth
                 else:
-                    img_arr = np.ones_like(img_arr) * (1. / max_depth)
+                    image_arr = np.ones_like(image_arr) * (1. / max_depth)
 
-            elif (img_arr == 0).any():
-                img_arr = self._fill_depth(img_arr)
+            elif (image_arr == 0).any():
+                image_arr = self._fill_depth(image_arr)
 
         if load_mode == preprocess_mode:
-            return img_arr
+            return image_arr
 
         if load_mode == 'flow_xy' and preprocess_mode == 'flow_xy_nan':
-            isnan = (np.isnan(img_arr[:, :, 0]) | np.isnan(img_arr[:, :, 1])).astype(self.dtype)
+            isnan = (np.isnan(image_arr[:, :, 0]) | np.isnan(image_arr[:, :, 1])).astype(self.dtype)
             if isnan.any():
-                img_arr[:, :, 0] = self._fill_flow(img_arr[:, :, 0])
-                img_arr[:, :, 1] = self._fill_flow(img_arr[:, :, 1])
+                image_arr[:, :, 0] = self._fill_flow(image_arr[:, :, 0])
+                image_arr[:, :, 1] = self._fill_flow(image_arr[:, :, 1])
 
-            img_arr = np.concatenate([img_arr, np.expand_dims(isnan, -1)], axis=-1)
+            image_arr = np.concatenate([image_arr, np.expand_dims(isnan, -1)], axis=-1)
 
         elif load_mode == 'flow_xy_nan' and preprocess_mode == 'flow_xy':
-            img_arr = img_arr[:, :, :2]
+            image_arr = image_arr[:, :, :2]
 
         elif (load_mode == 'depth' and preprocess_mode == 'disparity' or
               load_mode == 'disparity' and preprocess_mode == 'depth'):
-            img_arr = 1.0 / img_arr
+            image_arr = 1.0 / image_arr
 
         else:
             print('Can not perform casting from {} to {}'.format(load_mode, preprocess_mode))
             raise NotImplemented
 
-        return img_arr
+        return image_arr
 
-    def _get_preprocessed_img(self, fname, load_mode, preprocess_mode):
+    def _get_preprocessed_image(self, fname, load_mode, preprocess_mode):
         fpath = os.path.join(self.directory, fname)
-        if (self.cached_imgs is not None) and (fpath in self.cached_imgs):
-            img_arr = self.cached_imgs[fpath]
+        if (self.cached_images is not None) and (fpath in self.cached_images):
+            image_arr = self.cached_images[fpath]
         else:
-            img_arr = self._load_img(fpath, load_mode)
-            img_arr = self._preprocess_img(img_arr, load_mode, preprocess_mode)
+            image_arr = self._load_image(fpath, load_mode)
+            image_arr = self._preprocess_image(image_arr, load_mode, preprocess_mode)
 
-            if (self.cached_imgs is not None) and \
+            if (self.cached_images is not None) and \
                     (not self.stop_caching) and \
-                    (len(self.cached_imgs) % 1000 == 0):
+                    (len(self.cached_images) % 1000 == 0):
                 self.stop_caching = self._check_stop_caching()
 
-            if (self.cached_imgs is not None) and (not self.stop_caching):
-                self.cached_imgs[fpath] = img_arr
+            if (self.cached_images is not None) and (not self.stop_caching):
+                self.cached_images[fpath] = image_arr
 
-        if img_arr is None:
+        if image_arr is None:
             return None
 
-        return img_arr.copy()
+        return image_arr.copy()
 
-    def _init_batch(self, columns, index_array):
+    def _init_batch(self, cols, index_array):
         batch = []
 
-        for col in columns:
+        for col in cols:
             if col in self.image_cols:
                 batch.append(
                     np.zeros((len(index_array),) + self.image_shapes[col], dtype=self.dtype))
@@ -351,16 +351,16 @@ class ExtendedDataFrameIterator(keras_img.iterator.BatchFromFilesMixin, keras_im
             seed = np.random.randint(1000000)
             for col, fname in self.df_images.iloc[df_row_index].iteritems():
                 params = self.image_data_generator.get_random_transform(self.image_shapes[col], seed)
-                img_arr = self._get_preprocessed_img(fname, self.load_modes[col], self.preprocess_modes[col])
-                if img_arr is None:
+                image_arr = self._get_preprocessed_image(fname, self.load_modes[col], self.preprocess_modes[col])
+                if image_arr is None:
                     valid_samples[index_in_batch] = False
                     continue
-                img_arr = self.image_data_generator.apply_transform(img_arr, params)
-                img_arr = self.image_data_generator.standardize(img_arr)
+                image_arr = self.image_data_generator.apply_transform(image_arr, params)
+                image_arr = self.image_data_generator.standardize(image_arr)
                 if col in self.x_cols:
-                    batch_x[self.x_cols.index(col)][index_in_batch] = img_arr
+                    batch_x[self.x_cols.index(col)][index_in_batch] = image_arr
                 if col in self.y_cols:
-                    batch_y[self.y_cols.index(col)][index_in_batch] = img_arr
+                    batch_y[self.y_cols.index(col)][index_in_batch] = image_arr
 
         batch_x = [features[valid_samples] for features in batch_x]
         batch_y = [target[valid_samples] for target in batch_y]
