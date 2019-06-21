@@ -2,8 +2,7 @@ import os
 
 class BaseParser:
 
-    def __init__(self, trajectory_dir):
-        self.dir = trajectory_dir
+    def __init__(self):
         self.cols = ['path_to_rgb', 'path_to_depth']
 
     def _load_data(self):
