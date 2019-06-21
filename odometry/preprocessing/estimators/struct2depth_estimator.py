@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import tensorflow as tf
 
@@ -14,6 +13,7 @@ class Struct2DepthEstimator(NetworkEstimator):
 
     def __init__(self, *args, **kwargs):
         super(Struct2DepthEstimator, self).__init__(*args, **kwargs)
+        mlflow.log_param("depth_checkpoint", self.checkpoint)
         self.name = 'Struct2Depth'
 
     def _load_model(self):

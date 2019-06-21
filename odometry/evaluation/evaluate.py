@@ -1,4 +1,5 @@
 import numpy as np
+from collections import OrderedDict
 import mlflow
 
 def calculate_distances_along_trajectory(points):
@@ -157,7 +158,7 @@ def calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory):
     return np.mean(pointwise_distances) ** 0.5
 
 
-def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full'):
+def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full', prefix=''):
     ate = calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory)
     rpe_t, rpe_r, divider = calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
                                                           indices=indices, mode='rpe')
@@ -174,3 +175,20 @@ def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full'):
 
     mlflow.log_metrics(metrics)
     return metrics
+
+
+def get_average_metrics(records):
+    if len(records) == 0:
+        return []
+
+    total_average_metrics = OrderedDict()
+    for metric_name in ('ATE', 'RMSE_t', 'RMSE_r'):
+        total_average_metrics[metric_name] = np.mean([record[metric_name] for record in records])
+
+    total_rpe_divider = np.sum([record['RPE_divider'] for record in records])
+    total_rpe_translation = np.sum([record['RPE_t'] for record in records])
+    total_rpe_rotation = np.sum([record['RPE_r'] for record in records])
+    total_average_metrics['RPE_t'] = total_rpe_translation / total_rpe_divider
+    total_average_metrics['RPE_r'] = total_rpe_rotation / total_rpe_divider
+
+    return total_average_metrics

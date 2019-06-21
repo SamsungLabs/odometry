@@ -1,10 +1,5 @@
-import os
-import shutil
 import copy
-import tqdm
-import numpy as np
 
-import tensorflow as tf
 from tensorflow.python.client import device_lib
 
 from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
@@ -18,6 +13,7 @@ class PWCNetEstimator(NetworkEstimator):
 
     def __init__(self, *args, **kwargs):
         super(PWCNetEstimator, self).__init__(*args, **kwargs)
+        mlflow.log_param("pwc_checkpoint", self.checkpoint)
         self.name = 'PWCNet'
 
     def _load_model(self):

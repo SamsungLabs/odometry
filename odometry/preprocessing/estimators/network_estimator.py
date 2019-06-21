@@ -1,6 +1,4 @@
 import os
-import shutil
-import copy
 import numpy as np
 
 from odometry.utils import load_image
