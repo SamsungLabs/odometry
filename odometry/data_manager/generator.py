@@ -114,8 +114,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  y_col='y_col',
                  image_col=None,
                  target_size=(256, 256),
-                 load_modes='rgb',
-                 preprocess_modes=None,
+                 load_mode='rgb',
+                 preprocess_mode=None,
                  batch_size=128,
                  shuffle=True,
                  seed=42,
@@ -164,22 +164,22 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         assert set(self.image_cols) <= (set(self.x_cols) | set(self.y_cols))
         assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
 
-        if isinstance(load_modes, str):
-            self.load_modes = dict((col, load_modes) for col in self.image_cols)
+        if isinstance(load_mode, str):
+            self.load_mode = dict((col, load_mode) for col in self.image_cols)
         else:  # load_mode is iterable
-            self.load_modes = dict(zip(self.image_cols, load_modes))
+            self.load_mode = dict(zip(self.image_cols, load_mode))
 
-        assert len(self.load_modes) == len(self.image_cols)
+        assert len(self.load_mode) == len(self.image_cols)
 
-        if isinstance(preprocess_modes, str) or preprocess_modes is None:
-            self.preprocess_modes = dict((col, preprocess_modes) for col in self.image_cols)
+        if isinstance(preprocess_mode, str) or preprocess_mode is None:
+            self.preprocess_mode = dict((col, preprocess_mode) for col in self.image_cols)
         else:
-            self.preprocess_modes = dict(zip(self.image_cols, preprocess_modes))
+            self.preprocess_mode = dict(zip(self.image_cols, preprocess_mode))
 
-        assert len(self.preprocess_modes) == len(self.image_cols)
+        assert len(self.preprocess_mode) == len(self.image_cols)
 
         channels_counts_dict = dict((col, _get_number_of_channels(preprocess_mode))
-                                    for col, preprocess_mode in self.preprocess_modes.items())
+                                    for col, preprocess_mode in self.preprocess_mode.items())
         self.channels_counts = [channels_counts_dict[col]
                                 for col in self.x_cols if col in self.image_cols]
         self.image_shapes = dict((col, self.target_size + (num_channels,))
@@ -351,7 +351,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             seed = np.random.randint(1000000)
             for col, fname in self.df_images.iloc[df_row_index].iteritems():
                 params = self.image_data_generator.get_random_transform(self.image_shapes[col], seed)
-                image_arr = self._get_preprocessed_image(fname, self.load_modes[col], self.preprocess_modes[col])
+                image_arr = self._get_preprocessed_image(fname, self.load_mode[col], self.preprocess_mode[col])
                 if image_arr is None:
                     valid_samples[index_in_batch] = False
                     continue
