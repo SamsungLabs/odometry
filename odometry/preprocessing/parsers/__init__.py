@@ -1,7 +1,7 @@
 from .tum_parser import TUMParser
 
 from .retailbot_parser import RetailBotParser
-from .saicofficeparser import SAICOfficeParser
+from .saicoffice_parser import SAICOfficeParser
 
 from .kitti_parser import KITTIParser
 
