@@ -1,4 +1,4 @@
-from odometry.preprocessing.parsers.retailbot_parser import RetailBotParser
+from .retailbot_parser import RetailBotParser
 
 
 class SAICOfficeParser(RetailBotParser):
