@@ -17,6 +17,3 @@ class RetailBotParser(TUMParser):
 
         self.name = 'RetailBotParser'
         self.skiprows = 0
-
-    def __repr__(self):
-        return '(txt_path={})'.format(self.gt_txt_path)
