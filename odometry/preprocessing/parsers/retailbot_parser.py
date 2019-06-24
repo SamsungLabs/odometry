@@ -6,10 +6,20 @@ from odometry.preprocessing.parsers.tum_parser import TUMParser
 class RetailBotParser(TUMParser):
 
     def __init__(self, src_dir):
-        super(RetailBotParser, self).__init__(src_dir)
-        self.gt_txt_path = os.path.join(self.src_dir, 'pose.txt')
-        self.depth_txt_path = os.path.join(self.src_dir, 'depth.txt')
-        self.rgb_txt_path = os.path.join(self.src_dir, 'rgb.txt')
+        try:
+            super(RetailBotParser, self).__init__(src_dir)
+        except RuntimeError:
+            self.gt_txt_path = os.path.join(self.src_dir, 'pose.txt')
+            if not os.path.exists(self.gt_txt_path):
+                raise RuntimeError(f"Couldn't find groundtruth.txt: {self.gt_txt_path}")
+
+            self.depth_txt_path = os.path.join(self.src_dir, 'depth.txt')
+            if not os.path.exists(self.depth_txt_path):
+                raise RuntimeError(f"Couldn't find depth.txt: {self.depth_txt_path}")
+
+            self.rgb_txt_path = os.path.join(self.src_dir, 'rgb.txt')
+            if not os.path.exists(self.rgb_txt_path):
+                raise RuntimeError(f"Couldn't find rgb.txt: {self.rgb_txt_path}")
         self.skiprows = 0
 
     def __repr__(self):

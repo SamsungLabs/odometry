@@ -10,12 +10,22 @@ from odometry.preprocessing.parsers.elementwise_parser import ElementwiseParser
 class KITTIParser(ElementwiseParser):
 
     def __init__(self,
-                 trajectory_id,
-                 dataset_root='/dbstore/datasets/KITTI_odometry_2012/dataset/sequences'):
+                 src_dir):
         super(KITTIParser, self).__init__()
-        self.src_dir = os.path.join(dataset_root, trajectory_id)
+        self.src_dir = src_dir
+        if not os.path.exists(self.src_dir):
+            raise RuntimeError(f"Couldn't find trajectory dir: {src_dir}")
+
         self.image_dir = os.path.join(self.src_dir, 'image_2')
+        if not os.path.exists(self.image_dir):
+            raise RuntimeError(f"Couldn't find image sub dir for trajectory: {self.image_dir}")
+
+        trajectory_id = os.path.basename(src_dir)
+        dataset_root = os.path.join(os.path.dirname(src_dir))
         self.pose_filepath = os.path.join(os.path.dirname(dataset_root), 'poses', '{}.txt'.format(trajectory_id))
+        if not os.path.exists(self.pose_filepath):
+            raise RuntimeError(f"Couldn't find poses dir {self.pose_filepath}")
+
         self.cols = ['path_to_rgb']
 
         np.allclose = partial(np.allclose, atol=1e-6)

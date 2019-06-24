@@ -8,10 +8,15 @@ from odometry.preprocessing.parsers.elementwise_parser import ElementwiseParser
 
 class DISCOMANParser(ElementwiseParser):
 
-    def __init__(self, json_path):
+    def __init__(self, src_dir):
         super(DISCOMANParser, self).__init__()
-        self.src_dir = os.path.dirname(json_path)
-        self.json_path = json_path
+        self.src_dir = src_dir
+        if not os.path.exists(self.src_dir):
+            raise RuntimeError(f"Couldn't find trajectory dir {src_dir}")
+
+        self.json_path = os.path.join(src_dir, "0_traj.json")
+        if not os.path.exists(self.json_path):
+            raise RuntimeError(f"Couldn't find json file {self.json_path}")
 
     def _load_data(self):
         with open(self.json_path) as read_file:

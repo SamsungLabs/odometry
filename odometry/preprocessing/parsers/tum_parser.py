@@ -10,9 +10,21 @@ class TUMParser(BaseParser):
     def __init__(self, src_dir):
         super(TUMParser, self).__init__()
         self.src_dir = src_dir
+        if not os.path.exists(self.src_dir):
+            raise RuntimeError(f"Couldn't find trajectory dir: {src_dir}")
+
         self.gt_txt_path = os.path.join(self.src_dir, 'groundtruth.txt')
+        if not os.path.exists(self.gt_txt_path):
+            raise RuntimeError(f"Couldn't find groundtruth.txt: {self.gt_txt_path}")
+
         self.depth_txt_path = os.path.join(self.src_dir, 'depth.txt')
+        if not os.path.exists(self.depth_txt_path):
+            raise RuntimeError(f"Couldn't find depth.txt: {self.depth_txt_path}")
+
         self.rgb_txt_path = os.path.join(self.src_dir, 'rgb.txt')
+        if not os.path.exists(self.rgb_txt_path):
+            raise RuntimeError(f"Couldn't find rgb.txt: {self.rgb_txt_path}")
+
         self.skiprows = 3
 
     @staticmethod
