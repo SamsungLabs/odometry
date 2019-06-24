@@ -1,6 +1,6 @@
 import os
 
-from odometry.preprocessing.parsers.tum_parser import TUMParser
+from .tum_parser import TUMParser
 
 
 class RetailBotParser(TUMParser):
