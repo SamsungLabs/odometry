@@ -2,8 +2,8 @@ import os
 import json
 import pandas as pd
 
-from odometry.preprocessing.parsers.base_parser import BaseParser
-from odometry.preprocessing.parsers.elementwise_parser import ElementwiseParser
+from .base_parser import BaseParser
+from .elementwise_parser import ElementwiseParser
 
 
 class DISCOMANJSONParser(ElementwiseParser):
