@@ -1,6 +1,6 @@
 import numpy as np
 from collections import OrderedDict
-import mlflow
+
 
 def calculate_distances_along_trajectory(points):
     distances_along_trajectory = np.linalg.norm(points[1:] - points[:-1], axis=1)
@@ -176,19 +176,19 @@ def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full', prefi
     return metrics
 
 
-def average_metrics(records):
+def average_metrics(records, prefix=''):
     if len(records) == 0:
         return []
 
-    total_average_metrics = OrderedDict()
+    averaged_metrics = OrderedDict()
     for metric_name in ('ATE', 'RMSE_t', 'RMSE_r'):
-        total_average_metrics[metric_name] = np.mean([record[metric_name] for record in records])
+        averaged_metrics[metric_name] = np.mean([record[metric_name] for record in records])
 
     total_rpe_divider = np.sum([record['RPE_divider'] for record in records])
     total_rpe_translation = np.sum([record['RPE_t'] for record in records])
     total_rpe_rotation = np.sum([record['RPE_r'] for record in records])
-    total_average_metrics['RPE_t'] = total_rpe_translation / total_rpe_divider
-    total_average_metrics['RPE_r'] = total_rpe_rotation / total_rpe_divider
+    averaged_metrics['RPE_t'] = total_rpe_translation / total_rpe_divider
+    averaged_metrics['RPE_r'] = total_rpe_rotation / total_rpe_divider
 
-    mlflow.log_metrics(total_average_metrics)
-    return total_average_metrics
+    averaged_metrics = {prefix + i[0]: i[1] for i in averaged_metrics.items()}
+    return averaged_metrics

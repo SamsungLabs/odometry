@@ -7,14 +7,12 @@ from submodules.tf_models.research.struct2depth.util import get_vars_to_save_and
 
 from odometry.utils import resize_image
 from odometry.preprocessing.estimators.network_estimator import NetworkEstimator
-import mlflow
 
 
 class Struct2DepthEstimator(NetworkEstimator):
 
     def __init__(self, *args, **kwargs):
         super(Struct2DepthEstimator, self).__init__(*args, **kwargs)
-        mlflow.log_param("depth_checkpoint", self.checkpoint)
         self.name = 'Struct2Depth'
 
     def _load_model(self):
