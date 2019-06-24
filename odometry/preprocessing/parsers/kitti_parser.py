@@ -33,10 +33,10 @@ class KITTIParser(ElementwiseParser):
         self.pose_matrices = []
         with open(self.pose_filepath) as pose_fp:
             for line in pose_fp:
-                T_w_cam0 = np.fromstring(line, dtype=float, sep=' ')
-                T_w_cam0 = T_w_cam0.reshape(3, 4)
-                T_w_cam0 = np.vstack((T_w_cam0, [0, 0, 0, 1]))
-                self.pose_matrices.append(T_w_cam0)
+                t_w_cam0 = np.fromstring(line, dtype=float, sep=' ')
+                t_w_cam0 = t_w_cam0.reshape(3, 4)
+                t_w_cam0 = np.vstack((t_w_cam0, [0, 0, 0, 1]))
+                self.pose_matrices.append(t_w_cam0)
 
     def _load_image_filepaths(self):
         self.image_filepaths = [os.path.join(self.image_dir, image_filename)

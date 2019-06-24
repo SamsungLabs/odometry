@@ -85,4 +85,3 @@ class TUMParser(BaseParser):
 
     def _create_dataframe(self):
         self.df = self.associate_dataframes(self.dataframes, self.timestamp_cols)
-
