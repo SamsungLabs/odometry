@@ -86,9 +86,6 @@ class OldDISCOMANParser(DISCOMANJSONParser):
     @staticmethod
     def get_translation(item):
         return item['info']['agent_state']['position']
-
-    def __repr__(self):
-        return '(json_path={})'.format(self.json_path)
     
     
 class DISCOMANCSVParser(BaseParser):
