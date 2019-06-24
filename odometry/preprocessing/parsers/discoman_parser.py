@@ -8,10 +8,8 @@ from odometry.preprocessing.parsers.elementwise_parser import ElementwiseParser
 
 class DISCOMANParser(ElementwiseParser):
 
-    def __init__(self,
-                 trajectory_dir,
-                 json_path):
-        super(DISCOMANParser, self).__init__(trajectory_dir)
+    def __init__(self, json_path):
+        super(DISCOMANParser, self).__init__()
         self.src_dir = os.path.dirname(json_path)
         self.json_path = json_path
 
@@ -50,7 +48,7 @@ class DISCOMANParser(ElementwiseParser):
         return parsed_item
 
     def __repr__(self):
-        return 'DISCOMANParser(dir={}, json_path={})'.format(self.dir, self.json_path)
+        return 'DISCOMANParser(json_path={})'.format(self.json_path)
     
     
 class OldDISCOMANParser(DISCOMANParser):
@@ -81,15 +79,13 @@ class OldDISCOMANParser(DISCOMANParser):
         return item['info']['agent_state']['position']
     
     def __repr__(self):
-        return 'OldDISCOMANParser(dir={}, json_path={})'.format(self.dir, self.json_path)
+        return 'OldDISCOMANParser(json_path={})'.format(self.json_path)
     
     
 class DISCOMANCSVParser(BaseParser):
 
-    def __init__(self,
-                 trajectory_dir,
-                 csv_path):
-        super(DISCOMANCSVParser, self).__init__(trajectory_dir)
+    def __init__(self, csv_path):
+        super(DISCOMANCSVParser, self).__init__()
         self.src_dir = os.path.dirname(csv_path)
         self.csv_path = csv_path
         
@@ -109,3 +105,6 @@ class DISCOMANCSVParser(BaseParser):
         self.df.timestamp = self.df.timestamp.apply(lambda x: str(x).zfill(6))
         self.df['path_to_depth'] = self.df.timestamp + '_depth.png'
         self.df['path_to_rgb'] = self.df.timestamp + '_raycast.jpg'
+
+    def __repr__(self):
+        return 'DISCOMANCSVParser(csv_path={})'.format(self.csv_path)

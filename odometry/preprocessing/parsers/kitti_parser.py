@@ -9,11 +9,10 @@ from odometry.preprocessing.parsers.elementwise_parser import ElementwiseParser
         
 class KITTIParser(ElementwiseParser):
 
-    def __init__(self, 
-                 trajectory_dir,
+    def __init__(self,
                  trajectory_id,
                  dataset_root='/dbstore/datasets/KITTI_odometry_2012/dataset/sequences'):
-        super(KITTIParser, self).__init__(trajectory_dir)
+        super(KITTIParser, self).__init__()
         self.src_dir = os.path.join(dataset_root, trajectory_id)
         self.image_dir = os.path.join(self.src_dir, 'image_2')
         self.pose_filepath = os.path.join(os.path.dirname(dataset_root), 'poses', '{}.txt'.format(trajectory_id))
@@ -61,3 +60,6 @@ class KITTIParser(ElementwiseParser):
         parsed_item.update(dict(zip(['q_w', 'q_x', 'q_y', 'q_z'], self.get_quaternion(item))))
         parsed_item.update(dict(zip(['t_x', 't_y', 't_z'], self.get_translation(item))))
         return parsed_item
+
+    def __repr__(self):
+        return 'KITTIParser(trajectory_id={})'.format(self.trajectory_id)
