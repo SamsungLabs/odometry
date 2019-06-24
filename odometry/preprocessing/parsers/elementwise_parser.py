@@ -5,6 +5,10 @@ from odometry.preprocessing.parsers.base_parser import BaseParser
 
 class ElementwiseParser(BaseParser):
 
+    def __init__(self, src_dir):
+        super(ElementwiseParser, self).__init__(src_dir)
+        self.trajectory = None
+
     def _parse_item(self, item):
         raise NotImplementedError
 

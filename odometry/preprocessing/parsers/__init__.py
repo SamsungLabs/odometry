@@ -1,11 +1,11 @@
 from .tum_parser import TUMParser
 
 from .retailbot_parser import RetailBotParser
-from .retailbot_parser import SAICOfficeParser
+from .saicofficeparser import SAICOfficeParser
 
 from .kitti_parser import KITTIParser
 
-from .discoman_parser import DISCOMANParser
+from .discoman_parser import DISCOMANJSONParser
 from .discoman_parser import OldDISCOMANParser
 from .discoman_parser import DISCOMANCSVParser
 
@@ -15,7 +15,7 @@ __all__ = [
     'TUMParser',
     'RetailBotParser',
     'SAICOfficeParser',
-    'DISCOMANParser',
+    'DISCOMANJSONParser',
     'OldDISCOMANParser',
     'DISCOMANCSVParser'    
 ]

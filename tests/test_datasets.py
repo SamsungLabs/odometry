@@ -6,7 +6,7 @@ from pathlib import Path
 from odometry.preprocessing.parsers import (KITTIParser,
                                             TUMParser,
                                             RetailBotParser,
-                                            DISCOMANParser)
+                                            DISCOMANJSONParser)
 from odometry.preprocessing import estimators as est
 from odometry.preprocessing.prepare_trajectory import prepare_trajectory
 
@@ -93,7 +93,7 @@ class TestDatasets(unittest.TestCase):
         output_dir = 'discoman'
         trajectory_dir = os.path.join(env.DATASET_PATH, 'renderbox/iros2019/dset/output/deprecated/000001')
         height, width = 120, 160
-        parser = DISCOMANParser(trajectory_dir)
+        parser = DISCOMANJSONParser(trajectory_dir)
         num_files = 5
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
