@@ -3,7 +3,7 @@ from .prepare_trajectory import prepare_trajectory
 from .parsers import KITTIParser
 from .parsers import TUMParser
 from .parsers import RetailBotParser
-from .parsers import DISCOMANParser
+from .parsers import DISCOMANJSONParser
 from .parsers import OldDISCOMANParser
 
 from .estimators import Quaternion2EulerEstimator
@@ -17,7 +17,7 @@ __all__ = [
     'KITTIParser',
     'TUMParser',
     'RetailBotParser',
-    'DISCOMANParser',
+    'DISCOMANJSONParser',
     'OldDISCOMANParser'
     'Quaternion2EulerEstimator',
     'Struct2DepthEstimator',

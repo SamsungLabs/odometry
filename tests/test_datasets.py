@@ -6,7 +6,7 @@ from pathlib import Path
 from odometry.preprocessing.parsers import (KITTIParser,
                                             TUMParser,
                                             RetailBotParser,
-                                            DISCOMANParser)
+                                            DISCOMANJSONParser)
 from odometry.preprocessing import estimators as est
 from odometry.preprocessing.prepare_trajectory import prepare_trajectory
 
@@ -72,71 +72,70 @@ class TestDatasets(unittest.TestCase):
     def test_tum(self) -> None:
         print('Started TUM test')
 
-        trajectory_dir = 'tum'
-        dir = os.path.join(env.DATASET_PATH, 'tum_rgbd_flow/data/rgbd_dataset_freiburg2_coke')
+        output_dir = 'tum'
+        trajectory_dir = os.path.join(env.DATASET_PATH, 'tum_rgbd_flow/data/rgbd_dataset_freiburg2_coke')
         height, width = 480, 640
         num_files = 7
-        parser = TUMParser(trajectory_dir, src_dir=dir)
+        parser = TUMParser(trajectory_dir)
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
-        df = prepare_trajectory(trajectory_dir,
+        df = prepare_trajectory(output_dir,
                                 parser=parser,
                                 single_frame_estimators=single_frame_estimators,
                                 pair_frames_estimators=pair_frames_estimators,
                                 stride=1)
 
-        self.assert_df(df, trajectory_dir, num_files=num_files)
+        self.assert_df(df, output_dir, num_files=num_files)
 
     def test_discoman(self) -> None:
         print('Started DISCOMAN test')
 
-        trajectory_dir = 'discoman'
-        json_path = os.path.join(env.DATASET_PATH, 'renderbox/iros2019/dset/output/deprecated/000001/0_traj.json')
+        output_dir = 'discoman'
+        trajectory_dir = os.path.join(env.DATASET_PATH, 'renderbox/iros2019/dset/output/deprecated/000001')
         height, width = 120, 160
-        parser = DISCOMANParser(trajectory_dir, json_path=json_path)
+        parser = DISCOMANJSONParser(trajectory_dir)
         num_files = 5
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
-        df = prepare_trajectory(trajectory_dir,
+        df = prepare_trajectory(output_dir,
                                 parser=parser,
                                 single_frame_estimators=single_frame_estimators,
                                 pair_frames_estimators=pair_frames_estimators,
                                 stride=1)
 
-        self.assert_df(df, trajectory_dir, num_files=num_files)
+        self.assert_df(df, output_dir, num_files=num_files)
 
     def test_kitti(self) -> None:
         print('Started KITTI test')
-        trajectory_dir = 'kitti'
-        trajectory_id = '00'
+        output_dir = 'kitti'
         height, width = 94, 300
-        dataset_root = os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012/dataset/sequences')
-        parser = KITTIParser(trajectory_dir, trajectory_id=trajectory_id, dataset_root=dataset_root)
+        trajectory_dir = os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012/dataset/sequences/00')
+        parser = KITTIParser(trajectory_dir)
         num_files = 10
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
-        df = prepare_trajectory(trajectory_dir,
+        df = prepare_trajectory(output_dir,
                                 parser=parser,
                                 single_frame_estimators=single_frame_estimators,
                                 pair_frames_estimators=pair_frames_estimators,
                                 stride=1)
 
-        self.assert_df(df, trajectory_dir, num_files=num_files)
+        self.assert_df(df, output_dir, num_files=num_files)
 
     def test_retailbot(self) -> None:
         print('Started RetailBot test')
 
-        trajectory_dir = 'retailbot'
-        dir = os.path.join(env.DATASET_PATH, 'retail_bot/meetingroom_04_rgbd_ir_imu_pose')
+        output_dir = 'retailbot'
+        trajectory_dir = os.path.join(env.DATASET_PATH, 'retail_bot/meetingroom_04_rgbd_ir_imu_pose')
         height, width = 480, 640
-        parser = RetailBotParser(trajectory_dir, src_dir=dir)
+        parser = RetailBotParser(trajectory_dir)
         num_files = 2
 
         single_frame_estimators, pair_frames_estimators = self.prepare_estimators(height=height, width=width)
-        df = prepare_trajectory(trajectory_dir,
+        df = prepare_trajectory(output_dir,
                                 parser=parser,
                                 single_frame_estimators=single_frame_estimators,
                                 pair_frames_estimators=pair_frames_estimators,
                                 stride=1)
 
-        self.assert_df(df, trajectory_dir, num_files=num_files)
+        self.assert_df(df, output_dir, num_files=num_files)

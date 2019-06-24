@@ -49,7 +49,7 @@ def initialize(datset_type):
         parser = parsers.KITTIParser
     elif args.dataset == "discoman":
         config = configs.get_discoman_iros_1_config()
-        parser = parsers.DISCOMANParser
+        parser = parsers.DISCOMANJSONParser
 
     elif args.dataset == "tum":
         config = configs.get_tum_config()

@@ -2,17 +2,28 @@ import os
 import numpy as np
 import pandas as pd
 
-from odometry.preprocessing.parsers.base_parser import BaseParser
+from .base_parser import BaseParser
 
 
 class TUMParser(BaseParser):
 
-    def __init__(self, src_dir):
-        super(TUMParser, self).__init__()
-        self.src_dir = src_dir
-        self.gt_txt_path = os.path.join(self.src_dir, 'groundtruth.txt')
-        self.depth_txt_path = os.path.join(self.src_dir, 'depth.txt')
-        self.rgb_txt_path = os.path.join(self.src_dir, 'rgb.txt')
+    def __init__(self, src_dir, gt_txt_path=None, depth_txt_path=None, rgb_txt_path=None):
+        super(TUMParser, self).__init__(src_dir)
+
+        self.name = 'TUMParser'
+
+        self.gt_txt_path = gt_txt_path if gt_txt_path else os.path.join(self.src_dir, 'groundtruth.txt')
+        if not os.path.exists(self.gt_txt_path):
+            raise RuntimeError(f'Could not find groundtruth.txt: {self.gt_txt_path}')
+
+        self.depth_txt_path = depth_txt_path if depth_txt_path else os.path.join(self.src_dir, 'depth.txt')
+        if not os.path.exists(self.depth_txt_path):
+            raise RuntimeError(f'Could not find depth.txt: {self.depth_txt_path}')
+
+        self.rgb_txt_path = rgb_txt_path if rgb_txt_path else os.path.join(self.src_dir, 'rgb.txt')
+        if not os.path.exists(self.rgb_txt_path):
+            raise RuntimeError(f'Could not find rgb.txt: {self.rgb_txt_path}')
+
         self.skiprows = 3
 
     @staticmethod
@@ -59,7 +70,8 @@ class TUMParser(BaseParser):
         return df
 
     def _load_gt_txt(self):
-        return self._load_txt(self.gt_txt_path, columns=['timestamp_gt', 't_x', 't_y', 't_z', 'q_x', 'q_y', 'q_z', 'q_w'])
+        return self._load_txt(self.gt_txt_path,
+                              columns=['timestamp_gt', 't_x', 't_y', 't_z', 'q_x', 'q_y', 'q_z', 'q_w'])
 
     def _load_rgb_txt(self):
         return self._load_txt(self.rgb_txt_path, columns=['timestamp_rgb', 'path_to_rgb'])
@@ -73,6 +85,3 @@ class TUMParser(BaseParser):
 
     def _create_dataframe(self):
         self.df = self.associate_dataframes(self.dataframes, self.timestamp_cols)
-
-    def __repr__(self):
-        return 'TUMParser(txt_path={})'.format(self.gt_txt_path)
