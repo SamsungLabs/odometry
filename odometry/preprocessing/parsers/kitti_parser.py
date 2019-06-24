@@ -4,7 +4,7 @@ import pyquaternion
 from functools import partial
 
 from odometry.linalg import split_se3
-from odometry.preprocessing.parsers.elementwise_parser import ElementwiseParser
+from .elementwise_parser import ElementwiseParser
         
         
 class KITTIParser(ElementwiseParser):
