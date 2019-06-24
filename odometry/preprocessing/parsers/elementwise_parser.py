@@ -1,6 +1,6 @@
 import pandas as pd
 
-from odometry.preprocessing.parsers.base_parser import BaseParser
+from .base_parser import BaseParser
 
 
 class ElementwiseParser(BaseParser):
