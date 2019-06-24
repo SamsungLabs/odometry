@@ -62,7 +62,7 @@ class GeneratorFactory:
             val_samples = int(np.ceil(val_ratio * len(self.df_val))) # upper-round to cover all dataset with k folds
             start = val_samples * fold_index
             end = start + val_samples
-            print('fold #{}: validate on samples {} -- {} (out of {})'.format(fold_index, start, end, len(self.df_val)))
+            print(f'fold #{fold_index}: validate on samples {start} -- {end} (out of {len(self.df_val)})')
             self.df_train = pd.concat([self.df_train[:start], self.df_train[end:]])
             self.df_val = self.df_val[start:end]
 
@@ -109,15 +109,15 @@ class GeneratorFactory:
             with open(cache_file, 'rb') as cache_fp:
                 self.cached_images = pickle.load(cache_fp)
         except:
-            print('Failed to load cached images from "{}", initialized empty cache'.format(cache_file))
+            print(f'Failed to load cached images from {cache_file}, initialized empty cache')
             self.cached_images = {}
         else:
-            print('Successfully loaded cached images from "{}"'.format(cache_file))
+            print(f'Successfully loaded cached images from {cache_file}')
 
     def dump_cache(self, cache_file):
         with open(cache_file, 'wb') as cache_fp:
             pickle.dump(self.cached_images, cache_fp)
-        print('Saved cached images to "{}"'.format(cache_file))
+        print(f'Saved cached images to {cache_file}')
 
     def _get_generator(self, dataframe, generator_args, trajectory=False):
         if trajectory:

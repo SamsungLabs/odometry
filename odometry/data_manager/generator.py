@@ -303,7 +303,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             image_arr = 1.0 / image_arr
 
         else:
-            print('Can not perform casting from {} to {}'.format(load_mode, preprocess_mode))
+            print(f'Can not perform casting from {load_mode} to {preprocess_mode}')
             raise NotImplemented
 
         return image_arr
