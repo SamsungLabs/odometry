@@ -184,11 +184,9 @@ def average_metrics(records, prefix=''):
     for metric_name in ('ATE', 'RMSE_t', 'RMSE_r'):
         averaged_metrics[metric_name] = np.mean([record[metric_name] for record in records])
 
-    total_rpe_divider = np.sum([record['RPE_divider'] for record in records])
-    total_rpe_translation = np.sum([record['RPE_t'] for record in records])
-    total_rpe_rotation = np.sum([record['RPE_r'] for record in records])
-    averaged_metrics['RPE_t'] = total_rpe_translation / total_rpe_divider
-    averaged_metrics['RPE_r'] = total_rpe_rotation / total_rpe_divider
-
-    averaged_metrics = {prefix + i[0]: i[1] for i in averaged_metrics.items()}
-    return averaged_metrics
+    total_divider = np.sum([record['RPE_divider'] for record in records])
+    total_rpe_t = np.sum([record['RPE_t'] for record in records])
+    total_rpe_r = np.sum([record['RPE_r'] for record in records])
+    total_average_metrics['RPE_t'] = total_rpe_t / total_divider
+    total_average_metrics['RPE_r'] = total_rpe_r / total_divider
+    return total_average_metrics
