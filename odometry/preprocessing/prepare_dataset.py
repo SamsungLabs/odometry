@@ -1,13 +1,15 @@
 import os
-import argparse
-from . import __init_path__
-import env
 import json
-from odometry.preprocessing import parsers, estimators, prepare_trajectory
+import logging
+import argparse
 from tqdm import tqdm
 from pathlib import Path
+
+from . import __init_path__
+import env
+
 from odometry.utils.computation_utils import limit_resources
-import logging
+from odometry.preprocessing import parsers, estimators, prepare_trajectory
 
 
 def str2bool(v):
@@ -34,8 +36,8 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
                                                                   checkpoint=depth_checkpoint,
                                                                   height=target_size[0],
                                                                   width=target_size[1])
-        single_frame_estimators.append(struct2depth_estimator
-                                       )
+        single_frame_estimators.append(struct2depth_estimator)
+
     cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
     input_col = cols + [col + '_next' for col in cols]
     output_col = cols
@@ -52,16 +54,16 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
 
 
 def initialize_parser(dataset_type):
-    if dataset_type == "kitti":
+    if dataset_type == 'kitti':
         return parsers.KITTIParser
-    elif dataset_type == "discoman":
+    elif dataset_type == 'discoman':
         return parsers.DISCOMANJSONParser
-    elif dataset_type == "tum":
+    elif dataset_type == 'tum':
         return parsers.TUMParser
-    elif dataset_type == "retailbot":
+    elif dataset_type == 'retailbot':
         return parsers.RetailBotParser
     else:
-        raise RuntimeError("Unexpected dataset type")
+        raise RuntimeError('Unexpected dataset type')
 
 
 def get_all_trajectories(dataset_root):
@@ -69,25 +71,25 @@ def get_all_trajectories(dataset_root):
     if not isinstance(dataset_root, Path):
         dataset_root = Path(dataset_root)
 
-    logger = logging.getLogger("prepare_dataset")
+    logger = logging.getLogger('prepare_dataset')
 
     trajectories = list()
-    for d in dataset_root.rglob("**/*"):
-        if list(d.glob("*traj.json")) or\
-                list(d.glob("rgb.txt")) or \
-                list(d.glob("image_2")) or \
-                list(d.glob("camera_gt.csv")):
-            logger.info(f"Trajectory {d.as_posix()} added")
+    for d in dataset_root.rglob('**/*'):
+        if list(d.glob('*traj.json')) or \
+                list(d.glob('rgb.txt')) or \
+                list(d.glob('image_2')) or \
+                list(d.glob('camera_gt.csv')):
+            logger.info(f'Trajectory {d.as_posix()} added')
             trajectories.append(d.as_posix())
 
     return trajectories
 
 
 def set_logger(output_dir):
-    fh = logging.FileHandler(output_dir.joinpath("log.txt").as_posix(), mode="w+")
+    fh = logging.FileHandler(output_dir.joinpath('log.txt').as_posix(), mode='w+')
     fh.setLevel(logging.DEBUG)
 
-    logger = logging.getLogger("prepare_dataset")
+    logger = logging.getLogger('prepare_dataset')
     logger.setLevel(logging.DEBUG)
     logger.addHandler(fh)
 
@@ -110,8 +112,8 @@ def prepare_dataset(dataset_type, dataset_root, output_dir, target_size, optical
     parser_class = initialize_parser(dataset_type)
     trajectories = get_all_trajectories(dataset_root)
 
-    with open(output_dir.joinpath("config.json").as_posix(), mode="w+") as f:
-        dataset_config = {"depth_checkpoint": depth_checkpoint, "optical_flow_checkpoint": optical_flow_checkpoint}
+    with open(output_dir.joinpath('config.json').as_posix(), mode='w+') as f:
+        dataset_config = {'depth_checkpoint': depth_checkpoint, 'optical_flow_checkpoint': optical_flow_checkpoint}
         json.dump(dataset_config, f)
 
     for trajectory in tqdm(trajectories):
@@ -128,15 +130,15 @@ def prepare_dataset(dataset_type, dataset_root, output_dir, target_size, optical
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, help="possible variants: kitti, discoman, tum, retailbot")
-    parser.add_argument("--dataset_root", type=str)
-    parser.add_argument("--output_dir", type=str)
-    parser.add_argument("--of_checkpoint", type=str,
+    parser.add_argument('--dataset', type=str, choices=['kitti', 'discoman', 'tum', 'retailbox'])
+    parser.add_argument('--dataset_root', type=str)
+    parser.add_argument('--output_dir', type=str)
+    parser.add_argument('--of_checkpoint', type=str,
                         default='/Vol0/user/f.konokhov/tfoptflow/tfoptflow/tmp/pwcnet.ckpt-84000')
-    parser.add_argument("--depth", type=str2bool, default=True)
-    parser.add_argument("--depth_checkpoint", type=str,
+    parser.add_argument('--depth', type=str2bool, default=True)
+    parser.add_argument('--depth_checkpoint', type=str,
                         default=os.path.join(env.PROJECT_PATH, 'weights/model-199160'))
-    parser.add_argument("--target_size", type=int, nargs="+")
+    parser.add_argument('--target_size', type=int, nargs='+')
     args = parser.parse_args()
 
     prepare_dataset(args.dataset,
