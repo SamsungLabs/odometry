@@ -10,7 +10,7 @@ def mean_absolute_error(y_true, y_pred, scale=1.):
 
 
 def confidence_error(y_true, y_pred, scale=1):
-    return K.mean(K.square(K.abs(y_true * scale - y_pred[:,0] * scale) - y_pred[:,1] * scale), axis=-1)
+    return K.mean(K.square(K.abs(y_true * scale - y_pred[:, 0] * scale) - y_pred[:, 1] * scale), axis=-1)
 
 
 def mean_squared_logarithmic_error(y_true, y_pred, scale=1.):
