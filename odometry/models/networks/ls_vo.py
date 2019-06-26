@@ -76,14 +76,13 @@ def construct_ls_vo_model(inputs,
                                              kernel_initializer=kernel_initializer)
     reconstructed_flow = construct_flow_decoder(bottleneck,
                                                 cropping=cropping,
-                                                output_channels=inputs_concatenated.shape[-1].value)
+                                                output_channels=inputs.shape[-1].value)
     fc2 = construct_double_fc(features,
                               hidden_size=hidden_size,
                               regularization=regularization,
                               kernel_initializer=kernel_initializer)
     outputs = construct_outputs(fc2, fc2, regularization=regularization) + [reconstructed_flow]
-    model = Model(inputs=inputs, outputs=outputs)
-    return model
+    return outputs
 
 
 def construct_ls_vo_rt_model(inputs,
@@ -96,7 +95,7 @@ def construct_ls_vo_rt_model(inputs,
                                              kernel_initializer=kernel_initializer)
     reconstructed_flow = construct_flow_decoder(bottleneck,
                                                 cropping=cropping,
-                                                output_channels=inputs_concatenated.shape[-1].value)
+                                                output_channels=inputs.shape[-1].value)
     fc2_rotation = construct_double_fc(features,
                                        hidden_size=hidden_size,
                                        regularization=regularization,
