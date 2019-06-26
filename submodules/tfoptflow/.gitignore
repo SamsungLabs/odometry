@@ -1,0 +1,4 @@
+.ipynb_checkpoints
+.pkl
+/tfoptflow/models/pwcnet.ckpt-*.data-00000-of-00001
+__pycache__/

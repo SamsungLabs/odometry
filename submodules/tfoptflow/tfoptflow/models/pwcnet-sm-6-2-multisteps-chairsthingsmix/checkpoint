@@ -1,0 +1,2 @@
+model_checkpoint_path: "pwcnet.ckpt-592000"
+all_model_checkpoint_paths: "pwcnet.ckpt-592000"
