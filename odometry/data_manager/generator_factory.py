@@ -90,19 +90,10 @@ class GeneratorFactory:
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
             current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
             current_df['trajectory_id'] = trajectory_name
-            df = df.append(current_df, sort=False) if df is not None else current_df
+            df = current_df if df is None else df.append(current_df, sort=False)
 
         df.index = range(len(df))
         return df
-
-    def warm_up_cache(self):
-        assert self.cached_images is not None
-        for subset, generator in (('Train', self.get_train_generator()),
-                                  ('Val', self.get_val_generator()),
-                                  ('Test', self.get_test_generator())):
-            print(subset, flush=True)
-            for batch_index in tqdm(range(len(generator))):
-                generator[batch_index]
 
     def load_cache(self, cache_file):
         try:
