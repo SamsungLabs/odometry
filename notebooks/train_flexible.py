@@ -2,150 +2,146 @@ import os
 from pathlib import Path
 import __init_path__
 import env
-import argparse
+
+import itertools
+import functools
 import mlflow
-from odometry.data_manager import GeneratorFactory
 import numpy as np
 import pandas as pd
-from functools import partial
-import datetime
 
-
+from odometry.data_manager import GeneratorFactory
+from odometry.evaluation import PredictCallback
 from odometry.models import ModelFactory, construct_flexible_model
-from odometry.linalg import RelativeTrajectory
-from odometry.evaluation import calculate_metrics, average_metrics
-from odometry.utils import visualize_trajectory, visualize_trajectory_with_gt
-import odometry.preprocessing.splits as configs
+
+from odometry.preprocessing import parsers, estimators, prepare_trajectory
 
 
-def train(dataset, model, epochs):
+def initialize_estimators(target_size):
 
-    for epoch in range(epochs):
-        print('TRAIN')
-        train_generator = dataset.get_train_generator()
-        model.fit_generator(train_generator, steps_per_epoch=len(train_generator), epochs=1)
+    quaternion2euler_estimator = estimators.Quaternion2EulerEstimator(input_col=['q_w', 'q_x', 'q_y', 'q_z'],
+                                                                      output_col=['euler_x', 'euler_y', 'euler_z'])
 
-        print('VAL')
-        val_generator = dataset.get_val_generator()
-        model_output = model.predict_generator(val_generator, steps=len(val_generator))
-        predictions = pd.DataFrame(data=np.concatenate(model_output, 1),
-                                   index=dataset.df_val.index,
-                                   columns=dataset.y_col)
+    depth_checkpoint = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+                                    'weights/model-199160')
+    struct2depth_estimator = estimators.Struct2DepthEstimator(input_col='path_to_rgb',
+                                                              output_col='path_to_depth',
+                                                              sub_dir='depth',
+                                                              checkpoint=depth_checkpoint,
+                                                              height=target_size[0],
+                                                              width=target_size[1])
 
-        print('EVALUATE')
-        records = list()
-        for trajectory_id, indices in dataset.df_val.groupby(by='trajectory_id').indices.items():
-            trajectory_id = trajectory_id.replace('/', '_')
+    cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+    input_col = cols + [f'{col}_next' for col in cols]
+    output_col = cols
+    global2relative_estimator = estimators.Global2RelativeEstimator(input_col=input_col,
+                                                                    output_col=output_col)
 
-            gt_trajectory = RelativeTrajectory.from_dataframe(dataset.df_val.iloc[indices]).to_global()
-            predicted_trajectory = RelativeTrajectory.from_dataframe(predictions.iloc[indices]).to_global()
+    optical_flow_checkpoint = '/Vol0/user/f.konokhov/tfoptflow/tfoptflow/tmp/pwcnet.ckpt-84000'
+    # optical_flow_checkpoint = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    # '/weights/pwcnet.ckpt-595000') # official weights
+    pwcnet_estimator = estimators.PWCNetEstimator(input_col=['path_to_rgb', 'path_to_rgb_next'],
+                                                  output_col='path_to_optical_flow',
+                                                  sub_dir='optical_flow',
+                                                  checkpoint=optical_flow_checkpoint)
 
-            predicted_trajectory.plot('plot_{}.html'.format(trajectory_id))
-
-            metrics = calculate_metrics(gt_trajectory, predicted_trajectory, prefix='val')
-            records.append(metrics)
-
-            title = '{}: {}'.format(trajectory_id.upper(), metrics)
-            visualize_trajectory(predicted_trajectory, title=title, is_3d=True,
-                                 file_name='visualize_3d_{}.html'.format(trajectory_id))
-            visualize_trajectory(predicted_trajectory, title=title, is_3d=False,
-                                 file_name='visualize_2d_{}.html'.format(trajectory_id))
-
-            visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, is_3d=True,
-                                         file_name='visualize_3d_with_gt_{}.html'.format(trajectory_id))
-            visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, is_3d=False,
-                                         file_name='visualize_2d_with_gt_{}.html'.format(trajectory_id))
-
-        averaged_metrics = average_metrics(records, prefix="val_")
-        mlflow.log_metrics(averaged_metrics, step=epoch)
-        print(averaged_metrics)
+    single_frame_estimators = [quaternion2euler_estimator, struct2depth_estimator]
+    pair_frames_estimators = [global2relative_estimator, pwcnet_estimator]
+    return single_frame_estimators, pair_frames_estimators
 
 
-def test(dataset, model):
-    print('TEST')
+def prepare_dataset(trajectories, dataset_root, target_size):
+
+    single_frame_estimators, pair_frames_estimators = initialize_estimators(target_size)
+    for index, trajectory in enumerate(trajectories):
+        parser = parsers.DISCOMANCSVParser(trajectory['csv'])
+        df = prepare_trajectory(os.path.join(dataset_root, trajectory['name']),
+                                parser=parser,
+                                single_frame_estimators=single_frame_estimators,
+                                pair_frames_estimators=pair_frames_estimators,
+                                stride=1)
+        path_to_save = os.path.join(dataset_root, trajectory['name'], 'df.csv')
+        print(f'{index + 1} / {len(trajectories)}: saved trajectory(name={trajectory["name"]}, csv={trajectory["csv"]}) to {path_to_save}')
+        df.to_csv(os.path.join(dataset_root, trajectory['name'], 'df.csv'), index=False)
+
+
+def train(dataset, model, epochs, predictions_dir=None, visuals_dir=None, period=1, save_best_only=True):
+    train_generator = dataset.get_train_generator()
     val_generator = dataset.get_val_generator()
-    model_output = model.predict_generator(val_generator, steps=len(val_generator))
-    predictions = pd.DataFrame(data=np.concatenate(model_output, 1),
-                               index=dataset.df_val.index,
-                               columns=dataset.y_col)
+    callback = PredictCallback(model,
+                               dataset,
+                               predictions_dir=predictions_dir,
+                               visuals_dir=visuals_dir,
+                               period=period,
+                               save_best_only=save_best_only)
 
-    print('EVALUATE')
-    records = list()
-    for trajectory_id, indices in dataset.df_val.groupby(by='trajectory_id').indices.items():
-        trajectory_id = trajectory_id.replace('/', '_')
+    model.fit_generator(
+        train_generator,
+        steps_per_epoch=len(train_generator),
+        epochs=epochs,
+        validation_data=val_generator,
+        validation_steps=len(val_generator),
+        shuffle=True,
+        callbacks=[callback]
+    )
 
-        gt_trajectory = RelativeTrajectory.from_dataframe(dataset.df_val.iloc[indices]).to_global()
-        predicted_trajectory = RelativeTrajectory.from_dataframe(predictions.iloc[indices]).to_global()
+        
+def get_configs(dataset_root: Path):
 
-        predicted_trajectory.plot('plot_{}.html'.format(trajectory_id))
+    trajectories = list()
+    for d in dataset_root.iterdir():
+        traj = dict()
+        traj['name'] = d.name
+        traj['csv'] = d.joinpath('camera_gt.csv')
 
-        metrics = calculate_metrics(gt_trajectory, predicted_trajectory, prefix='val')
-        records.append(metrics)
+        if traj['csv'].exists():
+            trajectories.append(traj)
 
-        title = '{}: {}'.format(trajectory_id.upper(), metrics)
-        visualize_trajectory(predicted_trajectory, title=title, is_3d=True,
-                             file_name='visualize_3d_{}.html'.format(trajectory_id))
-        visualize_trajectory(predicted_trajectory, title=title, is_3d=False,
-                             file_name='visualize_2d_{}.html'.format(trajectory_id))
+    #how do we split trajectories?
+    #train = trajectories[:100]
+    #val = trajectories[100:150]
+    #test = trajectories[150:]
 
-        visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, is_3d=True,
-                                     file_name='visualize_3d_with_gt_{}.html'.format(trajectory_id))
-        visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, is_3d=False,
-                                     file_name='visualize_2d_with_gt_{}.html'.format(trajectory_id))
+    #this is a toy example
+    train = trajectories[:1]
+    val = trajectories[1:2]
+    test = trajectories[2:3]
 
-    averaged_metrics = average_metrics(records, prefix="test_")
-    mlflow.log_metrics(averaged_metrics)
-    print(averaged_metrics)
-
-
-def get_config(dataset_type):
-
-    if dataset_type == "kitti_1":
-        config = configs.get_kitti_config_1()
-        mlflow.set_experiment('kitti_1')
-    elif dataset_type == "kitti_2":
-        config = configs.get_kitti_config_2()
-        mlflow.set_experiment('kitti_2')
-    elif dataset_type == "discoman_iros_1":
-        config = configs.get_discoman_iros_1_config()
-        mlflow.set_experiment("discoman_iros_1")
-    elif dataset_type == "discoman_debug":
-        config = configs.get_discoman_debug_config()
-        mlflow.set_experiment("discoman_debug")
-    else:
-        raise RuntimeError("Unexpected dataset type")
-
-    return config
+    configs = {'train_trajectories': train, 'val_trajectories': val, 'test_trajectories': test}
+    return configs
 
 
-def main(dataset_root, dataset_type):
-
-    config = get_config(dataset_type)
-
-    mlflow.set_experiment(dataset_type)
-
+if __name__ == '__main__':
+    mlflow.set_experiment('discoman_v10_unzip')
     with mlflow.start_run(run_name='default_setup'):
-        # All parameters
-        epochs = 3
-        mlflow.log_param("epochs", epochs)
-        mlflow.log_param("date", datetime.datetime.today().isoformat())
+
+        #All parameters
+        epochs = 1
+        mlflow.log_param('epochs', epochs)
         target_size = (120, 160)
+        dataset_root = 'discoman'
+
+        configs = get_configs(Path(env.DATASET_PATH).joinpath('Odometry_team/discoman_v10_unzip'))
+        prepare_dataset(list(itertools.chain(configs['train_trajectories'], configs['val_trajectories'], configs['test_trajectories'])),
+                        dataset_root=dataset_root,
+                        target_size=target_size)
 
         dataset = GeneratorFactory(
             csv_name='df.csv',
             dataset_root=dataset_root,
-            train_sequences=config['train_sequences'],
-            val_sequences=config['val_sequences'],
+            train_trajectories=[c['name'] for c in configs['train_trajectories']],
+            val_trajectories=[c['name'] for c in configs['val_trajectories']],
+            test_trajectories=[c['name'] for c in configs['test_trajectories']],
             target_size=target_size,
             x_col=['path_to_optical_flow'],
-            image_columns=['path_to_optical_flow'],
-            load_modes=['flow_xy'],
-            preprocess_modes=['flow_xy'],
+            image_col=['path_to_optical_flow'],
+            load_mode=['flow_xy'],
+            preprocess_mode=['flow_xy'],
             val_sampling_step=2,
-            cached_imgs={}
+            test_sampling_step=2,
+            cached_images={}
         )
 
-        construct_graph_fn = partial(construct_flexible_model, use_gated_convolutions=False)
+        construct_graph_fn = functools.partial(construct_flexible_model, use_gated_convolutions=False)
         model_factory = ModelFactory(
             construct_graph_fn,
             input_shapes=dataset.input_shapes,
@@ -155,33 +151,11 @@ def main(dataset_root, dataset_type):
         )
         model = model_factory.construct()
 
-        train(dataset=dataset, model=model, epochs=epochs)
-
-        dataset = GeneratorFactory(
-            csv_name='df.csv',
-            dataset_root=dataset_root,
-            train_sequences=[],
-            val_sequences=config['test_sequences'],
-            target_size=target_size,
-            x_col=['path_to_optical_flow'],
-            image_columns=['path_to_optical_flow'],
-            load_modes=['flow_xy'],
-            preprocess_modes=['flow_xy'],
-            val_sampling_step=2,
-            cached_imgs={}
+        train(dataset=dataset,
+              model=model,
+              epochs=epochs,
+              predictions_dir='predictions',
+              visuals_dir='visuals',
+              period=1,
+              save_best_only=True
         )
-
-        test(dataset, model)
-
-
-if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_root", type=str, help="path to dataset",
-                        default='/dbstore/datasets/Odometry_team/discoman_v10_full/')
-    parser.add_argument("--dataset_type", type=str, help="possible variants: kitti_1, kitti_2, discoman_iros_1,"
-                                                         " discoman_debug , tum",
-                        default='discoman_iros_1')
-
-    args = parser.parse_args()
-    main(args.dataset_root, args.dataset_type)

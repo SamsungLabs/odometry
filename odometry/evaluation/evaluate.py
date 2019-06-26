@@ -176,7 +176,18 @@ def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full', prefi
     return metrics
 
 
-def average_metrics(records, prefix=''):
+def normalize_metrics(metrics):
+    normalized_metrics = OrderedDict()
+    for metric_name in metrics:
+        normalized_metrics[metric_name] = metrics[metric_name]
+
+    normalized_metrics['RPE_t'] /= normalized_metrics['RPE_divider']
+    normalized_metrics['RPE_r'] /= normalized_metrics['RPE_divider']
+    del normalized_metrics['RPE_divider']
+    return normalized_metrics
+
+
+def average_metrics(records):
     if len(records) == 0:
         return []
 
@@ -184,11 +195,7 @@ def average_metrics(records, prefix=''):
     for metric_name in ('ATE', 'RMSE_t', 'RMSE_r'):
         averaged_metrics[metric_name] = np.mean([record[metric_name] for record in records])
 
-    total_rpe_divider = np.sum([record['RPE_divider'] for record in records])
-    total_rpe_translation = np.sum([record['RPE_t'] for record in records])
-    total_rpe_rotation = np.sum([record['RPE_r'] for record in records])
-    averaged_metrics['RPE_t'] = total_rpe_translation / total_rpe_divider
-    averaged_metrics['RPE_r'] = total_rpe_rotation / total_rpe_divider
+    for metric_name in ('RPE_t', 'RPE_r', 'RPE_divider'):
+        total_average_metrics[metric_name] = np.sum([record[metric_name] for record in records])
 
-    averaged_metrics = {prefix + i[0]: i[1] for i in averaged_metrics.items()}
-    return averaged_metrics
+    return normalize_metrics(total_average_metrics)
