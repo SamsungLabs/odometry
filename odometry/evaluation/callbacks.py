@@ -40,24 +40,50 @@ class PredictCallback(keras.callbacks.Callback):
         os.makedirs(os.path.join(self.visuals_dir, prediction_id, subset), exist_ok=True)
         return os.path.join(self.visuals_dir, prediction_id, subset, f'{trajectory_id}.html')
 
+    def _create_prediction_filename(self, prediction_id, subset, trajectory_id):
+        os.makedirs(os.path.join(self.predictions_dir, prediction_id, subset), exist_ok=True)
+        return os.path.join(self.predictions_dir, prediction_id, subset, f'{trajectory_id}.csv')
+
+    @staticmethod
+    def _create_trajectory(df):
+        return RelativeTrajectory.from_dataframe(df).to_global()
+
+    def _maybe_save_trajectory(self, prediction_id, subset, trajectory_id, trajectory):
+        if not self.save_predictions:
+            return
+        file_name = self._create_prediction_filename(prediction_id, subset, trajectory_id)
+        trajectory.to_dataframe().to_csv(file_name)
+
+    def _maybe_visualize_trajectory(self, prediction_id, subset, trajectory_id, predicted_trajectory,
+                                    gt_trajectory=None, trajectory_metrics=None):
+        if not self.save_visuals:
+            return
+
+        file_name = self._create_visualization_filename(prediction_id, subset, trajectory_id)
+        if gt_trajectory is None:
+            title = trajectory_id.upper()
+            visualize_trajectory(predicted_trajectory, title=title, file_name=file_name)
+        else:
+            normalized_metrics = normalize_metrics(trajectory_metrics)
+            normalized_metrics_as_str = ', '.join(['{}: {:.6f}'.format(key, value)
+                                                   for key, value in normalized_metrics.items()])
+            title = f'{trajectory_id.upper()}: {normalized_metrics_as_str}'
+            visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_name=file_name)
+
     def _evaluate(self, generator, gt, subset, prediction_id):
         predictions = self._predict(generator, gt, subset, prediction_id)
 
         records = []
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
-            gt_trajectory = RelativeTrajectory.from_dataframe(gt.iloc[indices]).to_global()
-            predicted_trajectory = RelativeTrajectory.from_dataframe(predictions.iloc[indices]).to_global()
+            gt_trajectory = self._create_trajectory(gt.iloc[indices])
+            predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
+            self._maybe_save_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
 
             trajectory_metrics = calculate_metrics(gt_trajectory, predicted_trajectory)
             records.append(trajectory_metrics)
 
-            if self.save_visuals:
-                normalized_metrics = normalize_metrics(trajectory_metrics)
-                normalized_metrics_as_str = ', '.join(['{}: {:.6f}'.format(key, value)
-                                                       for key, value in normalized_metrics.items()])
-                title = f'{trajectory_id.upper()}: {normalized_metrics_as_str}'
-                file_name = self._create_visualization_filename(prediction_id, subset, trajectory_id)
-                visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_name=file_name)
+            self._maybe_visualize_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory,
+                                             gt_trajectory, trajectory_metrics)
 
         total_metrics = {f'{subset}_{key}': value for key, value in average_metrics(records).items()}
         return total_metrics
@@ -66,19 +92,15 @@ class PredictCallback(keras.callbacks.Callback):
         predictions = self._predict(generator, gt, subset, prediction_id)
 
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
-            predicted_trajectory = RelativeTrajectory.from_dataframe(predictions.iloc[indices]).to_global()
-
-            title = trajectory_id.upper()
-            file_name = self._create_visualization_filename(prediction_id, subset, trajectory_id)
-            visualize_trajectory(predicted_trajectory, title=title, file_name=file_name)
+            predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
+            self._maybe_save_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
+            self._maybe_visualize_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
 
     def _predict(self, generator, gt, subset, prediction_id):
         model_output = self.model.predict_generator(generator, steps=len(generator))
-        predictions = pd.DataFrame(data=np.concatenate(model_output, 1),
+        predictions = pd.DataFrame(data=np.stack(model_output)[..., 0].transpose(),
                                    index=gt.index,
                                    columns=self.dataset.y_col)
-        if self.save_predictions:
-            predictions.to_csv(os.path.join(self.predictions_dir, f'{prediction_id}_{subset}.csv'))
         return predictions
 
     def on_epoch_end(self, epoch, logs={}):
@@ -100,5 +122,4 @@ class PredictCallback(keras.callbacks.Callback):
         mlflow.log_metrics({'epoch': epoch, **train_metrics, **val_metrics})
 
     def on_train_end(self, epoch, logs={}):
-        if self.save_visuals:
-            self._visualize(self.dataset.get_test_generator(), self.dataset.df_test, 'test', 'test')
+        self._visualize(self.dataset.get_test_generator(), self.dataset.df_test, 'test', 'test')
