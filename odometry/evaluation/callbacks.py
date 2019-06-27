@@ -25,7 +25,7 @@ class PredictCallback(keras.callbacks.Callback):
 
         self.period = period
         self.epoch_counter = 0
-        self.best_loss = 9999999
+        self.best_loss = np.inf
         self.save_best_only = save_best_only
 
         self.save_visuals = self.visuals_dir is not None
