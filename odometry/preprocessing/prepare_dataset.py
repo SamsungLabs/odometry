@@ -21,7 +21,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint=None):
+def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint=None, pwc_features=False):
 
     single_frame_estimators = list()
 
@@ -38,6 +38,7 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
                                                                   width=target_size[1])
         single_frame_estimators.append(struct2depth_estimator)
 
+
     cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
     input_col = cols + [col + '_next' for col in cols]
     output_col = cols
@@ -50,6 +51,14 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
                                                   checkpoint=optical_flow_checkpoint)
 
     pair_frames_estimators = [global2relative_estimator, pwcnet_estimator]
+
+    if pwc_features:
+        features_extractor = estimators.PWCNetFeatureExtractor(input_col=['path_to_rgb', 'path_to_rgb_next'],
+                                                  output_col='path_to_optical_flow',
+                                                  sub_dir='optical_flow',
+                                                  checkpoint=optical_flow_checkpoint)
+        pair_frames_estimators.append(features_extractor)
+
     return single_frame_estimators, pair_frames_estimators
 
 
@@ -57,7 +66,7 @@ def initialize_parser(dataset_type):
     if dataset_type == 'kitti':
         return parsers.KITTIParser
     elif dataset_type == 'discoman':
-        return parsers.DISCOMANJSONParser
+        return parsers.DISCOMANCSVParser
     elif dataset_type == 'tum':
         return parsers.TUMParser
     elif dataset_type == 'retailbot':
