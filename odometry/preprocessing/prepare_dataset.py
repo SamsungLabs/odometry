@@ -104,7 +104,7 @@ def set_logger(output_dir):
 
 
 def prepare_dataset(dataset_type, dataset_root, output_dir, target_size, optical_flow_checkpoint,
-                    depth_checkpoint=None):
+                    depth_checkpoint=None, pwc_features=False):
 
     limit_resources()
 
@@ -116,7 +116,8 @@ def prepare_dataset(dataset_type, dataset_root, output_dir, target_size, optical
 
     sf_estimators, pf_estimators = initialize_estimators(target_size,
                                                          optical_flow_checkpoint=optical_flow_checkpoint,
-                                                         depth_checkpoint=depth_checkpoint)
+                                                         depth_checkpoint=depth_checkpoint, 
+                                                         pwc_features=pwc_features)
 
     parser_class = initialize_parser(dataset_type)
     trajectories = get_all_trajectories(dataset_root)

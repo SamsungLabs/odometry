@@ -49,7 +49,8 @@ class TestDatasets(unittest.TestCase):
                         output_dir=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
-                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
+                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
+                        pwc_features=True
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
@@ -70,7 +71,8 @@ class TestDatasets(unittest.TestCase):
                         output_dir=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
-                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
+                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
+                        pwc_features=True
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
@@ -91,7 +93,8 @@ class TestDatasets(unittest.TestCase):
                         output_dir=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
-                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
+                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
+                        pwc_features=True
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
@@ -112,7 +115,8 @@ class TestDatasets(unittest.TestCase):
                         output_dir=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
-                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
+                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
+                        pwc_features=True
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
