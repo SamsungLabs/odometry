@@ -194,9 +194,9 @@ class GlobalTrajectory(AbstractTrajectory):
     def align_with(self, reference_trajectory, by='mean'):
         rotation_matrix, translation, scale = align(self.points, reference_trajectory.points, by=by)
         trajectory_aligned = GlobalTrajectory()
-        for point in self.points:
-            t_aligned = scale * np.dot(point, rotation_matrix) + translation
-            rotation_matrix_aligned = convert_euler_angles_to_rotation_matrix(np.dot(point, rotation_matrix))
+        for pos in self.positions:
+            t_aligned = scale * np.dot([pos.translation], rotation_matrix.T)[0] + translation
+            rotation_matrix_aligned = rotation_matrix@pos.quaternion.rotation_matrix
             q_aligned = Quaternion(matrix=rotation_matrix_aligned).normalised
             trajectory_aligned.positions.append(QuaternionWithTranslation(q_aligned, t_aligned))
 
