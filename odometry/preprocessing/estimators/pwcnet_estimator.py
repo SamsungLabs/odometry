@@ -15,8 +15,7 @@ class PWCNetEstimator(NetworkEstimator):
     def __init__(self, *args, **kwargs):
         super(PWCNetEstimator, self).__init__(*args, **kwargs)
         self.name = 'PWCNet'
-        
-        
+
     def get_nn_opts(self):
         nn_opts = copy.deepcopy(_DEFAULT_PWCNET_TEST_OPTIONS)
         nn_opts['verbose'] = True
