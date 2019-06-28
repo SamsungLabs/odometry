@@ -43,11 +43,11 @@ class QuaternionWithTranslation:
                 't_x': t[0], 't_y': t[1], 't_z': t[2]}
 
     @classmethod
-    def from_euler_angles(cls, euler_angles_and_translation):
-        euler_angles = [euler_angles_and_translation['euler_x'], euler_angles_and_translation['euler_y'], euler_angles_and_translation['euler_z']]
+    def from_euler_angles(cls, euler_angles_with_translation):
+        euler_angles = [euler_angles_with_translation['euler_x'], euler_angles_with_translation['euler_y'], euler_angles_with_translation['euler_z']]
         rotation_matrix = convert_euler_angles_to_rotation_matrix(euler_angles)
         quaternion = Quaternion(matrix=rotation_matrix)
-        translation = [euler_angles_and_translation['t_x'], euler_angles_and_translation['t_y'], euler_angles_and_translation['t_z']]
+        translation = [euler_angles_with_translation['t_x'], euler_angles_with_translation['t_y'], euler_angles_with_translation['t_z']]
         return cls(q=quaternion, t=translation)
 
     def to_semi_global(self, origin):

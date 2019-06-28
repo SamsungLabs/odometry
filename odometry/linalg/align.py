@@ -44,8 +44,8 @@ def align(trajectory_points, reference_trajectory_points, by='mean'):
     if np.linalg.det(U) * np.linalg.det(Vh) < 0:
         S[2, 2] = -1
 
-    rotation_matrix = (U @ S @ Vh).transpose()
-    trajectory_points_rotated = trajectory_points_shifted @ rotation_matrix
+    rotation_matrix = U @ S @ Vh
+    trajectory_points_rotated = trajectory_points_shifted @ rotation_matrix.T
     
     dots = 0.0
     norms = 0.0
@@ -54,5 +54,5 @@ def align(trajectory_points, reference_trajectory_points, by='mean'):
         norms += np.inner(trajectory_points_shifted[index], trajectory_points_shifted[index])
 
     scale = float(dots / norms)
-    translation = reference_align_point - scale * (align_point @ rotation_matrix)
+    translation = reference_align_point - scale * (align_point @ rotation_matrix.T)
     return rotation_matrix, translation, scale

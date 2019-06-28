@@ -153,7 +153,7 @@ def calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory):
         ATE
     '''
     predicted_trajectory_aligned = predicted_trajectory.align_with(gt_trajectory)
-    elementwise_differences = (predicted_trajectory.points - gt_trajectory.points).reshape(-1, 3, 1)
+    elementwise_differences = (predicted_trajectory_aligned.points - gt_trajectory.points).reshape(-1, 3, 1)
     pointwise_distances = np.sum(elementwise_differences ** 2, axis=(1, 2))
     return np.mean(pointwise_distances) ** 0.5
 
@@ -196,6 +196,6 @@ def average_metrics(records):
         averaged_metrics[metric_name] = np.mean([record[metric_name] for record in records])
 
     for metric_name in ('RPE_t', 'RPE_r', 'RPE_divider'):
-        total_average_metrics[metric_name] = np.sum([record[metric_name] for record in records])
+        averaged_metrics[metric_name] = np.sum([record[metric_name] for record in records])
 
-    return normalize_metrics(total_average_metrics)
+    return normalize_metrics(averaged_metrics)
