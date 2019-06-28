@@ -8,6 +8,8 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building..'
+                sh 'git status'
+                sh 'cat .gitmodules'
                 sh 'rm -rf weights'
                 sh 'ln -s /weights weights'
             }
