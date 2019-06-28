@@ -18,10 +18,12 @@ class PWCNetFeatureExtractor(PWCNetEstimator):
 
     def __init__(self, *args, **kwargs):
         super(PWCNetFeatureExtractor, self).__init__(*args, **kwargs)
-
-        self.nn_opts['ret_feat'] = True
-
         self.name = 'PWCNetExtractor'
+
+    def get_nn_opts(self):
+        nn_opts = super(PWCNetFeatureExtractor, self).get_nn_opts()
+        nn_opts['ret_feat'] = True
+        return nn_opts
 
     def _run_model_inference(self, model_input):
         return self.model.return_features(model_input, batch_size=1, verbose=False)

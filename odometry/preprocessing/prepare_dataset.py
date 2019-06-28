@@ -54,8 +54,8 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
 
     if pwc_features:
         features_extractor = estimators.PWCNetFeatureExtractor(input_col=['path_to_rgb', 'path_to_rgb_next'],
-                                                  output_col='path_to_optical_flow',
-                                                  sub_dir='optical_flow',
+                                                  output_col='path_to_features',
+                                                  sub_dir='features',
                                                   checkpoint=optical_flow_checkpoint)
         pair_frames_estimators.append(features_extractor)
 
