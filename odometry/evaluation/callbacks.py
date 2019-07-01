@@ -12,6 +12,56 @@ from odometry.linalg import RelativeTrajectory
 from odometry.utils import visualize_trajectory, visualize_trajectory_with_gt
 
 
+def on_batch_end(cls, batch, logs=None):
+    cls.params['metrics'] = ['loss', 'val_loss']
+
+    logs = logs or {}
+    batch_size = logs.get('size', 0)
+    if cls.use_steps:
+        cls.seen += 1
+    else:
+        cls.seen += batch_size
+
+    for k in cls.params['metrics']:
+        if k in logs:
+            cls.log_values.append((k, logs[k]))
+
+    if cls.verbose and cls.seen < cls.target:
+        cls.progbar.update(cls.seen, cls.log_values)
+
+
+keras.callbacks.ProgbarLogger.on_batch_end = on_batch_end
+
+
+class TerminateOnLR(keras.callbacks.Callback):
+    '''Stop training when a lr has become less than passed min_lr.
+    # Arguments
+        monitor: quantity to be monitored.
+        verbose: verbosity mode.
+        min_lr: Threshold value for the monitored quantity to reach.
+            Training will stop if the monitored value is less than min_lr.
+    '''
+    def __init__(self,
+                 min_lr=None,
+                 verbose=0):
+        super(TerminateOnLR, self).__init__()
+        self.verbose = verbose
+        self.min_lr = min_lr
+        self.stopped_epoch = 0
+
+    def on_epoch_end(self, epoch, logs=None):
+        lr = K.get_value(self.model.optimizer.lr)
+        mlflow.log_metric('lr', lr)
+        if lr < self.min_lr:
+            self.stopped_epoch = epoch
+            self.model.stop_training = True
+
+    def on_train_end(self, logs=None):
+        if self.stopped_epoch > 0 and self.verbose > 0:
+            lr = K.get_value(self.model.optimizer.lr)
+            print(f'Epoch {self.stopped_epoch}: terminated on lr = {lr} < {self.min_lr}')
+
+
 class Evaluate(keras.callbacks.Callback):
     def __init__(self,
                  model,
