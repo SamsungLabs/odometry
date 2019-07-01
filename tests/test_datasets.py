@@ -35,6 +35,10 @@ class TestDatasets(unittest.TestCase):
         self.assertTrue(len(df['path_to_optical_flow']) == (num_files - 1))
         for path in df['path_to_optical_flow']:
             self.assertTrue(os.path.isfile(os.path.join(trajectory_dir, path)))
+            
+        self.assertTrue(len(df['path_to_features']) == (num_files - 1))
+        for path in df['path_to_features']:
+            self.assertTrue(os.path.isfile(os.path.join(trajectory_dir, path)))
 
     def test_tum(self) -> None:
         print('Started TUM test')
@@ -45,7 +49,8 @@ class TestDatasets(unittest.TestCase):
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
-                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
+                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
+                        pwc_features=True
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
@@ -66,7 +71,8 @@ class TestDatasets(unittest.TestCase):
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
-                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
+                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
+                        pwc_features=True
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
@@ -87,7 +93,8 @@ class TestDatasets(unittest.TestCase):
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
-                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
+                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
+                        pwc_features=True
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
@@ -108,7 +115,8 @@ class TestDatasets(unittest.TestCase):
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
-                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
+                        depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
+                        pwc_features=True
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))

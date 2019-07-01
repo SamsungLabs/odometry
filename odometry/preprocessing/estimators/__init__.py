@@ -6,6 +6,8 @@ from .struct2depth_estimator import Struct2DepthEstimator
 
 from .pwcnet_estimator import PWCNetEstimator
 
+from .pwcnet_feature_extractor import PWCNetFeatureExtractor
+
 #from .senet_estimator import SENetEstimator
 
 

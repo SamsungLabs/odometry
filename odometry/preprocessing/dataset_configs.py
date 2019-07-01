@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-
+DATASET_TYPES = ['kitti_1', 'kitti_2', 'discoman_v10', 'discoman_debug']
 def append_root(config, dataset_root):
     for k in ['train_trajectories', 'val_trajectories', 'test_trajectories']:
         if config[k] is not None:
@@ -19,6 +19,9 @@ def get_config(dataset_root, dataset_type):
         config = append_root(config, dataset_root)
     elif dataset_type == 'discoman_v10':
         config = get_discoman_v10_config(dataset_root)
+    elif dataset_type == 'discoman_debug':
+        config = get_discoman_debug_config()
+        config = append_root(config, dataset_root)
     else:
         raise RuntimeError('Unexpected name of config for training')
     return config
@@ -90,9 +93,9 @@ def get_discoman_v10_config(dataset_root):
 
 def get_discoman_debug_config():
     config = {
-        'train_trajectories': ['000001'],
-        'val_trajectories': ['000001'],
-        'test_trajectories': ['000001'],
+        'train_trajectories': ['train/000001'],
+        'val_trajectories': ['val/000230'],
+        'test_trajectories': ['test/000200'],
         'exp_name': 'discoman_debug',
         'target_size': (90, 160),
          }

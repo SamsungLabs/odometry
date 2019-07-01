@@ -14,7 +14,7 @@ from odometry.preprocessing import parsers, estimators, prepare_trajectory
 from odometry.utils.utils import str2bool
 
 
-def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint=None):
+def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint=None, pwc_features=False):
 
     single_frame_estimators = list()
 
@@ -43,6 +43,14 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
                                                   checkpoint=optical_flow_checkpoint)
 
     pair_frames_estimators = [global2relative_estimator, pwcnet_estimator]
+
+    if pwc_features:
+        features_extractor = estimators.PWCNetFeatureExtractor(input_col=['path_to_rgb', 'path_to_rgb_next'],
+                                                  output_col='path_to_features',
+                                                  sub_dir='features',
+                                                  checkpoint=optical_flow_checkpoint)
+        pair_frames_estimators.append(features_extractor)
+
     return single_frame_estimators, pair_frames_estimators
 
 
@@ -50,7 +58,7 @@ def initialize_parser(dataset_type):
     if dataset_type == 'kitti':
         return parsers.KITTIParser
     elif dataset_type == 'discoman':
-        return parsers.DISCOMANJSONParser
+        return parsers.DISCOMANCSVParser
     elif dataset_type == 'tum':
         return parsers.TUMParser
     elif dataset_type == 'retailbot':
@@ -72,16 +80,20 @@ def get_all_trajectories(dataset_root):
             list(dataset_root.glob('rgb.txt')) or \
             list(dataset_root.glob('image_2')) or \
             list(dataset_root.glob('camera_gt.csv')):
-        logger.info(f'Trajectory {dataset_root.as_posix()} added')
-        trajectories.append(dataset_root.as_posix())
+
+        if not ("secret" in dataset_root.as_posix()):
+            logger.info(f'Trajectory {dataset_root.as_posix()} added')
+            trajectories.append(dataset_root.as_posix())
 
     for d in dataset_root.rglob('**/*'):
         if list(d.glob('*traj.json')) or \
                 list(d.glob('rgb.txt')) or \
                 list(d.glob('image_2')) or \
                 list(d.glob('camera_gt.csv')):
-            logger.info(f'Trajectory {d.as_posix()} added')
-            trajectories.append(d.as_posix())
+
+            if not ("secret" in d.as_posix()):
+                logger.info(f'Trajectory {d.as_posix()} added')
+                trajectories.append(d.as_posix())
 
     logger.info(f'Total: {len(trajectories)}')
     return trajectories
@@ -97,7 +109,7 @@ def set_logger(output_dir):
 
 
 def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optical_flow_checkpoint,
-                    depth_checkpoint=None):
+                    depth_checkpoint=None, pwc_features=False):
 
     limit_resources()
 
@@ -110,7 +122,8 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
 
     sf_estimators, pf_estimators = initialize_estimators(target_size,
                                                          optical_flow_checkpoint=optical_flow_checkpoint,
-                                                         depth_checkpoint=depth_checkpoint)
+                                                         depth_checkpoint=depth_checkpoint,
+                                                         pwc_features=pwc_features)
 
     parser_class = initialize_parser(dataset_type)
     trajectories = get_all_trajectories(dataset_root)
@@ -123,7 +136,7 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
 
     for trajectory in tqdm(trajectories):
         trajectory_parser = parser_class(trajectory)
-        trajectory_name = trajectory[len(dataset_root)+1:]
+        trajectory_name = trajectory[len(dataset_root):]
         output_dir = output_root.joinpath(trajectory_name)
         logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}')
 
@@ -137,7 +150,7 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
         except Exception as e:
             logger.info(e)
             logger.info(f'WARNING! Trajectory {trajectory} failed to prepare')
-            shutil.rmtree(output_dir.as_posix())
+            shutil.rmtree(output_dir.as_posix(), ignore_errors=True)
 
 
 if __name__ == '__main__':

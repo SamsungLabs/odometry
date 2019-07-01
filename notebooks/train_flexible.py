@@ -7,7 +7,7 @@ import env
 from odometry.data_manager import GeneratorFactory
 from odometry.evaluation import PredictCallback
 from odometry.models import ModelFactory, construct_flexible_model
-from odometry.preprocessing.dataset_configs import get_config
+from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
 from odometry.utils.utils import str2bool
 
 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset_root', '-r', type=str, help='Directory with trajectories', required=True)
     parser.add_argument('--dataset_type', '-t', type=str,
-                        choices=['kitti_1', 'kitti_2', 'tum', 'discoman_v10'], required=True
+                        choices=DATASET_TYPES, required=True
                         )
     parser.add_argument('--epochs', '-e', type=int, help='Number of epochs to train', required=True)
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',

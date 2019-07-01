@@ -16,7 +16,7 @@ class PWCNetEstimator(NetworkEstimator):
         super(PWCNetEstimator, self).__init__(*args, **kwargs)
         self.name = 'PWCNet'
 
-    def _load_model(self):
+    def get_nn_opts(self):
         nn_opts = copy.deepcopy(_DEFAULT_PWCNET_TEST_OPTIONS)
         nn_opts['verbose'] = True
         nn_opts['ckpt_path'] = self.checkpoint
@@ -32,6 +32,10 @@ class PWCNetEstimator(NetworkEstimator):
         nn_opts['use_res_cx'] = True
         nn_opts['pyr_lvls'] = 6
         nn_opts['flow_pred_lvl'] = 2
+        return nn_opts 
+
+    def _load_model(self):
+        nn_opts = self.get_nn_opts()
         self.model = pwc_net(mode='test', options=nn_opts)
 
     def _convert_model_output_to_prediction(self, optical_flow):
