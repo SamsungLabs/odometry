@@ -2,6 +2,7 @@ from .model_factory import PretrainedModelFactory
 from .model_factory import ModelFactory
 from .model_factory import ModelWithDecoderFactory
 from .model_factory import ConstantModelFactory
+from .model_factory import ModelWithConfidenceFactory
 
 from .networks import construct_simple_model
 from .networks import construct_constant_model
@@ -12,6 +13,7 @@ from .networks import construct_ls_vo_model
 from .networks import construct_ls_vo_rt_model
 from .networks import construct_ls_vo_rt_no_decoder_model
 from .networks import construct_flexible_model
+from .networks import construct_flexible_model_with_confidence
 from .networks import construct_rigidity_model
 
 
@@ -20,6 +22,7 @@ __all__ = [
     'ModelFactory',
     'ModelWithDecoderFactory',
     'ConstantModelFactory',
+    'ModelWithConfidenceFactory',
     'construct_simple_model',
     'construct_constant_model',
     'construct_resnet50_model',
@@ -29,5 +32,6 @@ __all__ = [
     'construct_ls_vo_rt_model',
     'construct_ls_vo_rt_no_decoder_model',
     'construct_flexible_model',
+    'construct_flexible_model_with_confidence',
     'construct_rigidity_model'
 ]
