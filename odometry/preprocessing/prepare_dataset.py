@@ -46,9 +46,9 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
 
     if pwc_features:
         features_extractor = estimators.PWCNetFeatureExtractor(input_col=['path_to_rgb', 'path_to_rgb_next'],
-                                                  output_col='path_to_features',
-                                                  sub_dir='features',
-                                                  checkpoint=optical_flow_checkpoint)
+                                                               output_col='path_to_features',
+                                                               sub_dir='features',
+                                                               checkpoint=optical_flow_checkpoint)
         pair_frames_estimators.append(features_extractor)
 
     return single_frame_estimators, pair_frames_estimators
@@ -81,9 +81,8 @@ def get_all_trajectories(dataset_root):
             list(dataset_root.glob('image_2')) or \
             list(dataset_root.glob('camera_gt.csv')):
 
-        if not ("secret" in dataset_root.as_posix()):
-            logger.info(f'Trajectory {dataset_root.as_posix()} added')
-            trajectories.append(dataset_root.as_posix())
+        logger.info(f'Trajectory {dataset_root.as_posix()} added')
+        trajectories.append(dataset_root.as_posix())
 
     for d in dataset_root.rglob('**/*'):
         if list(d.glob('*traj.json')) or \
@@ -91,9 +90,8 @@ def get_all_trajectories(dataset_root):
                 list(d.glob('image_2')) or \
                 list(d.glob('camera_gt.csv')):
 
-            if not ("secret" in d.as_posix()):
-                logger.info(f'Trajectory {d.as_posix()} added')
-                trajectories.append(d.as_posix())
+            logger.info(f'Trajectory {d.as_posix()} added')
+            trajectories.append(d.as_posix())
 
     logger.info(f'Total: {len(trajectories)}')
     return trajectories
@@ -135,12 +133,13 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
         json.dump(dataset_config, f)
 
     for trajectory in tqdm(trajectories):
-        trajectory_parser = parser_class(trajectory)
         trajectory_name = trajectory[len(dataset_root):]
         output_dir = output_root.joinpath(trajectory_name)
         logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}')
 
         try:
+            trajectory_parser = parser_class(trajectory)
+
             df = prepare_trajectory(output_dir,
                                     parser=trajectory_parser,
                                     single_frame_estimators=sf_estimators,
