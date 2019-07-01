@@ -18,6 +18,10 @@ class Global2RelativeEstimator(BaseEstimator):
         self.name = 'Global2Relative'
 
     def run(self, row, dataset_root=None):
+
+        if not (set(self.input_col) <= set(dict(row).keys())):
+            return row
+
         dof = row[self.input_col[:6]].values
         next_dof = row[self.input_col[6:]].values
 

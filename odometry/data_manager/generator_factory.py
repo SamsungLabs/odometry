@@ -1,5 +1,7 @@
 import os
+import json
 import pickle
+import mlflow
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -33,46 +35,75 @@ class GeneratorFactory:
                  *args, **kwargs):
 
         self.dataset_root = dataset_root
+
+        dataset_config_path = os.path.join(dataset_root, 'prepare_dataset.json')
+        try:
+            with open(dataset_config_path, 'r') as f:
+                dataset_config = json.load(f)
+                mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
+                mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
+        except FileNotFoundError:
+            print('WARNINIG!!!. No prepare_dataset.json for this dataset. You need to rerun prepare_dataset.py'
+                  f'for this dataset. Path {dataset_config_path}')
+            mlflow.log_param('depth_checkpoint', None)
+            mlflow.log_param('optical_flow_checkpoint', None)
+
         self.csv_name = csv_name
 
         self.x_col = list(x_col)
         self.y_col = list(y_col)
         self.image_col = list(image_col)
+        mlflow.log_param('image_col', image_col)
+
+        mlflow.log_param('x_col', x_col)
+        mlflow.log_param('y_col', y_col)
 
         self.batch_size = batch_size
+        mlflow.log_param('batch_size', batch_size)
 
         assert validate_on_train_trajectory == bool(val_ratio)
         if validate_on_train_trajectory:
             assert val_trajectories is None
             val_trajectories = train_trajectories
+            mlflow.log_param('val_on_train', validate_on_train_trajectory)
 
         self.train_trajectories = train_trajectories
         self.val_trajectories = val_trajectories
         self.test_trajectories = test_trajectories
 
-        self.df_train = self._get_multi_df_dataset(self.train_trajectories) \
-            if self.train_trajectories else None
+        self.df_train = self._get_multi_df_dataset(self.train_trajectories)
         self.df_val = self._get_multi_df_dataset(self.val_trajectories)
         self.df_test = self._get_multi_df_dataset(self.test_trajectories)
 
         if number_of_folds is not None:
             val_ratio = 1. / number_of_folds
+            mlflow.log_param('val_ratio', val_ratio)
 
         if val_ratio:
-            val_samples = int(np.ceil(val_ratio * len(self.df_val))) # upper-round to cover all dataset with k folds
+            val_samples = int(np.ceil(val_ratio * len(self.df_val)))  # upper-round to cover all dataset with k folds
             start = val_samples * fold_index
             end = start + val_samples
             print(f'fold #{fold_index}: validate on samples {start} -- {end} (out of {len(self.df_val)})')
             self.df_train = pd.concat([self.df_train[:start], self.df_train[end:]])
             self.df_val = self.df_val[start:end]
 
-        self.df_train = self.df_train.iloc[::train_sampling_step]
-        self.df_val = self.df_val.iloc[::val_sampling_step]
-        self.df_test = self.df_test.iloc[::test_sampling_step]
+        self.df_train = self.df_train.iloc[::train_sampling_step] if self.df_train is not None else None
+        mlflow.log_param('train_sampling_step', train_sampling_step)
+
+        self.df_val = self.df_val.iloc[::val_sampling_step] if self.df_val is not None else None
+        mlflow.log_param('val_sampling_step', val_sampling_step)
+
+        self.df_test = self.df_test.iloc[::test_sampling_step] if self.df_test is not None else None
+        mlflow.log_param('test_sampling_step', test_sampling_step)
 
         self.train_generator_args = train_generator_args or {}
+        mlflow.log_param('train_generator_args', self.train_generator_args)
+
         self.val_generator_args = val_generator_args or {}
+        mlflow.log_param('val_generator_args', self.val_generator_args)
+
         self.test_generator_args = test_generator_args or {}
+        mlflow.log_param('test_generator_args', self.test_generator_args)
 
         self.args = args
         self.kwargs = kwargs
@@ -85,7 +116,12 @@ class GeneratorFactory:
             if self.train_trajectories else self.get_val_generator().input_shapes
 
     def _get_multi_df_dataset(self, trajectories):
+
         df = None
+
+        if not trajectories:
+            return df
+
         for trajectory_name in tqdm(trajectories):
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
             current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
@@ -111,6 +147,10 @@ class GeneratorFactory:
         print(f'Saved cached images to {cache_file}')
 
     def _get_generator(self, dataframe, generator_args, trajectory=False):
+
+        if dataframe is None:
+            return None
+
         if trajectory:
             shuffle = False
             filter_invalid = False

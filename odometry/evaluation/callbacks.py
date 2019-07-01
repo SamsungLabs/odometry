@@ -71,7 +71,11 @@ class PredictCallback(keras.callbacks.Callback):
             visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_name=file_name)
 
     def _evaluate(self, generator, gt, subset, prediction_id):
-        predictions = self._predict(generator, gt, subset, prediction_id)
+
+        if generator is None:
+            return dict()
+
+        predictions = self._predict(generator, gt)
 
         records = []
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
@@ -89,14 +93,14 @@ class PredictCallback(keras.callbacks.Callback):
         return total_metrics
 
     def _visualize(self, generator, gt, subset, prediction_id):
-        predictions = self._predict(generator, gt, subset, prediction_id)
+        predictions = self._predict(generator, gt)
 
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
             predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
             self._maybe_save_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
             self._maybe_visualize_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
 
-    def _predict(self, generator, gt, subset, prediction_id):
+    def _predict(self, generator, gt):
         model_output = self.model.predict_generator(generator, steps=len(generator))
         predictions = pd.DataFrame(data=np.stack(model_output)[..., 0].transpose(),
                                    index=gt.index,
@@ -121,5 +125,5 @@ class PredictCallback(keras.callbacks.Callback):
         val_metrics = self._evaluate(self.dataset.get_val_generator(), self.dataset.df_val, 'val', prediction_id)
         mlflow.log_metrics({'epoch': epoch, **train_metrics, **val_metrics})
 
-    def on_train_end(self, epoch, logs={}):
+    def on_train_end(self, logs={}):
         self._visualize(self.dataset.get_test_generator(), self.dataset.df_test, 'test', 'test')
