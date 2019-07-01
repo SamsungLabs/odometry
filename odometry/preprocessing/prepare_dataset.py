@@ -5,20 +5,12 @@ import argparse
 from tqdm import tqdm
 from pathlib import Path
 
-from . import __init_path__
+import __init_path__
 import env
 
 from odometry.utils.computation_utils import limit_resources
 from odometry.preprocessing import parsers, estimators, prepare_trajectory
-
-
-def str2bool(v):
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+from odometry.utils.utils import str2bool
 
 
 def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint=None):
@@ -82,6 +74,7 @@ def get_all_trajectories(dataset_root):
             logger.info(f'Trajectory {d.as_posix()} added')
             trajectories.append(d.as_posix())
 
+    logger.info(f'Total: {len(trajectories)}')
     return trajectories
 
 
@@ -94,16 +87,16 @@ def set_logger(output_dir):
     logger.addHandler(fh)
 
 
-def prepare_dataset(dataset_type, dataset_root, output_dir, target_size, optical_flow_checkpoint,
+def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optical_flow_checkpoint,
                     depth_checkpoint=None):
 
     limit_resources()
 
-    if not isinstance(output_dir, Path):
-        output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if not isinstance(output_root, Path):
+        output_root = Path(output_root)
+    output_root.mkdir(parents=True, exist_ok=True)
 
-    set_logger(output_dir)
+    set_logger(output_root)
 
     sf_estimators, pf_estimators = initialize_estimators(target_size,
                                                          optical_flow_checkpoint=optical_flow_checkpoint,
@@ -112,14 +105,16 @@ def prepare_dataset(dataset_type, dataset_root, output_dir, target_size, optical
     parser_class = initialize_parser(dataset_type)
     trajectories = get_all_trajectories(dataset_root)
 
-    with open(output_dir.joinpath('config.json').as_posix(), mode='w+') as f:
-        dataset_config = {'depth_checkpoint': depth_checkpoint, 'optical_flow_checkpoint': optical_flow_checkpoint}
+    with open(output_root.joinpath('prepare_dataset.json').as_posix(), mode='w+') as f:
+        dataset_config = {'depth_checkpoint': depth_checkpoint,
+                          'optical_flow_checkpoint': optical_flow_checkpoint,
+                          'target_size': target_size}
         json.dump(dataset_config, f)
 
     for trajectory in tqdm(trajectories):
         trajectory_parser = parser_class(trajectory)
         trajectory_name = os.path.basename(trajectory)
-        output_dir = output_dir.joinpath(trajectory_name)
+        output_dir = output_root.joinpath(trajectory_name)
         df = prepare_trajectory(output_dir.as_posix(),
                                 parser=trajectory_parser,
                                 single_frame_estimators=sf_estimators,
@@ -130,20 +125,20 @@ def prepare_dataset(dataset_type, dataset_root, output_dir, target_size, optical
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, choices=['kitti', 'discoman', 'tum', 'retailbox'])
-    parser.add_argument('--dataset_root', type=str)
-    parser.add_argument('--output_dir', type=str)
+    parser.add_argument('--dataset', type=str, choices=['kitti', 'discoman', 'tum', 'retailbox'], required=True)
+    parser.add_argument('--dataset_root', type=str, required=True)
+    parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--of_checkpoint', type=str,
                         default='/Vol0/user/f.konokhov/tfoptflow/tfoptflow/tmp/pwcnet.ckpt-84000')
     parser.add_argument('--depth', type=str2bool, default=True)
     parser.add_argument('--depth_checkpoint', type=str,
                         default=os.path.join(env.PROJECT_PATH, 'weights/model-199160'))
-    parser.add_argument('--target_size', type=int, nargs='+')
+    parser.add_argument('--target_size', type=int, nargs='+', required=True)
     args = parser.parse_args()
 
     prepare_dataset(args.dataset,
                     dataset_root=args.dataset_root,
-                    output_dir=args.output_dir,
+                    output_root=args.output_dir,
                     target_size=args.target_size,
                     optical_flow_checkpoint=args.of_checkpoint,
                     depth_checkpoint=args.depth_checkpoint if args.depth else None)

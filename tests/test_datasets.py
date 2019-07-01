@@ -1,5 +1,5 @@
 import unittest
-import __init_path__
+from . import __init_path__
 import env
 import os
 from pathlib import Path
@@ -42,7 +42,7 @@ class TestDatasets(unittest.TestCase):
         num_files = 7
         prepare_dataset(dataset_type='tum',
                         dataset_root=os.path.join(env.DATASET_PATH, 'tum_rgbd_flow'),
-                        output_dir=self.output_dir.as_posix(),
+                        output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
@@ -63,7 +63,7 @@ class TestDatasets(unittest.TestCase):
 
         prepare_dataset(dataset_type='discoman',
                         dataset_root=os.path.join(env.DATASET_PATH, 'renderbox'),
-                        output_dir=self.output_dir.as_posix(),
+                        output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
@@ -84,7 +84,7 @@ class TestDatasets(unittest.TestCase):
 
         prepare_dataset(dataset_type='kitti',
                         dataset_root=os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012'),
-                        output_dir=self.output_dir.as_posix(),
+                        output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
@@ -105,7 +105,7 @@ class TestDatasets(unittest.TestCase):
 
         prepare_dataset(dataset_type='retailbot',
                         dataset_root=os.path.join(env.DATASET_PATH, 'retail_bot'),
-                        output_dir=self.output_dir.as_posix(),
+                        output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160')
