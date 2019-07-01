@@ -68,9 +68,9 @@ class GeneratorFactory:
         self.val_trajectories = val_trajectories
         self.test_trajectories = test_trajectories
 
-        self.df_train = self._get_multi_df_dataset(self.train_trajectories)
-        self.df_val = self._get_multi_df_dataset(self.val_trajectories)
-        self.df_test = self._get_multi_df_dataset(self.test_trajectories)
+        self.df_train = self._get_multi_df_dataset(self.train_trajectories, 'train')
+        self.df_val = self._get_multi_df_dataset(self.val_trajectories, 'val')
+        self.df_test = self._get_multi_df_dataset(self.test_trajectories, 'test')
 
         if number_of_folds is not None:
             val_ratio = 1. / number_of_folds
@@ -107,12 +107,10 @@ class GeneratorFactory:
 
     def _get_multi_df_dataset(self, trajectories, subset=''):
         df = None
-
         if not trajectories:
             return df
 
         for trajectory_name in tqdm.tqdm(trajectories, desc=f'Collect {subset} trajectories'):
-
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
             current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
             current_df['trajectory_id'] = trajectory_name
