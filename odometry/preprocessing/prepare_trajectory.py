@@ -2,7 +2,7 @@ import os
 import shutil
 import tqdm
 import pandas as pd
-
+from pathlib import Path
 
 def force_make_dir(column_dst_dir):
     if os.path.exists(column_dst_dir):
@@ -50,20 +50,25 @@ def prepare_trajectory(root,
                        single_frame_estimators=None, 
                        pair_frames_estimators=None,
                        stride=1):
+
+    if not isinstance(root, Path):
+        root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+
     assert stride >= 1
     if single_frame_estimators is None:
         single_frame_estimators = []
     if pair_frames_estimators is None:
         pair_frames_estimators = []
 
-    single_frame_df = work_with_parser(root, parser)
+    single_frame_df = work_with_parser(root.as_posix(), parser)
 
     for estimator in single_frame_estimators:
-        single_frame_df = work_with_estimator(root, single_frame_df, estimator)
+        single_frame_df = work_with_estimator(root.as_posix(), single_frame_df, estimator)
 
     paired_frame_df = transform_single_frame_df_to_paired(single_frame_df, stride)
 
     for estimator in pair_frames_estimators:
-        paired_frame_df = work_with_estimator(root, paired_frame_df, estimator)
+        paired_frame_df = work_with_estimator(root.as_posix(), paired_frame_df, estimator)
 
     return paired_frame_df

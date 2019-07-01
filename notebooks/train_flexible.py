@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset_root', '-r', type=str, help='Directory with trajectories', required=True)
     parser.add_argument('--dataset_type', '-t', type=str,
-                        choices=['kitti_1', 'kitti_2', 'tum', 'discoman_iros2019'], required=True
+                        choices=['kitti_1', 'kitti_2', 'tum', 'discoman_v10'], required=True
                         )
     parser.add_argument('--epochs', '-e', type=int, help='Number of epochs to train', required=True)
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',

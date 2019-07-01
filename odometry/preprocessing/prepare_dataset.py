@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 import logging
 import argparse
 from tqdm import tqdm
@@ -66,6 +67,14 @@ def get_all_trajectories(dataset_root):
     logger = logging.getLogger('prepare_dataset')
 
     trajectories = list()
+
+    if list(dataset_root.glob('*traj.json')) or \
+            list(dataset_root.glob('rgb.txt')) or \
+            list(dataset_root.glob('image_2')) or \
+            list(dataset_root.glob('camera_gt.csv')):
+        logger.info(f'Trajectory {dataset_root.as_posix()} added')
+        trajectories.append(dataset_root.as_posix())
+
     for d in dataset_root.rglob('**/*'):
         if list(d.glob('*traj.json')) or \
                 list(d.glob('rgb.txt')) or \
@@ -97,6 +106,7 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
     output_root.mkdir(parents=True, exist_ok=True)
 
     set_logger(output_root)
+    logger = logging.getLogger('prepare_dataset')
 
     sf_estimators, pf_estimators = initialize_estimators(target_size,
                                                          optical_flow_checkpoint=optical_flow_checkpoint,
@@ -113,14 +123,21 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
 
     for trajectory in tqdm(trajectories):
         trajectory_parser = parser_class(trajectory)
-        trajectory_name = os.path.basename(trajectory)
+        trajectory_name = trajectory[len(dataset_root)+1:]
         output_dir = output_root.joinpath(trajectory_name)
-        df = prepare_trajectory(output_dir.as_posix(),
-                                parser=trajectory_parser,
-                                single_frame_estimators=sf_estimators,
-                                pair_frames_estimators=pf_estimators,
-                                stride=1)
-        df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
+        logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}')
+
+        try:
+            df = prepare_trajectory(output_dir,
+                                    parser=trajectory_parser,
+                                    single_frame_estimators=sf_estimators,
+                                    pair_frames_estimators=pf_estimators,
+                                    stride=1)
+            df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
+        except Exception as e:
+            logger.info(e)
+            logger.info(f'WARNING! Trajectory {trajectory} failed to prepare')
+            shutil.rmtree(output_dir.as_posix())
 
 
 if __name__ == '__main__':

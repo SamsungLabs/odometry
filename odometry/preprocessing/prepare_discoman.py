@@ -3,7 +3,7 @@ import os
 
 import __init_path__
 import env
-from . import prepare_dataset
+from odometry.preprocessing.prepare_dataset import prepare_dataset
 from odometry.utils.utils import str2bool
 
 if __name__ == '__main__':
@@ -17,10 +17,10 @@ if __name__ == '__main__':
                         default=os.path.join(env.PROJECT_PATH, 'weights/model-199160'))
     args = parser.parse_args()
 
-    prepare_dataset.prepare_dataset(dataset_type='discoman',
-                                    dataset_root=args.dataset_root,
-                                    output_root=args.output_dir,
-                                    target_size=(90, 160),
-                                    optical_flow_checkpoint=args.of_checkpoint,
-                                    depth_checkpoint=args.depth_checkpoint if args.depth else None)
+    prepare_dataset(dataset_type='discoman',
+                    dataset_root=args.dataset_root,
+                    output_root=args.output_dir,
+                    target_size=(90, 160),
+                    optical_flow_checkpoint=args.of_checkpoint,
+                    depth_checkpoint=args.depth_checkpoint if args.depth else None)
 
