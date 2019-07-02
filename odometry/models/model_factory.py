@@ -70,18 +70,13 @@ class ModelFactory:
                  loss=mean_squared_error,
                  scale_rotation=1.,
                  scale_translation=1.):
+        mlflow.log_params(locals())
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
-        mlflow.log_param('input_shapes', input_shapes)
         self.optimizer = Adam(lr=lr, amsgrad=True)
-        mlflow.log_param('optimizer', 'Adam')
-        mlflow.log_param('learning_rate', lr)
         self.loss_fn = self._get_loss_function(loss)
-        mlflow.log_param('loss function', loss)
         self.loss = [self.loss_fn] * 6
         self.loss_weights = [scale_rotation] * 3 + [scale_translation] * 3
-        mlflow.log_param('scale_rotation', scale_rotation)
-        mlflow.log_param('scale_translation', scale_translation)
         self.metrics = dict(zip(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z'), [rmse] * 6))
 
     @staticmethod

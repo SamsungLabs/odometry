@@ -38,7 +38,6 @@ def train(dataset_root: str,
     mlflow.set_experiment(config['exp_name'])
     mlflow.start_run(run_name=run_name)
 
-
     #  All parameters
     mlflow.log_param('run_name', run_name)
     epochs = 2
@@ -98,9 +97,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--dataset_root', '-r', type=str, help='Directory with trajectories', required=True)
-    parser.add_argument('--dataset_type', '-t', type=str,
-                        choices=DATASET_TYPES, required=True
-                        )
+    parser.add_argument('--dataset_type', '-t', type=str, choices=DATASET_TYPES, required=True)
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
                         required=True)
     parser.add_argument('--prediction_dir', '-p', type=str, help='Name of subdir to store predictions',

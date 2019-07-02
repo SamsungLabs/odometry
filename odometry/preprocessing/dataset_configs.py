@@ -2,22 +2,21 @@ import os
 from pathlib import Path
 
 DATASET_TYPES = ['kitti_8/3', 'kitti_4/6', 'discoman_v10', 'discoman_debug', 'tum_debug']
-LEADER_BOARDS = ['kitti_4/6', 'discoman_v10', 'tum_debug']
 
 
 def append_root(config, dataset_root):
-    for k in ['train_trajectories', 'val_trajectories', 'test_trajectories']:
-        if config[k] is not None:
-            config[k] = [os.path.join(dataset_root, i) for i in config[k]]
+    for key in ['train_trajectories', 'val_trajectories', 'test_trajectories']:
+        if config[key] is not None:
+            config[key] = [os.path.join(dataset_root, i) for i in config[key]]
     return config
 
 
 def get_config(dataset_root, dataset_type):
 
-    if dataset_type == 'kitti_1':
+    if dataset_type == 'kitti_8/3':
         config = get_kitti_8_3_config()
         config = append_root(config, dataset_root)
-    elif dataset_type == 'kitti_2':
+    elif dataset_type == 'kitti_4/6':
         config = get_kitti_4_6_config()
         config = append_root(config, dataset_root)
     elif dataset_type == 'discoman_v10':
@@ -29,7 +28,7 @@ def get_config(dataset_root, dataset_type):
         config = get_tum_debug_config()
         config = append_root(config, dataset_root)
     else:
-        raise RuntimeError('Unexpected name of config for training')
+        raise RuntimeError(f'Unexpected name of config for training. Got {dataset_type}.')
     return config
 
 
@@ -85,14 +84,10 @@ def get_discoman_v10_config(dataset_root):
         'target_size': (90, 160),
          }
 
-    for trajectory in Path(dataset_root).joinpath('train').glob('*'):
-        config['train_trajectories'].append(trajectory.as_posix())
-
-    for trajectory in Path(dataset_root).joinpath('val').glob('*'):
-        config['val_trajectories'].append(trajectory.as_posix())
-
-    for trajectory in Path(dataset_root).joinpath('test').glob('*'):
-        config['test_trajectories'].append(trajectory.as_posix())
+    sub_dirs = ['train', 'val', 'test']
+    for d in sub_dirs:
+        for trajectory in Path(dataset_root).joinpath(d).glob('*'):
+            config[f'{d}_trajectories'].append(trajectory.as_posix())
 
     return config
 

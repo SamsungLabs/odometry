@@ -19,7 +19,7 @@ class Global2RelativeEstimator(BaseEstimator):
 
     def run(self, row, dataset_root=None):
 
-        if not (set(self.input_col) <= set(dict(row).keys())):
+        if not set(self.input_col) <= set(dict(row).keys()):
             return row
 
         dof = row[self.input_col[:6]].values
