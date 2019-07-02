@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
 
-DATASET_TYPES = ['kitti_1', 'kitti_2', 'discoman_v10', 'discoman_debug']
+DATASET_TYPES = ['kitti_8/3', 'kitti_4/6', 'discoman_v10', 'discoman_debug', 'tum_debug']
+LEADER_BOARDS = ['kitti_4/6', 'discoman_v10', 'tum_debug']
+
+
 def append_root(config, dataset_root):
     for k in ['train_trajectories', 'val_trajectories', 'test_trajectories']:
         if config[k] is not None:
@@ -12,22 +15,25 @@ def append_root(config, dataset_root):
 def get_config(dataset_root, dataset_type):
 
     if dataset_type == 'kitti_1':
-        config = get_kitti_1_config()
+        config = get_kitti_8_3_config()
         config = append_root(config, dataset_root)
     elif dataset_type == 'kitti_2':
-        config = get_kitti_2_config()
+        config = get_kitti_4_6_config()
         config = append_root(config, dataset_root)
     elif dataset_type == 'discoman_v10':
         config = get_discoman_v10_config(dataset_root)
     elif dataset_type == 'discoman_debug':
         config = get_discoman_debug_config()
         config = append_root(config, dataset_root)
+    elif dataset_type == 'tum_debug':
+        config = get_tum_debug_config()
+        config = append_root(config, dataset_root)
     else:
         raise RuntimeError('Unexpected name of config for training')
     return config
 
 
-def get_kitti_1_config():
+def get_kitti_8_3_config():
     config = {'train_trajectories': ['00',
                                      '01',
                                      '02',
@@ -44,13 +50,13 @@ def get_kitti_1_config():
                                    ],
 
               'test_trajectories': None,
-              'exp_name': 'kitti_1',
+              'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
               }
     return config
 
 
-def get_kitti_2_config():
+def get_kitti_4_6_config():
     config = {'train_trajectories': ['00',
                                      '02',
                                      '08',
@@ -64,7 +70,7 @@ def get_kitti_2_config():
                                    '10'
                                    ],
               'test_trajectories': None,
-              'exp_name': 'kitti_2',
+              'exp_name': 'kitti_4/6',
               'target_size': (96, 320)
               }
     return config
@@ -98,6 +104,17 @@ def get_discoman_debug_config():
         'test_trajectories': ['test/000200'],
         'exp_name': 'discoman_debug',
         'target_size': (90, 160),
+         }
+    return config
+
+
+def get_tum_debug_config():
+    config = {
+        'train_trajectories': ['rgbd_dataset_freiburg2_dishes'],
+        'val_trajectories': ['rgbd_dataset_freiburg1_teddy'],
+        'test_trajectories': ['rgbd_dataset_freiburg3_large_cabinet'],
+        'exp_name': 'tum_debug',
+        'target_size': (120, 160),
          }
     return config
 

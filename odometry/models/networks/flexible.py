@@ -1,5 +1,6 @@
 from keras.layers.merge import concatenate
 from keras.layers import Flatten
+import mlflow
 
 from odometry.models.layers import (concat,
                                     conv2d,
@@ -45,7 +46,19 @@ def construct_flexible_model(inputs,
                              use_batchnorm=False,
                              strides=[2, 1, 4, 1],
                              dilation_rates=None,
-                             kernel_sizes = [7, 5, 3, 3]):
+                             kernel_sizes=[7, 5, 3, 3]):
+
+    mlflow.log_param('model name', 'Flexible')
+    mlflow.log_param('model.hidden_size', hidden_size)
+    mlflow.log_param('model.regularization', regularization)
+    mlflow.log_param('model.activation', activation)
+    mlflow.log_param('model.kernel_initializer', kernel_initializer)
+    mlflow.log_param('model.use_gated_convolutions', use_gated_convolutions)
+    mlflow.log_param('model.use_batch_norm', use_batchnorm)
+    mlflow.log_param('model.stride', strides)
+    mlflow.log_param('model.dilation_rates', dilation_rates)
+    mlflow.log_param('model.kernel_size', kernel_sizes)
+
     inputs = concat(inputs)
     features = construct_encoder(inputs,
                                  use_gated_convolutions=use_gated_convolutions,

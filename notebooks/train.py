@@ -14,18 +14,34 @@ from odometry.utils.utils import str2bool
 def train(dataset_root: str,
           dataset_type: str,
           run_name: str,
-          epochs: int,
           predictions_dir: str = None,
           visuals_dir: str = None,
           period: int = 1,
           save_best_only: bool = True
           ) -> None:
+    """
+    This is script that shows how to use our small framework. You're welcome to modify it and experiment with new models.
+
+    :param dataset_root:
+    :param dataset_type:
+    :param run_name:
+    :param predictions_dir:
+    :param visuals_dir:
+    :param period:
+    :param save_best_only:
+    :return:
+    """
 
     config = get_config(dataset_root, dataset_type)
+
+    # MLFlow initialization
     mlflow.set_experiment(config['exp_name'])
     mlflow.start_run(run_name=run_name)
 
+
     #  All parameters
+    mlflow.log_param('run_name', run_name)
+    epochs = 2
     mlflow.log_param('epochs', epochs)
 
     dataset = GeneratorFactory(
@@ -85,7 +101,6 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_type', '-t', type=str,
                         choices=DATASET_TYPES, required=True
                         )
-    parser.add_argument('--epochs', '-e', type=int, help='Number of epochs to train', required=True)
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
                         required=True)
     parser.add_argument('--prediction_dir', '-p', type=str, help='Name of subdir to store predictions',
@@ -101,7 +116,6 @@ if __name__ == '__main__':
     train(dataset_root=args.dataset_root,
           dataset_type=args.dataset_type,
           run_name=args.run_name,
-          epochs=args.epochs,
           predictions_dir=args.prediction_dir,
           visuals_dir=args.visuals_dir,
           period=args.period,

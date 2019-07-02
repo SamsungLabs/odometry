@@ -127,7 +127,9 @@ class PredictCallback(keras.callbacks.Callback):
         prediction_id = '{:03d}_train:{:.6f}_val:{:.6f}'.format(epoch + 1, train_loss, val_loss)
         train_metrics = self._evaluate(self.dataset.get_train_generator(), self.dataset.df_train, 'train', prediction_id)
         val_metrics = self._evaluate(self.dataset.get_val_generator(), self.dataset.df_val, 'val', prediction_id)
-        mlflow.log_metrics({'epoch': epoch, **train_metrics, **val_metrics})
+
+        [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in train_metrics.items()]
+        [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in val_metrics.items()]
 
     def on_train_end(self, logs={}):
 
