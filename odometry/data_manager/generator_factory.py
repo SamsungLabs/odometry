@@ -37,7 +37,7 @@ class GeneratorFactory:
 
         params = locals()
         params.pop('self', None)
-        mlflow.log_params({'generator.' + k: repr(v) if 'trajectories' not in k else None for k, v in params.items()})
+        mlflow.log_params({'generator.' + k: repr(v) for k, v in params.items() if 'trajectories' not in k})
 
         self.dataset_root = dataset_root
 
