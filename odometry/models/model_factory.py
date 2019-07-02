@@ -70,7 +70,9 @@ class ModelFactory:
                  loss=mean_squared_error,
                  scale_rotation=1.,
                  scale_translation=1.):
-        mlflow.log_params(locals())
+        params = locals()
+        params.pop('self', None)
+        mlflow.log_params({'model_factory.' + k: repr(v) for k, v in params.items()})
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
         self.optimizer = Adam(lr=lr, amsgrad=True)

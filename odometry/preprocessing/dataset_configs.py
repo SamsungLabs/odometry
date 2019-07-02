@@ -11,7 +11,7 @@ def get_config(dataset_root: str, dataset_type: str) -> Dict:
     assert dataset_type in DATASET_TYPES
 
     this_module = sys.modules[__name__]
-    dataset_type = dataset_type.replace('/ ', '_')
+    dataset_type = dataset_type.replace('/', '_')
     config = getattr(this_module, f'get_{dataset_type}_config')(dataset_root)
 
     return config

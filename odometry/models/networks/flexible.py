@@ -49,7 +49,7 @@ def construct_flexible_model(inputs,
                              kernel_sizes=[7, 5, 3, 3]):
 
     mlflow.log_param('model.name', 'Flexible')
-    mlflow.log_params({'model.' + k: v for k, v in locals().items()})
+    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items()})
 
     inputs = concat(inputs)
     features = construct_encoder(inputs,
