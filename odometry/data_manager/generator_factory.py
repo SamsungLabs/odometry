@@ -48,7 +48,7 @@ class GeneratorFactory:
                 mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
                 mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
         except FileNotFoundError:
-            warnings.warn('WARNINIG!!!. No prepare_dataset.json for this dataset. You need to rerun prepare_dataset.py'
+            warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun prepare_dataset.py'
                           f'for this dataset. Path {dataset_config_path}', UserWarning)
             mlflow.log_param('depth_checkpoint', None)
             mlflow.log_param('optical_flow_checkpoint', None)
