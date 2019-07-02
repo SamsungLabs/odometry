@@ -238,7 +238,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                 if image.mode != 'RGB':
                     image = image.convert('RGB')
 
-            image_arr = np.asarray(image, dtype="float32")
+            image_arr = np.asarray(image, dtype='float32')
 
             if hasattr(image, 'close'):
                 image.close()
@@ -271,7 +271,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         if load_mode in ('depth', 'disparity'):
             if (image_arr == 0).all():
-                print('invalid depth')
                 if self.filter_invalid:
                     return None
 
@@ -370,10 +369,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         return batch_x, batch_y
 
     def next(self):
-        """For python 2.x.
+        '''For python 2.x.
         # Returns
             The next batch.
-        """
+        '''
         with self.lock:
             index_array = next(self.index_generator)
         # The transformation of images is not under thread lock
