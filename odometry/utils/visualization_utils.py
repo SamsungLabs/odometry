@@ -1,10 +1,10 @@
 import os
 import numpy as np
-
 import plotly
 import plotly.graph_objs as go
 from plotly.offline import init_notebook_mode, plot, iplot
-    
+
+
 def make_trace_and_start(xyz, is_gt, showlegend=True, is_3d=True):
     trace_color = 'orange' if is_gt else 'blue'
     if is_3d:
@@ -58,13 +58,13 @@ def init_figure(cols=3, is_3d=True):
 def get_scene_id(index):
     if index == 0:
         return 'scene'
-    return 'scene{}'.format(index+1)
+    return f'scene{index + 1}'
 
 
 def get_axis_id(index):
     if index == 0:
         return 'axis'
-    return 'axis{}'.format(index+1)
+    return f'axis{index + 1}'
     
 
 def update_figure(fig, values, cols=3, is_3d=True):
@@ -94,7 +94,7 @@ def update_figure(fig, values, cols=3, is_3d=True):
     return fig
 
 
-def save_figure(fig, title, cols=3, is_3d=True, file_name=None):
+def save_figure(fig, title, cols=3, is_3d=True, file_path=None):
     fig['layout'].update(title=title, height=1000)
     
     if is_3d:
@@ -106,8 +106,8 @@ def save_figure(fig, title, cols=3, is_3d=True, file_name=None):
         x_dom = [fig['layout']['x' + ax]['domain'] for ax in axes]
         y_dom = [fig['layout']['y' + ax]['domain'] for ax in axes]
 
-    if file_name is not None:
-        plot(fig, filename=file_name)
+    if file_path is not None:
+        plot(fig, filename=file_path)
     else:
         init_notebook_mode(connected=True)
         iplot(fig)
@@ -119,8 +119,8 @@ def append_multiple_traces_to_figure(fig, traces, row, col):
     return fig
 
 
-def visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title='', is_3d=True, file_name=None):
-    predicted_aligned_trajectory = predicted_trajectory.align_with(gt_trajectory)
+def visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title='', is_3d=True, file_path=None):
+    predicted_aligned_trajectory = predicted_trajectory.align_with(gt_trajectory, by='start')
     
     gt_trajectory_points = gt_trajectory.points
     predicted_trajectory_points = predicted_trajectory.points
@@ -144,10 +144,10 @@ def visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title='', 
     if not is_3d:
         values = values[:, np.array((0, 2, 3, 5))] # select values corresponding to 2d motion 
     fig = update_figure(fig, values, is_3d=is_3d)
-    save_figure(fig, title, cols=3, is_3d=is_3d, file_name=file_name)
+    save_figure(fig, title, cols=3, is_3d=is_3d, file_path=file_path)
 
 
-def visualize_trajectory(trajectory, title='', is_gt=False, is_3d=True, file_name=None):
+def visualize_trajectory(trajectory, title='', is_gt=False, is_3d=True, file_path=None):
     points = trajectory.points
     trace, start = make_trace_and_start(points, is_gt=False, is_3d=is_3d)
     
@@ -155,4 +155,4 @@ def visualize_trajectory(trajectory, title='', is_gt=False, is_3d=True, file_nam
     fig.append_trace(trace, 1, 1)
     fig.append_trace(start, 1, 1)
     fig = update_figure(fig, values=points, cols=1, is_3d=is_3d)
-    save_figure(fig, title, cols=1, is_3d=is_3d, file_name=file_name)
+    save_figure(fig, title, cols=1, is_3d=is_3d, file_path=file_path)
