@@ -13,7 +13,6 @@ from .networks import construct_ls_vo_model
 from .networks import construct_ls_vo_rt_model
 from .networks import construct_ls_vo_rt_no_decoder_model
 from .networks import construct_flexible_model
-from .networks import construct_flexible_model_with_confidence
 from .networks import construct_rigidity_model
 
 
@@ -32,6 +31,5 @@ __all__ = [
     'construct_ls_vo_rt_model',
     'construct_ls_vo_rt_no_decoder_model',
     'construct_flexible_model',
-    'construct_flexible_model_with_confidence',
     'construct_rigidity_model'
 ]

@@ -34,34 +34,34 @@ def construct_encoder(inputs,
                       batchnorm=True if use_batchnorm and i == 0 else False,
                       activation='relu',
                       kernel_initializer=kernel_initializer)
-   
+
     flatten1 = Flatten()(inputs)
     return flatten1
 
 
 def construct_flexible_model(inputs,
-                             cropping=((0, 0), (0, 0)),
+                             kernel_sizes=[7, 5, 3, 3],
+                             strides=[2, 1, 4, 1],
+                             dilation_rates=None,
                              hidden_size=500,
                              regularization=0,
                              activation='relu',
                              kernel_initializer='glorot_normal',
                              use_gated_convolutions=True,
                              use_batchnorm=False,
-                             strides=[2, 1, 4, 1],
-                             dilation_rates=None,
-                             kernel_sizes=[7, 5, 3, 3]):
-
+                             return_confidence=True
+                            ):
     mlflow.log_param('model.name', 'Flexible')
     mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items()})
 
     inputs = concat(inputs)
     features = construct_encoder(inputs,
-                                 use_gated_convolutions=use_gated_convolutions,
-                                 use_batchnorm=use_batchnorm,
+                                 kernel_sizes = kernel_sizes,
                                  strides=strides,
                                  dilation_rates=dilation_rates,
-                                 kernel_sizes = kernel_sizes,
-                                 kernel_initializer=kernel_initializer)
+                                 kernel_initializer=kernel_initializer,
+                                 use_gated_convolutions=use_gated_convolutions,
+                                 use_batchnorm=use_batchnorm)
     fc2_rotation = construct_double_fc(features,
                                        hidden_size=hidden_size,
                                        regularization=regularization,
@@ -75,42 +75,9 @@ def construct_flexible_model(inputs,
                                           kernel_initializer=kernel_initializer,
                                           name='translation')
     outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization)
-    return outputs
+    if not return_confidence:
+        return outputs
 
-
-def construct_flexible_model_with_confidence(inputs,
-                                             cropping=((0, 0), (0, 0)),
-                                             hidden_size=500,
-                                             regularization=0,
-                                             activation='relu',
-                                             kernel_initializer='glorot_normal',
-                                             use_gated_convolutions=True,
-                                             use_batchnorm=False,
-                                             strides=[2, 1, 4, 1],
-                                             dilation_rates=None,
-                                             kernel_sizes=[7, 5, 3, 3]):
-    inputs = concat(inputs)
-    features = construct_encoder(inputs,
-                                 use_gated_convolutions=use_gated_convolutions,
-                                 use_batchnorm=use_batchnorm,
-                                 strides=strides,
-                                 dilation_rates=dilation_rates,
-                                 kernel_sizes = kernel_sizes,
-                                 kernel_initializer=kernel_initializer)
-    fc2_rotation = construct_double_fc(features,
-                                       hidden_size=hidden_size,
-                                       regularization=regularization,
-                                       activation=activation,
-                                       kernel_initializer=kernel_initializer,
-                                       name='rotation')
-    fc2_translation = construct_double_fc(features,
-                                          hidden_size=hidden_size,
-                                          regularization=regularization,
-                                          activation=activation,
-                                          kernel_initializer=kernel_initializer,
-                                          name='translation')
-    outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization)
     outputs_with_confidences = construct_outputs_with_confidences(outputs, fc2_rotation, fc2_translation,
-                                                                  regularization=regularization,
-                                                                  kernel_initializer=kernel_initializer)
+                                                                  regularization=regularization)
     return outputs_with_confidences
