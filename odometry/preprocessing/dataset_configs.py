@@ -1,7 +1,20 @@
 import os
+import sys
+from typing import Dict
 from pathlib import Path
 
 DATASET_TYPES = ['kitti_8/3', 'kitti_4/6', 'discoman_v10', 'discoman_debug', 'tum_debug']
+
+
+def get_config(dataset_root: str, dataset_type: str) -> Dict:
+
+    assert dataset_type in DATASET_TYPES
+
+    this_module = sys.modules[__name__]
+    dataset_type = dataset_type.replace('/ ', '_')
+    config = getattr(this_module, f'get_{dataset_type}_config')(dataset_root)
+
+    return config
 
 
 def append_root(config, dataset_root):
@@ -11,28 +24,7 @@ def append_root(config, dataset_root):
     return config
 
 
-def get_config(dataset_root, dataset_type):
-
-    if dataset_type == 'kitti_8/3':
-        config = get_kitti_8_3_config()
-        config = append_root(config, dataset_root)
-    elif dataset_type == 'kitti_4/6':
-        config = get_kitti_4_6_config()
-        config = append_root(config, dataset_root)
-    elif dataset_type == 'discoman_v10':
-        config = get_discoman_v10_config(dataset_root)
-    elif dataset_type == 'discoman_debug':
-        config = get_discoman_debug_config()
-        config = append_root(config, dataset_root)
-    elif dataset_type == 'tum_debug':
-        config = get_tum_debug_config()
-        config = append_root(config, dataset_root)
-    else:
-        raise RuntimeError(f'Unexpected name of config for training. Got {dataset_type}.')
-    return config
-
-
-def get_kitti_8_3_config():
+def get_kitti_8_3_config(dataset_root):
     config = {'train_trajectories': ['00',
                                      '01',
                                      '02',
@@ -52,10 +44,12 @@ def get_kitti_8_3_config():
               'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
               }
+
+    config = append_root(config, dataset_root)
     return config
 
 
-def get_kitti_4_6_config():
+def get_kitti_4_6_config(dataset_root):
     config = {'train_trajectories': ['00',
                                      '02',
                                      '08',
@@ -72,6 +66,7 @@ def get_kitti_4_6_config():
               'exp_name': 'kitti_4/6',
               'target_size': (96, 320)
               }
+    config = append_root(config, dataset_root)
     return config
 
 
@@ -92,7 +87,7 @@ def get_discoman_v10_config(dataset_root):
     return config
 
 
-def get_discoman_debug_config():
+def get_discoman_debug_config(dataset_root):
     config = {
         'train_trajectories': ['train/000001'],
         'val_trajectories': ['val/000230'],
@@ -100,10 +95,11 @@ def get_discoman_debug_config():
         'exp_name': 'discoman_debug',
         'target_size': (90, 160),
          }
+    config = append_root(config, dataset_root)
     return config
 
 
-def get_tum_debug_config():
+def get_tum_debug_config(dataset_root):
     config = {
         'train_trajectories': ['rgbd_dataset_freiburg2_dishes'],
         'val_trajectories': ['rgbd_dataset_freiburg1_teddy'],
@@ -111,6 +107,7 @@ def get_tum_debug_config():
         'exp_name': 'tum_debug',
         'target_size': (120, 160),
          }
+    config = append_root(config, dataset_root)
     return config
 
 

@@ -104,7 +104,7 @@ if __name__ == '__main__':
                         default='predictions')
     parser.add_argument('--visuals_dir', '-v', type=str, help='Name of subdir to store visualizations',
                         default='visuals')
-    parser.add_argument('--period', type=str, help='Period of evaluating train and val metrics',
+    parser.add_argument('--period', type=int, help='Period of evaluating train and val metrics',
                         default=1)
     parser.add_argument('--save_best_only', type=str2bool, help='Evaluate metrics only for best losses',
                         default=False)

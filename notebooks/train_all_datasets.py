@@ -4,6 +4,7 @@ import os
 from typing import List
 from pathlib import Path
 
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -26,7 +27,7 @@ def get_lsf_command(dataset_type: str, arguments: argparse.Namespace) -> List[st
 
     command = ['bsub',
                f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
-               '-gpu "num=1:mode=shared"',
+               '-gpu "num=1:mode=exclusive_process"',
                'python',
                f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "train.py")}',
                f'--dataset_root {dataset_root}',
@@ -50,7 +51,7 @@ if __name__ == '__main__':
                         default='predictions')
     parser.add_argument('--visuals_dir', '-v', type=str, help='Name of subdir to store visualizations',
                         default='visuals')
-    parser.add_argument('--period', type=str, help='Period of evaluating train and val metrics',
+    parser.add_argument('--period', type=int, help='Period of evaluating train and val metrics',
                         default=1)
     parser.add_argument('--save_best_only', type=str2bool, help='Evaluate metrics only for best losses',
                         default=False)

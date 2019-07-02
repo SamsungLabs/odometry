@@ -35,7 +35,7 @@ class GeneratorFactory:
                  cached_images=None,
                  *args, **kwargs):
 
-        mlflow.log_params({k: v if 'trajectories' not in k else os.path.basename(k) for k, v in locals().items()})
+        mlflow.log_params({k: v if 'trajectories' not in k else None for k, v in locals().items()})
 
         self.dataset_root = dataset_root
 
