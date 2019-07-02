@@ -23,7 +23,7 @@ class KITTIParser(ElementwiseParser):
         dataset_root = os.path.dirname(src_dir)
         self.pose_filepath = os.path.join(os.path.dirname(dataset_root), 'poses', '{}.txt'.format(trajectory_id))
         if not os.path.exists(self.pose_filepath):
-            raise RuntimeError(f'Could not find poses dir {self.pose_filepath}')
+            self.pose_filepath = None
 
         self.cols = ['path_to_rgb']
 
@@ -44,28 +44,35 @@ class KITTIParser(ElementwiseParser):
 
     def _load_data(self):
         self._load_image_filepaths()
-        self._load_poses()
-        assert len(self.pose_matrices) == len(self.image_filepaths)
-        self.trajectory = list(zip(self.pose_matrices, self.image_filepaths))
+
+        if self.pose_filepath:
+            self._load_poses()
+            assert len(self.pose_matrices) == len(self.image_filepaths)
+            self.trajectory = list(zip(self.image_filepaths, self.pose_matrices))
+        else:
+            self.trajectory = [[fpath] for fpath in self.image_filepaths]
 
     @staticmethod
     def get_quaternion(item):
-        rotation_matrix, translation = split_se3(item[0])
+        rotation_matrix, translation = split_se3(item[1])
         quaternion = pyquaternion.Quaternion(matrix=rotation_matrix).elements
         return quaternion
 
     @staticmethod
     def get_translation(item):
-        rotation_matrix, translation = split_se3(item[0])
+        rotation_matrix, translation = split_se3(item[1])
         return translation
 
     @staticmethod
     def get_path_to_rgb(item):
-        return item[1]
+        return item[0]
 
     def _parse_item(self, item):
         parsed_item = dict()
         parsed_item['path_to_rgb'] = self.get_path_to_rgb(item)
-        parsed_item.update(dict(zip(['q_w', 'q_x', 'q_y', 'q_z'], self.get_quaternion(item))))
-        parsed_item.update(dict(zip(['t_x', 't_y', 't_z'], self.get_translation(item))))
+
+        if self.pose_filepath:
+            parsed_item.update(dict(zip(['q_w', 'q_x', 'q_y', 'q_z'], self.get_quaternion(item))))
+            parsed_item.update(dict(zip(['t_x', 't_y', 't_z'], self.get_translation(item))))
+
         return parsed_item

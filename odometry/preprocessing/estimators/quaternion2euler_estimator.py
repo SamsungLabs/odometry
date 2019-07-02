@@ -16,6 +16,8 @@ class Quaternion2EulerEstimator(BaseEstimator):
         self.name = 'Quaternion2Euler'
 
     def run(self, row, dataset_root=None):
+        if not set(self.input_col) <= set(dict(row).keys()):
+            return row
         quaternion = Quaternion(row[self.input_col].values)
         euler_angles = convert_rotation_matrix_to_euler_angles(quaternion.rotation_matrix)
         row = self._drop_input(row)

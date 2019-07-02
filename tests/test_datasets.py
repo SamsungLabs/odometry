@@ -22,23 +22,17 @@ class TestDatasets(unittest.TestCase):
 
     def assert_df(self, df, trajectory_dir, num_files):
 
-        self.assertTrue(len(df['path_to_rgb']) == (num_files - 1), )
-        for path in df['path_to_rgb']:
-            self.assertTrue(os.path.isfile(os.path.join(trajectory_dir, path)))
-        self.assertTrue(os.path.isfile(os.path.join(trajectory_dir, df['path_to_rgb_next'].iloc[-1])))
+        columns = ['path_to_rgb', 'path_to_depth', 'path_to_optical_flow', 'path_to_features']
+        for column in columns:
+            self.assertTrue(len(df[column]) == (num_files - 1), )
+            for path in df[column]:
+                file_path = os.path.join(trajectory_dir, path)
+                self.assertTrue(os.path.isfile(file_path), f'Could not find file {file_path}')
 
-        self.assertTrue(len(df['path_to_depth']) == (num_files - 1))
-        for path in df['path_to_depth']:
-            self.assertTrue(os.path.isfile(os.path.join(trajectory_dir, path)))
-        self.assertTrue(os.path.isfile(os.path.join(trajectory_dir, df['path_to_depth_next'].iloc[-1])))
-
-        self.assertTrue(len(df['path_to_optical_flow']) == (num_files - 1))
-        for path in df['path_to_optical_flow']:
-            self.assertTrue(os.path.isfile(os.path.join(trajectory_dir, path)))
-            
-        self.assertTrue(len(df['path_to_features']) == (num_files - 1))
-        for path in df['path_to_features']:
-            self.assertTrue(os.path.isfile(os.path.join(trajectory_dir, path)))
+        columns = ['path_to_rgb_next', 'path_to_depth_next']
+        for column in columns:
+            file_path = os.path.join(trajectory_dir, df[column].iloc[-1])
+            self.assertTrue(os.path.isfile(file_path), f'Could not find file {file_path}')
 
     def test_tum(self) -> None:
         print('Started TUM test')
@@ -46,7 +40,7 @@ class TestDatasets(unittest.TestCase):
         num_files = 7
         prepare_dataset(dataset_type='tum',
                         dataset_root=os.path.join(env.DATASET_PATH, 'tum_rgbd_flow'),
-                        output_dir=self.output_dir.as_posix(),
+                        output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
@@ -54,7 +48,7 @@ class TestDatasets(unittest.TestCase):
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
-        self.assertTrue(len(csv_path) == 1)
+        self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
 
         csv_path = csv_path[0]
         trajectory_dir = csv_path.parent
@@ -68,7 +62,7 @@ class TestDatasets(unittest.TestCase):
 
         prepare_dataset(dataset_type='discoman',
                         dataset_root=os.path.join(env.DATASET_PATH, 'renderbox'),
-                        output_dir=self.output_dir.as_posix(),
+                        output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
@@ -76,7 +70,7 @@ class TestDatasets(unittest.TestCase):
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
-        self.assertTrue(len(csv_path) == 1)
+        self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
 
         csv_path = csv_path[0]
         trajectory_dir = csv_path.parent
@@ -90,7 +84,7 @@ class TestDatasets(unittest.TestCase):
 
         prepare_dataset(dataset_type='kitti',
                         dataset_root=os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012'),
-                        output_dir=self.output_dir.as_posix(),
+                        output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
@@ -98,7 +92,7 @@ class TestDatasets(unittest.TestCase):
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
-        self.assertTrue(len(csv_path) == 1)
+        self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
 
         csv_path = csv_path[0]
         trajectory_dir = csv_path.parent
@@ -112,7 +106,7 @@ class TestDatasets(unittest.TestCase):
 
         prepare_dataset(dataset_type='retailbot',
                         dataset_root=os.path.join(env.DATASET_PATH, 'retail_bot'),
-                        output_dir=self.output_dir.as_posix(),
+                        output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
@@ -120,7 +114,7 @@ class TestDatasets(unittest.TestCase):
                         )
 
         csv_path = list(self.output_dir.rglob("*.csv"))
-        self.assertTrue(len(csv_path) == 1)
+        self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
 
         csv_path = csv_path[0]
         trajectory_dir = csv_path.parent

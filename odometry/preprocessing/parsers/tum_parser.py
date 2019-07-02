@@ -50,7 +50,11 @@ class TUMParser(BaseParser):
     def associate_dataframes(dataframes, timestamp_cols):
         df = dataframes[0]
         timestamp_col = timestamp_cols[0]
+        df = df.drop_duplicates(timestamp_col)
         for other_df, other_timestamp_col in zip(dataframes[1:], timestamp_cols[1:]):
+
+            other_df = other_df.drop_duplicates(other_timestamp_col)
+
             timestamps, other_timestamps = \
                 TUMParser.associate_timestamps(df[timestamp_col].values, other_df[other_timestamp_col].values)
             df = df[df[timestamp_col].isin(timestamps)]
