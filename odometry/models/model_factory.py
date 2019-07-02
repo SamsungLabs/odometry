@@ -4,6 +4,7 @@ from keras.layers import Input
 from keras.models import Model, load_model
 from keras.optimizers import Adam
 
+
 from odometry.models.losses import (mean_squared_error,
                                     mean_absolute_error,
                                     mean_squared_logarithmic_error,
@@ -24,6 +25,7 @@ from odometry.models.layers import (activ,
                                     AssociationLayer,
                                     AddGridLayer)
 
+import mlflow
 
 class BaseModelFactory:
     def construct(self):
@@ -68,6 +70,9 @@ class ModelFactory:
                  loss=mean_squared_error,
                  scale_rotation=1.,
                  scale_translation=1.):
+        params = locals()
+        params.pop('self', None)
+        mlflow.log_params({'model_factory.' + k: repr(v) for k, v in params.items()})
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
         self.optimizer = Adam(lr=lr, amsgrad=True)

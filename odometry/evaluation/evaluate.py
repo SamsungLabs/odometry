@@ -1,4 +1,5 @@
 import numpy as np
+from collections import OrderedDict
 
 
 def calculate_distances_along_trajectory(points):
@@ -152,12 +153,12 @@ def calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory):
         ATE
     '''
     predicted_trajectory_aligned = predicted_trajectory.align_with(gt_trajectory)
-    elementwise_differences = (predicted_trajectory.points - gt_trajectory.points).reshape(-1, 3, 1)
+    elementwise_differences = (predicted_trajectory_aligned.points - gt_trajectory.points).reshape(-1, 3, 1)
     pointwise_distances = np.sum(elementwise_differences ** 2, axis=(1, 2))
     return np.mean(pointwise_distances) ** 0.5
 
 
-def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full'):
+def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full', prefix=''):
     ate = calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory)
     rpe_t, rpe_r, divider = calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
                                                           indices=indices, mode='rpe')
@@ -171,4 +172,30 @@ def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full'):
        'RPE_r': rpe_r,
        'RPE_divider': divider
     }
+
     return metrics
+
+
+def normalize_metrics(metrics):
+    normalized_metrics = OrderedDict()
+    for metric_name in metrics:
+        normalized_metrics[metric_name] = metrics[metric_name]
+
+    normalized_metrics['RPE_t'] /= normalized_metrics['RPE_divider']
+    normalized_metrics['RPE_r'] /= normalized_metrics['RPE_divider']
+    del normalized_metrics['RPE_divider']
+    return normalized_metrics
+
+
+def average_metrics(records):
+    if len(records) == 0:
+        return []
+
+    averaged_metrics = OrderedDict()
+    for metric_name in ('ATE', 'RMSE_t', 'RMSE_r'):
+        averaged_metrics[metric_name] = np.mean([record[metric_name] for record in records])
+
+    for metric_name in ('RPE_t', 'RPE_r', 'RPE_divider'):
+        averaged_metrics[metric_name] = np.sum([record[metric_name] for record in records])
+
+    return normalize_metrics(averaged_metrics)
