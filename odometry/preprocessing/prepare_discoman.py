@@ -11,7 +11,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_root', type=str, default='/dbstore/datasets/Odometry_team/discoman_v10_unzip/')
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--of_checkpoint', type=str,
-                        default='/Vol0/user/f.konokhov/tfoptflow/tfoptflow/tmp/pwcnet.ckpt-84000')
+                        default='/dbstore/datasets/Odometry_team/weights/pwcnet.ckpt-84000')
     parser.add_argument('--depth', type=str2bool, default=True)
     parser.add_argument('--depth_checkpoint', type=str,
                         default=os.path.join(env.PROJECT_PATH, 'weights/model-199160'))
