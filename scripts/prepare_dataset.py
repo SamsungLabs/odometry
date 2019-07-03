@@ -158,10 +158,10 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_root', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--of_checkpoint', type=str,
-                        default='/dbstore/datasets/Odometry_team/weights/pwcnet.ckpt-84000')
+                        default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/pwcnet.ckpt-84000'))
     parser.add_argument('--depth', type=str2bool, default=True)
     parser.add_argument('--depth_checkpoint', type=str,
-                        default=os.path.join(env.PROJECT_PATH, 'weights/model-199160'))
+                        default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/model-199160'))
     parser.add_argument('--target_size', type=int, nargs='+', required=True)
     args = parser.parse_args()
 

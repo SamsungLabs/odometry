@@ -1,4 +1,4 @@
-from .prepare_trajectory import prepare_trajectory
+from odometry.preprocessing.prepare_trajectory import prepare_trajectory
 
 from .parsers import KITTIParser
 from .parsers import TUMParser

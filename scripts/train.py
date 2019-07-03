@@ -8,7 +8,7 @@ from odometry.data_manager import GeneratorFactory
 from odometry.evaluation import PredictCallback
 from odometry.models import ModelFactory, construct_flexible_model
 from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
-from odometry.utils.utils import str2bool
+from odometry.utils import str2bool
 
 
 def train(dataset_root: str,
