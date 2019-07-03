@@ -11,6 +11,9 @@ from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
 from odometry.utils import str2bool
 
 
+class BaseTrainer:
+    def __init__(self, dateset_type, exp_name):
+
 def train(dataset_root: str,
           dataset_type: str,
           run_name: str,
@@ -40,7 +43,7 @@ def train(dataset_root: str,
 
     #  All parameters
     mlflow.log_param('run_name', run_name)
-    epochs = 2
+    epochs = 1
     mlflow.log_param('epochs', epochs)
 
     dataset = GeneratorFactory(

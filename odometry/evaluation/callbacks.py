@@ -118,7 +118,7 @@ class PredictCallback(keras.callbacks.Callback):
 
         self.epoch_counter = 0
         train_loss = logs['loss']
-        val_loss = logs['val_loss']
+        val_loss = logs.get('val_loss', np.inf)
         if self.save_best_only and self.best_loss < val_loss:
             return
 
@@ -136,4 +136,3 @@ class PredictCallback(keras.callbacks.Callback):
         prediction_id = 'test'
         test_metrics = self._evaluate(self.dataset.get_test_generator(), self.dataset.df_test, 'test', prediction_id)
         mlflow.log_metrics(test_metrics)
-        self._visualize(self.dataset.get_test_generator(), self.dataset.df_test, 'test', 'test')
