@@ -1,3 +1,4 @@
+import mlflow
 from functools import partial
 
 from keras.layers import Input
@@ -37,7 +38,7 @@ class PretrainedModelFactory(BaseModelFactory):
         self.pretrained_path = pretrained_path
 
     def construct(self):
-        model = load_model(
+        self.model = load_model(
             self.pretrained_path,
             custom_objects={'mean_squared_error': mean_squared_error,
                             'mean_absolute_error': mean_absolute_error,
@@ -59,7 +60,7 @@ class PretrainedModelFactory(BaseModelFactory):
                             'AssociationLayer': AssociationLayer,
                             'AddGridLayer': AddGridLayer,
                             })
-        return model
+        return self.model
 
 
 class ModelFactory:
@@ -104,15 +105,18 @@ class ModelFactory:
         else:
             raise ValueError
 
+    def _compile(self):
+        self.model.compile(loss=self.loss,
+                          loss_weights=self.loss_weights,
+                          optimizer=self.optimizer,
+                          metrics=self.metrics)
+
     def construct(self):
         inputs = [Input(input_shape) for input_shape in self.input_shapes]
         outputs = self.construct_graph_fn(inputs)
-        model = Model(inputs=inputs, outputs=outputs)
-        model.compile(loss=self.loss,
-                      loss_weights=self.loss_weights,
-                      optimizer=self.optimizer,
-                      metrics=self.metrics)
-        return model
+        self.model = Model(inputs=inputs, outputs=outputs)
+        self._compile()
+        return self.model
 
 
 class ModelWithDecoderFactory(ModelFactory):
@@ -143,3 +147,22 @@ class ConstantModelFactory(ModelFactory):
         super().__init__(construct_graph_fn=partial(construct_constant_model,
                                                     rot_and_trans_array=rot_and_trans_array),
                          input_shapes=input_shapes)
+
+
+class ModelWithConfidenceFactory(ModelFactory):
+
+    def freeze_confidences(self):
+        for layer in self.model.layers:
+            layer.trainable = (not 'confidence' in layer.name) or 'with' in layer.name
+            print('{:<30} {}'.format(layer.name, layer.trainable))
+        self._compile()
+        return self.model
+
+    def freeze_outputs(self):
+        for layer in self.model.layers:
+            layer.trainable = 'confidence' in layer.name
+            print('{:<30} {}'.format(layer.name, layer.trainable))
+
+        self.loss = confidence_error
+        self._compile()
+        return self.model

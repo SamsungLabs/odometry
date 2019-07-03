@@ -1,7 +1,8 @@
 pipeline {
     agent {
         dockerfile {
-        args '--runtime=nvidia -v /datasets:/datasets -v /weights:/weights'
+            // additionalBuildArgs '--no-cache'
+            args '--runtime=nvidia -v /datasets:/datasets -v /weights:/weights'
         }
     }
     stages {
