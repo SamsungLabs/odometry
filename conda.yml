@@ -209,5 +209,3 @@ dependencies:
     - gdown==3.8.1
     - pyquaternion==0.9.5
     - torch==1.0.1.post2
-prefix: /home/d-zhukov/miniconda3/envs/odometry
-
