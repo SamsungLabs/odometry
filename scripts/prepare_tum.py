@@ -2,8 +2,8 @@ import argparse
 import os
 
 import env
-from scripts.prepare_dataset import prepare_dataset
-from odometry.utils.utils import str2bool
+from scripts import prepare_dataset
+from odometry.utils import str2bool
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
