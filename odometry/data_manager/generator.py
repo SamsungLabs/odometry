@@ -97,8 +97,8 @@ def _resize(image_arr, target_size, data_format, mode):
         image_arr = image_arr.transpose(2, 0, 1)
 
     image_arr = F.interpolate(torch.Tensor(image_arr).unsqueeze_(0),
-                            target_size,
-                            mode=mode).numpy()[0]
+                              target_size,
+                              mode=mode).numpy()[0]
 
     if data_format == 'channels_last':
         image_arr = image_arr.transpose(1, 2, 0)
@@ -321,13 +321,13 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             image_arr = self._load_image(fpath, load_mode)
             image_arr = self._preprocess_image(image_arr, load_mode, preprocess_mode)
 
-            if (self.cached_images is not None) and \
-                    (not self.stop_caching) and \
-                    (len(self.cached_images) % 1000 == 0):
-                self.stop_caching = self._check_stop_caching()
-
-            if (self.cached_images is not None) and (not self.stop_caching):
-                self.cached_images[fpath] = image_arr
+            if image_arr is not None:
+                if (self.cached_images is not None) and \
+                        (not self.stop_caching) and \
+                        (len(self.cached_images) % 1000 == 0):
+                    self.stop_caching = self._check_stop_caching()
+                if (self.cached_images is not None) and (not self.stop_caching):
+                    self.cached_images[fpath] = image_arr
 
         if image_arr is None:
             return None

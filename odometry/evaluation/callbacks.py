@@ -82,7 +82,7 @@ class Evaluate(keras.callbacks.Callback):
         self.save_best_only = save_best_only
         self.max_to_visualize = max_to_visualize
 
-        self.train_generator = dataset.get_train_generator()
+        self.train_generator = dataset.get_train_generator(trajectory=True)
         self.val_generator = dataset.get_val_generator()
         self.test_generator = dataset.get_test_generator()
 
@@ -144,8 +144,8 @@ class Evaluate(keras.callbacks.Callback):
         records = []
         gt_by_trajectory = gt.groupby(by='trajectory_id').indices.items()
         for i, (trajectory_id, indices) in enumerate(tqdm.tqdm(gt_by_trajectory,
-                                                     total=gt.trajectory_id.nunique(),
-                                                     desc=f'Evaluate on {subset}')):
+                                                               total=gt.trajectory_id.nunique(),
+                                                               desc=f'Evaluate on {subset}')):
             gt_trajectory = self._create_trajectory(gt.iloc[indices])
             predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
             self._maybe_save_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
@@ -202,14 +202,14 @@ class Evaluate(keras.callbacks.Callback):
 
         prediction_id = '{:03d}_train:{:.6f}_val:{:.6f}'.format(epoch + 1, train_loss, val_loss)
 
-        train_metrics = self._evaluate(self.dataset.get_train_generator(), self.dataset.df_train, 'train', prediction_id)
-        val_metrics = self._evaluate(self.dataset.get_val_generator(), self.dataset.df_val, 'val', prediction_id)
+        train_metrics = self._evaluate(self.train_generator, self.df_train, 'train', prediction_id)
+        val_metrics = self._evaluate(self.val_generator, self.df_val, 'val', prediction_id)
 
         [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in train_metrics.items()]
         [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in val_metrics.items()]
 
     def on_train_end(self, logs={}):
         prediction_id = 'test'
-        test_metrics = self._evaluate(self.dataset.get_test_generator(), self.dataset.df_test, 'test', prediction_id)
+        test_metrics = self._evaluate(self.test_generator, self.df_test, 'test', prediction_id)
         mlflow.log_metrics(test_metrics)
         self._visualize(self.test_generator, self.df_test, 'test', 'test')
