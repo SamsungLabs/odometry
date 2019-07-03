@@ -2,13 +2,9 @@ import argparse
 import os
 
 import env
-<<<<<<< HEAD:scripts/prepare_kitti.py
+
 from scripts import prepare_dataset
 from odometry.utils import str2bool
-=======
-from scripts.prepare_dataset import prepare_dataset
-from odometry.utils.utils import str2bool
->>>>>>> 70949e2... 1. Small file reorganization:scripts/prepare_kitti.py
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
