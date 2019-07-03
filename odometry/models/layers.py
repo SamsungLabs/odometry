@@ -96,10 +96,10 @@ def construct_double_fc(inputs,
 
 def construct_outputs(fc_rotation, fc_translation, regularization=0):
     outputs = []
-    for input, output_names in ((fc_rotation, ['euler_x', 'euler_y', 'euler_z']),
-                                (fc_translation, ['t_x', 't_y', 't_z'])):
+    for x, output_names in ((fc_rotation, ['euler_x', 'euler_y', 'euler_z']),
+                            (fc_translation, ['t_x', 't_y', 't_z'])):
         for output_name in output_names:
-            output = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(input)
+            output = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(x)
             outputs.append(output)
 
     return outputs
@@ -112,14 +112,14 @@ def construct_outputs_with_confidences(outputs,
                                        kernel_initializer='glorot_normal'):
     confidences = []
     names = []
-    for output, output_names in ((fc_rotation, ['euler_x', 'euler_y', 'euler_z']),
-                                 (fc_translation, ['t_x', 't_y', 't_z'])):
+    for x, output_names in ((fc_rotation, ['euler_x', 'euler_y', 'euler_z']),
+                            (fc_translation, ['t_x', 't_y', 't_z'])):
         for output_name in output_names:
             confidence = Dense(1,
                                activation='relu',
                                kernel_regularizer=l2(regularization),
                                kernel_initializer=kernel_initializer,
-                               name=f'{output_name}_confidence')(output)
+                               name=f'{output_name}_confidence')(x)
             confidences.append(confidence)
             names.append(f'{output_name}_with_confidence')
 
