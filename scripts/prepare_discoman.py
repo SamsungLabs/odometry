@@ -5,6 +5,7 @@ import env
 from scripts import prepare_dataset
 from odometry.utils import str2bool
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_root', type=str,
