@@ -1,6 +1,8 @@
+import os
 import functools
 import mlflow
 import argparse
+import datetime
 
 import __init_path__
 import env
@@ -39,6 +41,7 @@ def train(dataset_root: str,
     mlflow.start_run(run_name=run_name)
 
     #  All parameters
+    mlflow.log_param("start_time", datetime.datetime.now().isoformat())
     mlflow.log_param('run_name', run_name)
     epochs = 2
     mlflow.log_param('epochs', epochs)
@@ -101,9 +104,9 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
                         required=True)
     parser.add_argument('--prediction_dir', '-p', type=str, help='Name of subdir to store predictions',
-                        default='predictions')
+                        default=os.path.join(env.PROJECT_PATH,'predictions'))
     parser.add_argument('--visuals_dir', '-v', type=str, help='Name of subdir to store visualizations',
-                        default='visuals')
+                        default=os.path.join(env.PROJECT_PATH, 'visuals'))
     parser.add_argument('--period', type=int, help='Period of evaluating train and val metrics',
                         default=1)
     parser.add_argument('--save_best_only', type=str2bool, help='Evaluate metrics only for best losses',
