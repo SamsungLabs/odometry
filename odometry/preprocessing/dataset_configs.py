@@ -107,9 +107,9 @@ def get_discoman_debug_config(dataset_root):
 
 
 def get_tum_debug_config(dataset_root):
-    config = {'train_trajectories': ['rgbd_dataset_freiburg2_dishes'],
-              'val_trajectories': ['rgbd_dataset_freiburg1_teddy'],
-              'test_trajectories': ['rgbd_dataset_freiburg3_large_cabinet'],
+    config = {'train_trajectories': ['rgbd_dataset_freiburg2_large_with_loop'],
+              'val_trajectories': ['rgbd_dataset_freiburg1_floor'],
+              'test_trajectories': ['rgbd_dataset_freiburg1_floor'],
               'exp_name': 'tum_debug',
               'target_size': (120, 160),
               }
@@ -136,27 +136,18 @@ def get_fr1_config(dataset_root):
 
 
 def get_fr2_config(dataset_root):
-    config = {'train_trajectories': ['rgbd_dataset_freiburg2_rgb_calibration',
-                                     'rgbd_dataset_freiburg2_large_checkerboard_calibration',
-                                     'rgbd_dataset_freiburg2_large_no_loop',
-                                     'rgbd_dataset_freiburg2_xyz',
+    config = {'train_trajectories': ['rgbd_dataset_freiburg2_xyz',
                                      'rgbd_dataset_freiburg2_rpy',
                                      'rgbd_dataset_freiburg2_360_hemisphere',
                                      'rgbd_dataset_freiburg2_flowerbouquet_brownbackground',
                                      'rgbd_dataset_freiburg2_coke',
                                      'rgbd_dataset_freiburg2_metallic_sphere',
-                                     'rgbd_dataset_freiburg2_flowerbouquet',
-                                     'rgbd_dataset_freiburg2_large_with_loop',
                                      'rgbd_dataset_freiburg2_metallic_sphere2',
                                      'rgbd_dataset_freiburg2_dishes',
-                                     'rgbd_dataset_freiburg2_pioneer_slam',
                                      'rgbd_dataset_freiburg2_pioneer_360',
                                      ],
-              'val_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam2',
-                                   'rgbd_dataset_freiburg2_desk'
-                                   ],
-              'test_trajectories': ['rgbd_dataset_freiburg2_desk_with_person',
-                                    'rgbd_dataset_freiburg2_pioneer_slam3'],
+              'val_trajectories': ['rgbd_dataset_freiburg2_flowerbouquet'],
+              'test_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam3'],
               'exp_name': 'fr2',
               'target_size': (120, 160),
               }
@@ -165,8 +156,7 @@ def get_fr2_config(dataset_root):
 
 
 def get_fr3_config(dataset_root):
-    config = {'train_trajectories': ['rgbd_dataset_freiburg3_calibration_rgb_depth',
-                                     'rgbd_dataset_freiburg3_checkerboard_large',
+    config = {'train_trajectories': ['rgbd_dataset_freiburg3_checkerboard_large',
                                      'rgbd_dataset_freiburg3_sitting_xyz',
                                      'rgbd_dataset_freiburg3_long_office_household',
                                      'rgbd_dataset_freiburg3_walking_xyz',
@@ -187,11 +177,27 @@ def get_fr3_config(dataset_root):
                                      'rgbd_dataset_freiburg3_structure_notexture_near',
                                      'rgbd_dataset_freiburg3_teddy',
                                      ],
-              'val_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam2',
-                                   'rgbd_dataset_freiburg2_desk'
+              'val_trajectories': ['rgbd_dataset_freiburg3_sitting_xyz_validation',
+                                   'rgbd_dataset_freiburg3_walking_xyz_validation',
+                                   'rgbd_dataset_freiburg3_walking_static_validation',
+                                   'rgbd_dataset_freiburg3_nostructure_notexture_far_validation',
+                                   'rgbd_dataset_freiburg3_nostructure_notexture_near_withloop_validation',
+                                   'rgbd_dataset_freiburg3_structure_notexture_far_validation',
+                                   'rgbd_dataset_freiburg3_large_cabinet_validation',
+                                   'rgbd_dataset_freiburg3_structure_texture_near_validation',
+                                   'rgbd_dataset_freiburg3_nostructure_texture_near_withloop_validation',
+                                   'rgbd_dataset_freiburg3_sitting_static_validation',
+                                   'rgbd_dataset_freiburg3_walking_rpy_validation',
+                                   'rgbd_dataset_freiburg3_cabinet_validation',
+                                   'rgbd_dataset_freiburg3_structure_notexture_near_validation',
+
                                    ],
-              'test_trajectories': ['rgbd_dataset_freiburg2_desk_with_person',
-                                    'rgbd_dataset_freiburg2_pioneer_slam3'],
+              'test_trajectories': ['rgbd_dataset_freiburg3_structure_texture_far_validation',
+                                    'rgbd_dataset_freiburg3_long_office_household_validation',
+                                    'rgbd_dataset_freiburg3_sitting_halfsphere_validation',
+                                    'rgbd_dataset_freiburg3_nostructure_texture_far_validation',
+                                    'rgbd_dataset_freiburg3_walking_halfsphere_validation',
+                                    ],
               'exp_name': 'fr3',
               'target_size': (120, 160),
               }
@@ -209,7 +215,6 @@ def get_tum_config(dataset_root):
 
     subsets = ['train', 'val', 'test']
     for subset in subsets:
-        config[f'{subset}_trajectories'].append(fr2_config[f'{subset}_trajectories'])
-        config[f'{subset}_trajectories'].append(fr3_config[f'{subset}_trajectories'])
+        config[f'{subset}_trajectories'].extend(fr2_config[f'{subset}_trajectories'])
+        config[f'{subset}_trajectories'].extend(fr3_config[f'{subset}_trajectories'])
     return config
-
