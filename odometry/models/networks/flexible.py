@@ -40,8 +40,8 @@ def construct_encoder(inputs,
 
 
 def construct_flexible_model(inputs,
-                             kernel_sizes=[7, 5, 3, 3],
-                             strides=[2, 1, 4, 1],
+                             kernel_sizes=[7, 5, 3, 3, 3, 3],
+                             strides=[2, 1, 4, 1 ,2, 1],
                              dilation_rates=None,
                              hidden_size=500,
                              regularization=0,
@@ -49,9 +49,6 @@ def construct_flexible_model(inputs,
                              kernel_initializer='glorot_normal',
                              use_gated_convolutions=True,
                              use_batchnorm=False,
-                             strides=[2, 1, 4, 1 ,2, 1],
-                             dilation_rates=None,
-                             kernel_sizes=[7, 5, 3, 3, 3, 3],
                              return_confidence=False):
 
     mlflow.log_param('model.name', 'Flexible')
