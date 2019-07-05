@@ -13,9 +13,9 @@ from odometry.models.layers import (concat,
 def construct_encoder(inputs,
                       use_gated_convolutions=False,
                       use_batchnorm=False,
-                      strides=[2, 1, 4, 1],
+                      strides=[2, 1, 4, 1 ,2, 1],
                       dilation_rates=None,
-                      kernel_sizes = [7, 5, 3, 3],
+                      kernel_sizes=[7, 5, 3, 3, 3, 3],
                       kernel_initializer='glorot_normal'):
     conv = gated_conv2d if use_gated_convolutions else conv2d
 
@@ -49,8 +49,11 @@ def construct_flexible_model(inputs,
                              kernel_initializer='glorot_normal',
                              use_gated_convolutions=True,
                              use_batchnorm=False,
-                             return_confidence=True
-                            ):
+                             strides=[2, 1, 4, 1 ,2, 1],
+                             dilation_rates=None,
+                             kernel_sizes=[7, 5, 3, 3, 3, 3],
+                             return_confidence=False):
+
     mlflow.log_param('model.name', 'Flexible')
     mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
 
