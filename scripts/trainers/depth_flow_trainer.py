@@ -11,7 +11,7 @@ from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
 from odometry.base_trainer import BaseTrainer
 
 
-class FlexibleTrainer(BaseTrainer):
+class DepthFlowTrainer(BaseTrainer):
 
     def __init__(self,
                  dataset_root,
@@ -22,13 +22,13 @@ class FlexibleTrainer(BaseTrainer):
                  period=1,
                  save_best_only=False
                  ):
-        super(FlexibleTrainer, self).__init__(dataset_root=dataset_root,
-                                              dataset_type=dataset_type,
-                                              run_name=run_name,
-                                              prediction_dir=prediction_dir,
-                                              visuals_dir=visuals_dir,
-                                              period=period,
-                                              save_best_only=save_best_only)
+        super(DepthFlowTrainer, self).__init__(dataset_root=dataset_root,
+                                               dataset_type=dataset_type,
+                                               run_name=run_name,
+                                               prediction_dir=prediction_dir,
+                                               visuals_dir=visuals_dir,
+                                               period=period,
+                                               save_best_only=save_best_only)
 
     def train(self):
 
@@ -89,16 +89,16 @@ class FlexibleTrainer(BaseTrainer):
 
 if __name__ == '__main__':
 
-    parser = FlexibleTrainer.get_default_parser()
+    parser = DepthFlowTrainer.get_parser()
     args = parser.parse_args()
 
-    trainer = FlexibleTrainer(dataset_root=args.dataset_root,
-                              dataset_type=args.dataset_type,
-                              run_name=args.run_name,
-                              prediction_dir=args.prediction_dir,
-                              visuals_dir=args.visuals_dir,
-                              period=args.period,
-                              save_best_only=args.save_best_only
-                              )
+    trainer = DepthFlowTrainer(dataset_root=args.dataset_root,
+                               dataset_type=args.dataset_type,
+                               run_name=args.run_name,
+                               prediction_dir=args.prediction_dir,
+                               visuals_dir=args.visuals_dir,
+                               period=args.period,
+                               save_best_only=args.save_best_only
+                               )
     trainer.train()
 

@@ -14,9 +14,9 @@ DATASET_TYPES = ['kitti_8/3',
                  'tum']
 
 
-def is_int(str: str):
+def is_int(string: str):
     try:
-        int(str)
+        int(string)
         return True
     except:
         return False

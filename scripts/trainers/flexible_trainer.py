@@ -89,7 +89,7 @@ class FlexibleTrainer(BaseTrainer):
 
 if __name__ == '__main__':
 
-    parser = FlexibleTrainer.get_default_parser()
+    parser = FlexibleTrainer.get_parser()
     args = parser.parse_args()
 
     trainer = FlexibleTrainer(dataset_root=args.dataset_root,

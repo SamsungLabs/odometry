@@ -65,7 +65,7 @@ class BaseTrainer:
         raise NotImplemented('Method of abstract class')
 
     @staticmethod
-    def get_default_parser():
+    def get_parser():
         parser = argparse.ArgumentParser()
 
         parser.add_argument('--dataset_root', '-r', type=str, help='Directory with trajectories', required=True)

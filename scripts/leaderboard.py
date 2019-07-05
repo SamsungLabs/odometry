@@ -100,6 +100,7 @@ class Leaderboard:
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
                    '-gpu "num=1:mode=exclusive_process"',
                    'python',
+                   f'-m [airugpub02, airugpua06, airugpua09, airugpua10]'
                    f'{self.trainer_path}',
                    f'--dataset_root {dataset_root}',
                    f'--dataset_type {dataset_type}',

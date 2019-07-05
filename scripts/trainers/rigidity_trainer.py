@@ -11,7 +11,7 @@ from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
 from odometry.base_trainer import BaseTrainer
 
 
-class FlexibleTrainer(BaseTrainer):
+class RigidityTrainer(BaseTrainer):
 
     def __init__(self,
                  dataset_root,
@@ -22,7 +22,7 @@ class FlexibleTrainer(BaseTrainer):
                  period=1,
                  save_best_only=False
                  ):
-        super(FlexibleTrainer, self).__init__(dataset_root=dataset_root,
+        super(RigidityTrainer, self).__init__(dataset_root=dataset_root,
                                               dataset_type=dataset_type,
                                               run_name=run_name,
                                               prediction_dir=prediction_dir,
@@ -89,10 +89,10 @@ class FlexibleTrainer(BaseTrainer):
 
 if __name__ == '__main__':
 
-    parser = FlexibleTrainer.get_default_parser()
+    parser = RigidityTrainer.get_parser()
     args = parser.parse_args()
 
-    trainer = FlexibleTrainer(dataset_root=args.dataset_root,
+    trainer = RigidityTrainer(dataset_root=args.dataset_root,
                               dataset_type=args.dataset_type,
                               run_name=args.run_name,
                               prediction_dir=args.prediction_dir,
