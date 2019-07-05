@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import shutil
 
-from scripts.prepare_dataset import prepare_dataset
+from odometry.preprocessing.prepare_dataset import prepare_dataset
 
 env.DATASET_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'minidataset')
 

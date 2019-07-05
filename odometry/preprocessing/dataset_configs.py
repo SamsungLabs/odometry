@@ -14,6 +14,14 @@ DATASET_TYPES = ['kitti_8/3',
                  'tum']
 
 
+def is_int(string: str):
+    try:
+        int(string)
+        return True
+    except:
+        return False
+
+
 def get_config(dataset_root: str, dataset_type: str) -> Dict:
 
     assert dataset_type in DATASET_TYPES
@@ -90,7 +98,8 @@ def get_discoman_v10_config(dataset_root):
     sub_dirs = ['train', 'val', 'test']
     for d in sub_dirs:
         for trajectory in Path(dataset_root).joinpath(d).glob('*'):
-            config[f'{d}_trajectories'].append(trajectory.as_posix())
+            if is_int(trajectory.name):
+                config[f'{d}_trajectories'].append(trajectory.as_posix())
 
     return config
 

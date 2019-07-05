@@ -4,6 +4,7 @@ from functools import partial
 from keras.layers import Input
 from keras.models import Model, load_model
 from keras.optimizers import Adam
+from keras.utils.layer_utils import count_params
 
 
 from odometry.models.losses import (mean_squared_error,
@@ -74,6 +75,7 @@ class ModelFactory:
         params = locals()
         params.pop('self', None)
         mlflow.log_params({'model_factory.' + k: repr(v) for k, v in params.items()})
+        self.model = None
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
         self.optimizer = Adam(lr=lr, amsgrad=True)
@@ -107,15 +109,17 @@ class ModelFactory:
 
     def _compile(self):
         self.model.compile(loss=self.loss,
-                          loss_weights=self.loss_weights,
-                          optimizer=self.optimizer,
-                          metrics=self.metrics)
+                           loss_weights=self.loss_weights,
+                           optimizer=self.optimizer,
+                           metrics=self.metrics)
 
     def construct(self):
         inputs = [Input(input_shape) for input_shape in self.input_shapes]
         outputs = self.construct_graph_fn(inputs)
         self.model = Model(inputs=inputs, outputs=outputs)
         self._compile()
+
+        mlflow.log_metric('Number of parameters', count_params(self.model.trainable_weights))
         return self.model
 
 

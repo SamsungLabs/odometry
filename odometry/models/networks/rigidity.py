@@ -1,3 +1,4 @@
+import mlflow
 from keras.layers.convolutional import Conv2D
 from keras.layers.merge import concatenate
 from keras.layers import GlobalAveragePooling2D, Lambda
@@ -13,6 +14,10 @@ def construct_rigidity_model(inputs,
                              c_x=0.5, 
                              c_y=0.5, 
                              kernel_initializer='he_uniform'):
+
+    mlflow.log_param('model.name', 'Rigidity')
+    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+
     inputs = concat(inputs)
     if add_grid_layer:
         inputs = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(inputs)

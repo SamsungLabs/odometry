@@ -11,5 +11,3 @@ from .visualization_utils import visualize_trajectory_with_gt
 from .visualization_utils import visualize_trajectory
 
 from .video_utils import parse_video
-
-from .utils import str2bool

@@ -11,7 +11,6 @@ import env
 
 from odometry.utils.computation_utils import limit_resources
 from odometry.preprocessing import parsers, estimators, prepare_trajectory
-from odometry.utils.utils import str2bool
 
 
 def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint=None, pwc_features=False):
@@ -150,24 +149,3 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
             logger.info(e)
             logger.info(f'WARNING! Trajectory {trajectory} failed to prepare')
             shutil.rmtree(output_dir.as_posix(), ignore_errors=True)
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, choices=['kitti', 'discoman', 'tum', 'retailbox'], required=True)
-    parser.add_argument('--dataset_root', type=str, required=True)
-    parser.add_argument('--output_dir', type=str, required=True)
-    parser.add_argument('--of_checkpoint', type=str,
-                        default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/pwcnet.ckpt-84000'))
-    parser.add_argument('--depth', type=str2bool, default=True)
-    parser.add_argument('--depth_checkpoint', type=str,
-                        default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/model-199160'))
-    parser.add_argument('--target_size', type=int, nargs='+', required=True)
-    args = parser.parse_args()
-
-    prepare_dataset(args.dataset,
-                    dataset_root=args.dataset_root,
-                    output_root=args.output_dir,
-                    target_size=args.target_size,
-                    optical_flow_checkpoint=args.of_checkpoint,
-                    depth_checkpoint=args.depth_checkpoint if args.depth else None)
