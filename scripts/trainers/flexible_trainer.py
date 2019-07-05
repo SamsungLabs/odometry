@@ -6,7 +6,7 @@ import argparse
 import env
 from odometry.data_manager import GeneratorFactory
 from odometry.evaluation import PredictCallback
-from odometry.models import ModelFactory, construct_depth_flow_model
+from odometry.models import ModelFactory, construct_flexible_model
 from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
 from odometry.base_trainer import BaseTrainer
 
@@ -54,7 +54,7 @@ class FlexibleTrainer(BaseTrainer):
             cached_images={}
         )
 
-        construct_graph_fn = functools.partial(construct_depth_flow_model)
+        construct_graph_fn = functools.partial(construct_flexible_model, use_gated_convolutions=False)
         model_factory = ModelFactory(
             construct_graph_fn,
             input_shapes=dataset.input_shapes,
@@ -88,20 +88,8 @@ class FlexibleTrainer(BaseTrainer):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
 
-    parser.add_argument('--dataset_root', '-r', type=str, help='Directory with trajectories', required=True)
-    parser.add_argument('--dataset_type', '-t', type=str, choices=DATASET_TYPES, required=True)
-    parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
-                        required=True)
-    parser.add_argument('--prediction_dir', '-p', type=str, help='Name of subdir to store predictions',
-                        default=os.path.join(env.PROJECT_PATH, 'predictions'))
-    parser.add_argument('--visuals_dir', '-v', type=str, help='Name of subdir to store visualizations',
-                        default=os.path.join(env.PROJECT_PATH, 'visuals'))
-    parser.add_argument('--period', type=int, help='Period of evaluating train and val metrics',
-                        default=1)
-    parser.add_argument('--save_best_only',  action='store_true', help='Evaluate metrics only for best losses',
-                        default=False)
+    parser = FlexibleTrainer.get_default_parser()
     args = parser.parse_args()
 
     trainer = FlexibleTrainer(dataset_root=args.dataset_root,

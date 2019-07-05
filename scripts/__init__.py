@@ -1,1 +1,1 @@
-from .prepare_dataset import prepare_dataset
+from scripts.dataset_preparation.prepare_dataset import prepare_dataset

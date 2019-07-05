@@ -1,10 +1,11 @@
+import os
 import mlflow
 import datetime
 import argparse
 
 import __init_path__
 import env
-from odometry.utils import str2bool
+
 from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
 
 
@@ -55,10 +56,26 @@ class BaseTrainer:
         exp_id = exp.experiment_id
         run_names = [client.get_run(i.run_id).data.params.get('run_name', '') for i in client.list_run_infos(exp_id)]
 
-        if run_name in run_names:
-            return False
-        else:
-            return True
+        return run_name not in run_names
 
     def train(self):
         raise NotImplemented('Method of abstract class')
+
+    @staticmethod
+    def get_default_parser():
+        parser = argparse.ArgumentParser()
+
+        parser.add_argument('--dataset_root', '-r', type=str, help='Directory with trajectories', required=True)
+        parser.add_argument('--dataset_type', '-t', type=str, choices=DATASET_TYPES, required=True)
+        parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
+                            required=True)
+        parser.add_argument('--prediction_dir', '-p', type=str, help='Name of subdir to store predictions',
+                            default=os.path.join(env.PROJECT_PATH, 'predictions'))
+        parser.add_argument('--visuals_dir', '-v', type=str, help='Name of subdir to store visualizations',
+                            default=os.path.join(env.PROJECT_PATH, 'visuals'))
+        parser.add_argument('--period', type=int, help='Period of evaluating train and val metrics',
+                            default=1)
+        parser.add_argument('--save_best_only', action='store_true', help='Evaluate metrics only for best losses',
+                            default=False)
+
+        return parser
