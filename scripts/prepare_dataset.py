@@ -11,7 +11,6 @@ import env
 
 from odometry.utils.computation_utils import limit_resources
 from odometry.preprocessing import parsers, estimators, prepare_trajectory
-from odometry.utils.utils import str2bool
 
 
 def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint=None, pwc_features=False):
@@ -159,7 +158,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--of_checkpoint', type=str,
                         default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/pwcnet.ckpt-84000'))
-    parser.add_argument('--depth', type=str2bool, default=True)
+    parser.add_argument('--depth', action='store_true', default=True)
     parser.add_argument('--depth_checkpoint', type=str,
                         default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/model-199160'))
     parser.add_argument('--target_size', type=int, nargs='+', required=True)

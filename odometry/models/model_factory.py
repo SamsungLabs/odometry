@@ -3,6 +3,7 @@ from functools import partial
 from keras.layers import Input
 from keras.models import Model, load_model
 from keras.optimizers import Adam
+from keras.utils.layer_utils import count_params
 
 
 from odometry.models.losses import (mean_squared_error,
@@ -112,6 +113,15 @@ class ModelFactory:
                       loss_weights=self.loss_weights,
                       optimizer=self.optimizer,
                       metrics=self.metrics)
+
+        model._check_trainable_weights_consistency()
+        if hasattr(model, '_collected_trainable_weights'):
+            trainable_count = count_params(model._collected_trainable_weights)
+        else:
+            trainable_count = count_params(model.trainable_weights)
+
+        mlflow.log_metric('Number of parameters', trainable_count
+                          )
         return model
 
 
