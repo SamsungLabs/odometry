@@ -54,7 +54,10 @@ class BaseTrainer:
                                f' Available names {DATASET_TYPES}')
 
         exp_id = exp.experiment_id
-        run_names = [client.get_run(i.run_id).data.params.get('run_name', '') for i in client.list_run_infos(exp_id)]
+
+        run_names = list()
+        for info in client.list_run_infos(exp_id):
+            run_names.append(client.get_run(info.run_id).data.params.get('run_name', ''))
 
         return run_name not in run_names
 
