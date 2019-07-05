@@ -12,7 +12,6 @@ class EuRoCParser(TUMParser):
                  gt_txt_path=None,
                  rgb_txt_path=None,
                  cols=None):
-        
         src_dir = os.path.join(src_dir, 'mav0')
         gt_txt_path = os.path.join(src_dir, 'state_groundtruth_estimate0/data.csv')
         rgb_txt_path = os.path.join(src_dir, 'cam0/data.csv')
