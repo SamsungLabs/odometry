@@ -1,3 +1,4 @@
+import mlflow
 from functools import partial
 
 from keras.layers import Input
@@ -38,7 +39,7 @@ class PretrainedModelFactory(BaseModelFactory):
         self.pretrained_path = pretrained_path
 
     def construct(self):
-        model = load_model(
+        self.model = load_model(
             self.pretrained_path,
             custom_objects={'mean_squared_error': mean_squared_error,
                             'mean_absolute_error': mean_absolute_error,
@@ -60,7 +61,7 @@ class PretrainedModelFactory(BaseModelFactory):
                             'AssociationLayer': AssociationLayer,
                             'AddGridLayer': AddGridLayer,
                             })
-        return model
+        return self.model
 
 
 class ModelFactory:
@@ -74,6 +75,7 @@ class ModelFactory:
         params = locals()
         params.pop('self', None)
         mlflow.log_params({'model_factory.' + k: repr(v) for k, v in params.items()})
+        self.model = None
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
         self.optimizer = Adam(lr=lr, amsgrad=True)
@@ -105,24 +107,20 @@ class ModelFactory:
         else:
             raise ValueError
 
+    def _compile(self):
+        self.model.compile(loss=self.loss,
+                           loss_weights=self.loss_weights,
+                           optimizer=self.optimizer,
+                           metrics=self.metrics)
+
     def construct(self):
         inputs = [Input(input_shape) for input_shape in self.input_shapes]
         outputs = self.construct_graph_fn(inputs)
-        model = Model(inputs=inputs, outputs=outputs)
-        model.compile(loss=self.loss,
-                      loss_weights=self.loss_weights,
-                      optimizer=self.optimizer,
-                      metrics=self.metrics)
+        self.model = Model(inputs=inputs, outputs=outputs)
+        self._compile()
 
-        model._check_trainable_weights_consistency()
-        if hasattr(model, '_collected_trainable_weights'):
-            trainable_count = count_params(model._collected_trainable_weights)
-        else:
-            trainable_count = count_params(model.trainable_weights)
-
-        mlflow.log_metric('Number of parameters', trainable_count
-                          )
-        return model
+        mlflow.log_metric('Number of parameters', count_params(self.model.trainable_weights))
+        return self.model
 
 
 class ModelWithDecoderFactory(ModelFactory):
@@ -153,3 +151,22 @@ class ConstantModelFactory(ModelFactory):
         super().__init__(construct_graph_fn=partial(construct_constant_model,
                                                     rot_and_trans_array=rot_and_trans_array),
                          input_shapes=input_shapes)
+
+
+class ModelWithConfidenceFactory(ModelFactory):
+
+    def freeze_confidences(self):
+        for layer in self.model.layers:
+            layer.trainable = (not 'confidence' in layer.name) or 'with' in layer.name
+            print('{:<30} {}'.format(layer.name, layer.trainable))
+        self._compile()
+        return self.model
+
+    def freeze_outputs(self):
+        for layer in self.model.layers:
+            layer.trainable = 'confidence' in layer.name
+            print('{:<30} {}'.format(layer.name, layer.trainable))
+
+        self.loss = confidence_error
+        self._compile()
+        return self.model

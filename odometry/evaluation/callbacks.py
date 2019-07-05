@@ -36,13 +36,15 @@ class PredictCallback(keras.callbacks.Callback):
         if self.save_predictions:
             os.makedirs(self.predictions_dir, exist_ok=True)
 
-    def _create_visualization_filename(self, prediction_id, subset, trajectory_id):
-        os.makedirs(os.path.join(self.visuals_dir, prediction_id, subset), exist_ok=True)
-        return os.path.join(self.visuals_dir, prediction_id, subset, f'{trajectory_id}.html')
+    def _create_visualization_file_path(self, prediction_id, subset, trajectory_id):
+        file_path = os.path.join(self.visuals_dir, prediction_id, subset, f'{trajectory_id}.html')
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        return file_path
 
-    def _create_prediction_filename(self, prediction_id, subset, trajectory_id):
-        os.makedirs(os.path.join(self.predictions_dir, prediction_id, subset), exist_ok=True)
-        return os.path.join(self.predictions_dir, prediction_id, subset, f'{trajectory_id}.csv')
+    def _create_prediction_file_path(self, prediction_id, subset, trajectory_id):
+        file_path = os.path.join(self.predictions_dir, prediction_id, subset, f'{trajectory_id}.csv')
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        return file_path
 
     @staticmethod
     def _create_trajectory(df):
@@ -51,24 +53,24 @@ class PredictCallback(keras.callbacks.Callback):
     def _maybe_save_trajectory(self, prediction_id, subset, trajectory_id, trajectory):
         if not self.save_predictions:
             return
-        file_name = self._create_prediction_filename(prediction_id, subset, trajectory_id)
-        trajectory.to_dataframe().to_csv(file_name)
+        file_path = self._create_prediction_file_path(prediction_id, subset, trajectory_id)
+        trajectory.to_dataframe().to_csv(file_path)
 
     def _maybe_visualize_trajectory(self, prediction_id, subset, trajectory_id, predicted_trajectory,
                                     gt_trajectory=None, trajectory_metrics=None):
         if not self.save_visuals:
             return
 
-        file_name = self._create_visualization_filename(prediction_id, subset, trajectory_id)
+        file_path = self._create_visualization_file_path(prediction_id, subset, trajectory_id)
         if gt_trajectory is None:
             title = trajectory_id.upper()
-            visualize_trajectory(predicted_trajectory, title=title, file_name=file_name)
+            visualize_trajectory(predicted_trajectory, title=title, file_path=file_path)
         else:
             normalized_metrics = normalize_metrics(trajectory_metrics)
             normalized_metrics_as_str = ', '.join(['{}: {:.6f}'.format(key, value)
                                                    for key, value in normalized_metrics.items()])
             title = f'{trajectory_id.upper()}: {normalized_metrics_as_str}'
-            visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_name=file_name)
+            visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_path=file_path)
 
     def _evaluate(self, generator, gt, subset, prediction_id):
 

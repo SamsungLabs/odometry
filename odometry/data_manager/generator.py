@@ -128,7 +128,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  depth_multiplicator=1./5000., 
                  cached_images=None,
                  filter_invalid=True,
-                 max_memory_consumption=0.8):
+                 max_memory_consumption=0.8,
+                 return_confidences=False):
         super().set_processing_attrs(image_data_generator,
                                      target_size,
                                      'rgb',
@@ -203,6 +204,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.filter_invalid = filter_invalid
 
+        self.return_confidences = return_confidences
+
         super(ExtendedDataFrameIterator, self).__init__(
             self.samples,
             batch_size,
@@ -222,6 +225,9 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.cached_images = cached_images
 
     def _load_image(self, fpath, load_mode):
+        if os.path.islink(fpath):
+            fpath = os.readlink(fpath)
+
         if fpath.endswith('.npy'):
             image_arr = np.load(fpath)
         else:
@@ -238,7 +244,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                 if image.mode != 'RGB':
                     image = image.convert('RGB')
 
-            image_arr = np.asarray(image, dtype="float32")
+            image_arr = np.asarray(image, dtype='float32')
 
             if hasattr(image, 'close'):
                 image.close()
@@ -271,7 +277,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         if load_mode in ('depth', 'disparity'):
             if (image_arr == 0).all():
-                print('invalid depth')
                 if self.filter_invalid:
                     return None
 
@@ -329,7 +334,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         return image_arr.copy()
 
-    def _init_batch(self, cols, index_array):
+    def _init_batch(self, cols, index_array, return_confidences=False):
         batch = []
 
         for col in cols:
@@ -337,13 +342,16 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                 batch.append(
                     np.zeros((len(index_array),) + self.image_shapes[col], dtype=self.dtype))
             else:
-                batch.append(self.df[col].values[index_array])
+                values = self.df[col].values[index_array]
+                if return_confidences:
+                    values = np.stack((values, np.ones_like(values)), axis=1)
+                batch.append(values)
 
         return batch
 
     def _get_batches_of_transformed_samples(self, index_array):
         batch_x = self._init_batch(self.x_cols, index_array)
-        batch_y = self._init_batch(self.y_cols, index_array)
+        batch_y = self._init_batch(self.y_cols, index_array, return_confidences=self.return_confidences)
 
         # build batch of image data
         valid_samples = np.ones(len(index_array)).astype(bool)
@@ -370,10 +378,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         return batch_x, batch_y
 
     def next(self):
-        """For python 2.x.
+        '''For python 2.x.
         # Returns
             The next batch.
-        """
+        '''
         with self.lock:
             index_array = next(self.index_generator)
         # The transformation of images is not under thread lock

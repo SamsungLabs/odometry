@@ -3,9 +3,9 @@ import json
 import warnings
 import pickle
 import mlflow
+import tqdm
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 from keras_preprocessing.image import ImageDataGenerator
 
 from odometry.data_manager.generator import ExtendedDataFrameIterator
@@ -105,14 +105,14 @@ class GeneratorFactory:
         self.input_shapes = self.get_train_generator().input_shapes \
             if self.train_trajectories else self.get_val_generator().input_shapes
 
-    def _get_multi_df_dataset(self, trajectories):
-
+    def _get_multi_df_dataset(self, trajectories, subset=''):
         df = None
 
         if not trajectories:
             return df
 
-        for trajectory_name in tqdm(trajectories):
+        for trajectory_name in tqdm.tqdm(trajectories, desc=f'Collect {subset} trajectories'):
+
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
             current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
             current_df['trajectory_id'] = trajectory_name
