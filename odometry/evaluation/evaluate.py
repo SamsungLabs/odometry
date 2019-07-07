@@ -89,7 +89,7 @@ def calculate_relative_pose_error(gt_trajectory, predicted_trajectory, indices='
     steps = get_steps(trajectory_length, indices)
 
     gt_points = gt_trajectory.points
-    gt_rotation_matrices = predicted_trajectory.rotation_matrices
+    gt_rotation_matrices = gt_trajectory.rotation_matrices
 
     predicted_points = predicted_trajectory.points
     predicted_rotation_matrices = predicted_trajectory.rotation_matrices
