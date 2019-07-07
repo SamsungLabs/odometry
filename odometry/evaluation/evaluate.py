@@ -158,7 +158,7 @@ def calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory):
     return np.mean(pointwise_distances) ** 0.5
 
 
-def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full', prefix=''):
+def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full'):
     ate = calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory)
     rpe_t, rpe_r, divider = calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
                                                           indices=indices, mode='rpe')
