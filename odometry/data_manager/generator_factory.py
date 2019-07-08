@@ -68,9 +68,9 @@ class GeneratorFactory:
         self.val_trajectories = val_trajectories
         self.test_trajectories = test_trajectories
 
-        self.df_train = self._get_multi_df_dataset(self.train_trajectories)
-        self.df_val = self._get_multi_df_dataset(self.val_trajectories)
-        self.df_test = self._get_multi_df_dataset(self.test_trajectories)
+        self.df_train = self._get_multi_df_dataset(self.train_trajectories, 'train')
+        self.df_val = self._get_multi_df_dataset(self.val_trajectories, 'val')
+        self.df_test = self._get_multi_df_dataset(self.test_trajectories, 'test')
 
         if number_of_folds is not None:
             val_ratio = 1. / number_of_folds
@@ -84,15 +84,14 @@ class GeneratorFactory:
             self.df_val = self.df_val[start:end]
 
         self.df_train = self.df_train.iloc[::train_sampling_step] if self.df_train is not None else None
-
         self.df_val = self.df_val.iloc[::val_sampling_step] if self.df_val is not None else None
-
         self.df_test = self.df_test.iloc[::test_sampling_step] if self.df_test is not None else None
 
+        assert val_sampling_step == test_sampling_step
+        self.df_train_trajectory = self.df_train.copy().iloc[::val_sampling_step]
+
         self.train_generator_args = train_generator_args or {}
-
         self.val_generator_args = val_generator_args or {}
-
         self.test_generator_args = test_generator_args or {}
 
         self.args = args
@@ -107,12 +106,10 @@ class GeneratorFactory:
 
     def _get_multi_df_dataset(self, trajectories, subset=''):
         df = None
-
         if not trajectories:
             return df
 
         for trajectory_name in tqdm.tqdm(trajectories, desc=f'Collect {subset} trajectories'):
-
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
             current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
             current_df['trajectory_id'] = trajectory_name
@@ -163,8 +160,9 @@ class GeneratorFactory:
             filter_invalid=filter_invalid,
             *self.args, **self.kwargs)
 
-    def get_train_generator(self):
-        return self._get_generator(self.df_train, self.train_generator_args)
+    def get_train_generator(self, trajectory=False):
+        df_train = self.df_train_trajectory if trajectory else self.df_train
+        return self._get_generator(df_train, self.train_generator_args, trajectory=trajectory)
 
     def get_val_generator(self):
         return self._get_generator(self.df_val, self.val_generator_args, trajectory=True)
