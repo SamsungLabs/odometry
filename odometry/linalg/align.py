@@ -54,5 +54,5 @@ def align(trajectory_points, reference_trajectory_points, by='mean'):
         norms += np.inner(trajectory_points_shifted[index], trajectory_points_shifted[index])
 
     scale = float(dots / norms)
-    translation = reference_align_point - scale * (align_point @ rotation_matrix.T)
+    translation = (reference_align_point - scale * (align_point @ rotation_matrix.T))[0]
     return rotation_matrix, translation, scale

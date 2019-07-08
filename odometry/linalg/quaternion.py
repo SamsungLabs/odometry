@@ -5,13 +5,21 @@ from pyquaternion import Quaternion
 from odometry.linalg.linalg_utils import (convert_euler_angles_to_rotation_matrix,
                                           convert_rotation_matrix_to_euler_angles)
 
+
 class QuaternionWithTranslation:
-    def __init__(self, q = Quaternion(), t = [0, 0, 0]):
+    def __init__(self, q=Quaternion(), t=[0, 0, 0]):
         self.quaternion = q
-        self.translation = t.copy()
+        self.translation = np.array(t.copy())
 
     def __str__(self):
         return 'quaternion: {}, translation: {}'.format(self.quaternion, self.translation)
+
+    def copy(self):
+        return QuaternionWithTranslation(self.quaternion.copy(), self.translation.copy())
+
+    @property
+    def rotation_matrix(self):
+        return self.quaternion.rotation_matrix.copy()
 
     def to_quaternion(self):
         q = self.quaternion.elements
@@ -26,18 +34,18 @@ class QuaternionWithTranslation:
 
     def to_transformation_matrix(self):
         T = self.quaternion.transformation_matrix
-        t = self.translation
-        T[:3, -1] = t[:]
+        t = self.translation.copy()
+        T[:3, -1] = t
         return T
 
     @classmethod
     def from_transformation_matrix(cls, transformation_matrix):
-        quaternion = Quaternion(matrix=transformation_matrix)
+        quaternion = Quaternion(matrix=transformation_matrix).normalised
         translation = transformation_matrix[:3, -1]
         return cls(q=quaternion, t=translation)
 
     def to_euler_angles(self):
-        euler_angles = convert_rotation_matrix_to_euler_angles(self.quaternion.rotation_matrix)
+        euler_angles = convert_rotation_matrix_to_euler_angles(self.rotation_matrix)
         t = self.translation
         return {'euler_x': euler_angles[0], 'euler_y': euler_angles[1], 'euler_z': euler_angles[2],
                 't_x': t[0], 't_y': t[1], 't_z': t[2]}
@@ -46,28 +54,22 @@ class QuaternionWithTranslation:
     def from_euler_angles(cls, euler_angles_with_translation):
         euler_angles = [euler_angles_with_translation['euler_x'], euler_angles_with_translation['euler_y'], euler_angles_with_translation['euler_z']]
         rotation_matrix = convert_euler_angles_to_rotation_matrix(euler_angles)
-        quaternion = Quaternion(matrix=rotation_matrix)
         translation = [euler_angles_with_translation['t_x'], euler_angles_with_translation['t_y'], euler_angles_with_translation['t_z']]
+        return cls.from_rotation_matrix((rotation_matrix, translation))
+
+    def to_rotation_matrix(self):
+        R = self.rotation_matrix
+        t = self.translation.copy()
+        return R, t
+
+    @classmethod
+    def from_rotation_matrix(cls, rotation_matrix_with_translation):
+        rotation_matrix, translation = rotation_matrix_with_translation
+        quaternion = Quaternion(matrix=rotation_matrix).normalised
         return cls(q=quaternion, t=translation)
 
     def to_semi_global(self, origin):
-        q_origin = origin.quaternion
-        t_origin = origin.translation.copy()
-        q_current = self.quaternion
-        t_current = self.translation.copy()
-
-        transformation_current = q_current.transformation_matrix
-        transformation_current[0, -1] = t_current[0]
-        transformation_current[1, -1] = t_current[1]
-        transformation_current[2, -1] = t_current[2]
-
-        transformation_origin = q_origin.transformation_matrix
-        transformation_origin[0, -1] = t_origin[0]
-        transformation_origin[1, -1] = t_origin[1]
-        transformation_origin[2, -1] = t_origin[2]
-
-        transformation_relative = np.linalg.inv(transformation_origin)@transformation_current
-
-        quaternion = Quaternion(matrix=transformation_current)
-        translation = transformation_relative[0:3, -1]
-        return QuaternionWithTranslation(quaternion, translation)
+        transformation_current = self.to_transformation_matrix()
+        transformation_origin = origin.to_transformation_matrix()
+        transformation_relative = np.linalg.inv(transformation_origin) @ transformation_current
+        return QuaternionWithTranslation.from_transformation_matrix(transformation_relative)
