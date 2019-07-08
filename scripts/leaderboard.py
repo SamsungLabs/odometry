@@ -18,8 +18,10 @@ class Leaderboard:
                  trainer_path,
                  dataset_type,
                  run_name,
+                 machines,
                  bundle_size=1,
-                 verbose=False
+                 verbose=False,
+                 debug=False
                  ):
 
         if not os.path.exists(trainer_path):
@@ -29,9 +31,14 @@ class Leaderboard:
         self.dataset_type = dataset_type
         self.run_name = run_name
         self.bundle_size = bundle_size
-        self.leader_boards = ['kitti_4/6', 'discoman_v10', 'tum']
+
+        if debug:
+            self.leader_boards = ['tum_debug', 'discoman_debug']
+        else:
+            self.leader_boards = ['kitti_4/6', 'discoman_v10', 'tum']
+
         self.verbose = verbose
-        # self.leader_boards = ['tum_debug', 'discoman_debug']
+        self.machines = machines
 
     def submit(self):
 
@@ -98,9 +105,9 @@ class Leaderboard:
 
         command = ['bsub',
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
+                   f'-m "{self.machines}"',
                    '-gpu "num=1:mode=exclusive_process"',
                    'python',
-                   f'-m [airugpub02, airugpua06, airugpua09, airugpua10]'
                    f'{self.trainer_path}',
                    f'--dataset_root {dataset_root}',
                    f'--dataset_type {dataset_type}',
@@ -206,6 +213,10 @@ if __name__ == '__main__':
     parser.add_argument('--bundle_size', '-b', type=int, help='Number runs in evaluate', required=True)
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console', default=False)
+    parser.add_argument('--debug', action='store_true', default=False)
+    parser.add_argument('--machines', '-m', help='lsf arg. Specify machines on which execute job',
+                        default='airugpua01 airugpua02 airugpua03 airugpua04 airugpua05 airugpua06 '
+                                'airugpua07 airugpua08 airugpua09 airugpua10 airugpub01 airugpub02')
 
     args = parser.parse_args()
 
@@ -213,7 +224,9 @@ if __name__ == '__main__':
                               dataset_type=args.dataset_type,
                               run_name=args.run_name,
                               bundle_size=args.bundle_size,
-                              verbose=args.verbose
+                              verbose=args.verbose,
+                              machines=args.machines,
+                              debug=args.debug
                               )
 
     leaderboard.submit()

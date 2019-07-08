@@ -3,6 +3,7 @@ import functools
 import mlflow
 import argparse
 
+import __init_path__
 import env
 from odometry.data_manager import GeneratorFactory
 from odometry.evaluation import PredictCallback

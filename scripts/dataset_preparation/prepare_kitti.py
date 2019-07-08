@@ -1,9 +1,10 @@
 import argparse
 import os
 
+import __init_path__
 import env
 
-from scripts import prepare_dataset
+from odometry.preprocessing import prepare_dataset
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
