@@ -27,7 +27,8 @@ from odometry.models.layers import (activ,
                                     AssociationLayer,
                                     AddGridLayer)
 
-import mlflow
+from odometry.utils import mlflow_logging
+
 
 class BaseModelFactory:
     def construct(self):
@@ -35,8 +36,11 @@ class BaseModelFactory:
 
 
 class PretrainedModelFactory(BaseModelFactory):
+
+    @mlflow_logging
     def __init__(self, pretrained_path):
         self.pretrained_path = pretrained_path
+        self.model = None
 
     def construct(self):
         self.model = load_model(
@@ -65,18 +69,17 @@ class PretrainedModelFactory(BaseModelFactory):
 
 
 class ModelFactory:
+
+    @mlflow_logging
     def __init__(self,
                  construct_graph_fn,
                  input_shapes=((60, 80, 3), (60, 80, 3)),
                  lr=0.001,
                  loss=mean_squared_error,
                  scale_rotation=1.,
-                 scale_translation=1.):
+                 scale_translation=1.,
+                 ignore=('construct_graph_fn',)):
 
-        if mlflow.active_run():
-            params = locals()
-            params.pop('self', None)
-            mlflow.log_params({'model_factory.' + k: repr(v) for k, v in params.items()})
         self.model = None
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes

@@ -30,12 +30,15 @@ def mlflow_logging(func):
             params.pop(k, None)
 
         params.pop('ignore', None)
+        params.pop('self', None)
+        params.pop('cls', None)
 
         return params
 
     def log(*args, **kwargs):
 
         if not mlflow.active_run():
+            print("Not active run")
             return func(*args, **kwargs)
 
         arg_spec = inspect.getargspec(func)
@@ -49,6 +52,6 @@ def mlflow_logging(func):
 
         mlflow.log_params(params)
 
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
 
     return log

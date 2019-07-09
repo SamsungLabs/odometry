@@ -1,4 +1,3 @@
-import mlflow
 from keras.layers.core import Lambda
 from keras.layers.merge import concatenate
 from keras.layers import BatchNormalization, Flatten, Dense, Concatenate
@@ -10,6 +9,8 @@ from odometry.models.layers import (concat,
                                     construct_outputs,
                                     AssociationLayer,
                                     AddGridLayer)
+
+from odometry.utils import mlflow_logging
 
 
 def construct_encoder(inputs,
@@ -88,6 +89,7 @@ def construct_encoder(inputs,
     return flatten
 
 
+@mlflow_logging
 def construct_depth_flow_model(inputs,
                                use_depth=True,
                                use_flow=True,
@@ -106,11 +108,10 @@ def construct_depth_flow_model(inputs,
                                f_y=1,
                                c_x=0.5,
                                c_y=0.5,
-                               kernel_initializer='glorot_normal'):
-
-    if mlflow.active_run():
-        mlflow.log_param('model.name', 'Depth flow')
-        mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+                               kernel_initializer='glorot_normal',
+                               model_name='DepthFlow',
+                               ignore=('inputs',),
+                               ):
 
     flatten = construct_encoder(inputs,
                                 use_depth=use_depth,

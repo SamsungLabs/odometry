@@ -1,5 +1,3 @@
-import mlflow
-from keras.layers.merge import concatenate
 from keras.layers import Flatten
 
 from odometry.models.layers import (concat,
@@ -8,6 +6,8 @@ from odometry.models.layers import (concat,
                                     construct_double_fc,
                                     construct_outputs,
                                     construct_outputs_with_confidences)
+
+from odometry.utils import mlflow_logging
 
 
 def construct_encoder(inputs,
@@ -81,6 +81,7 @@ def construct_encoder(inputs,
     return flatten
 
 
+@mlflow_logging
 def construct_multiscale_model(inputs,
                                layers=4,
                                filters=[[16, 16, 32]] * 4,
@@ -92,11 +93,10 @@ def construct_multiscale_model(inputs,
                                activation='relu',
                                kernel_initializer='glorot_normal',
                                use_gated_convolutions=False,
-                               return_confidence=False
-                              ):
-    if mlflow.active_run():
-        mlflow.log_param('model.name', 'Multiscale')
-        mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+                               return_confidence=False,
+                               model_name='Multiscale',
+                               ignore=('inputs',)
+                               ):
 
     inputs = concat(inputs)
     features = construct_encoder(inputs,

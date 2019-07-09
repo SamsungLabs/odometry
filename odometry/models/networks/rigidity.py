@@ -1,11 +1,11 @@
-import mlflow
 from keras.layers.convolutional import Conv2D
-from keras.layers.merge import concatenate
 from keras.layers import GlobalAveragePooling2D, Lambda
 
 from odometry.models.layers import concat, conv2d, AddGridLayer
+from odometry.utils import mlflow_logging
 
 
+@mlflow_logging
 def construct_rigidity_model(inputs,
                              batchnorm=True,
                              add_grid_layer=True, 
@@ -13,10 +13,10 @@ def construct_rigidity_model(inputs,
                              f_y=1,
                              c_x=0.5, 
                              c_y=0.5, 
-                             kernel_initializer='he_uniform'):
-    if mlflow.active_run():
-        mlflow.log_param('model.name', 'Rigidity')
-        mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+                             kernel_initializer='he_uniform',
+                             model_name='Rigidity',
+                             ignore=('inputs',)
+                             ):
 
     inputs = concat(inputs)
     if add_grid_layer:

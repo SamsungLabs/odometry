@@ -33,6 +33,7 @@ class BaseTrainer:
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(self.config['exp_name'])
         mlflow.start_run(run_name=run_name)
+        print(f'Active run {mlflow.active_run()}')
         mlflow.log_param('run_name', run_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
 
