@@ -155,18 +155,12 @@ class ConstantModelFactory(ModelFactory):
 
 class ModelWithConfidenceFactory(ModelFactory):
 
-    def freeze_confidences(self):
+    def freeze(self):
         for layer in self.model.layers:
-            layer.trainable = (not 'confidence' in layer.name) or 'with' in layer.name
-            print('{:<30} {}'.format(layer.name, layer.trainable))
-        self._compile()
-        return self.model
-
-    def freeze_outputs(self):
-        for layer in self.model.layers:
-            layer.trainable = 'confidence' in layer.name
-            print('{:<30} {}'.format(layer.name, layer.trainable))
+            layer.trainable = ~layer.trainable
 
         self.loss = confidence_error
         self._compile()
+        for layer in self.model.layers:
+            print('{:<30} {}'.format(layer.name, layer.trainable))
         return self.model
