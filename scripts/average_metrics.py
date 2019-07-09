@@ -2,6 +2,7 @@ import mlflow
 import datetime
 import numpy as np
 import argparse
+from collections import defaultdict
 
 import __init_path__
 import env
@@ -43,17 +44,17 @@ def load_metrics(run_name, dataset_type):
         if run_name == base_run_name:
             metrics.append(client.get_run(run_info.run_id).data.metrics)
             if not model_name:
-                model_name = client.get_run(run_info.run_id).data.params.get('model.name', 'Unknown')
+                model_name = client.get_run(run_info.run_id).data.params.get('model_name', 'Unknown')
 
     return metrics, model_name
 
 
 def aggregate_metrics(metrics):
-    aggregated_metrics = {k: [] for k in metrics[0].keys()}
+    aggregated_metrics = defaultdict(list)
 
     for metric in metrics:
         for k, v in metric.items():
-            aggregated_metrics.get(k, list()).append(v)
+            aggregated_metrics[k].append(v)
     return aggregated_metrics
 
 
