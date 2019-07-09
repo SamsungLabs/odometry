@@ -1,16 +1,15 @@
 import os
 import time
 import logging
-import datetime
 import argparse
-import numpy as np
 import subprocess as sp
 from pathlib import Path
 from multiprocessing import Pool
-import mlflow
 
 import __init_path__
 import env
+
+from scripts.average_metrics import average_metrics
 
 
 class Leaderboard:
@@ -73,7 +72,7 @@ class Leaderboard:
 
         logger.info(f'Dataset {dataset_type}. Averaging metrics')
         try:
-            self.average_metrics(dataset_type)
+            average_metrics(self.run_name, dataset_type)
         except Exception as e:
             logger.info(e)
 
@@ -151,55 +150,6 @@ class Leaderboard:
             sh.setLevel(logging.DEBUG)
             logger.addHandler(sh)
 
-    def average_metrics(self, dataset_type):
-
-        metrics, model_name = self.load_metrics(dataset_type)
-
-        aggregated_metrics = self.aggregate_metrics(metrics)
-
-        metrics_mean = {k + '_mean': np.mean(v) for k, v in aggregated_metrics.items() if 'test' in k}
-        metrics_var = {k + '_var': np.var(v) for k, v in aggregated_metrics.items() if 'test' in k}
-
-        mlflow.set_tracking_uri(env.TRACKING_URI)
-        mlflow.set_experiment(dataset_type)
-
-        with mlflow.start_run(run_name=(self.run_name + "_av")):
-            mlflow.log_param('run_name', self.run_name + "_av")
-            mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
-
-            mlflow.log_param('model.name', model_name)
-            mlflow.log_param('num_of_runs_to_average', len(metrics))
-
-            mlflow.log_metrics(metrics_mean)
-            mlflow.log_metrics(metrics_var)
-
-    def load_metrics(self, dataset_type):
-
-        client = mlflow.tracking.MlflowClient(env.TRACKING_URI)
-        exp = client.get_experiment_by_name(dataset_type)
-        exp_id = exp.experiment_id
-
-        metrics = list()
-        model_name = None
-        for run_info in client.list_run_infos(exp_id):
-            base_run_name = client.get_run(run_info.run_id).data.params['run_name'].split('_')
-            base_run_name = '_'.join(base_run_name[:-2])
-            if self.run_name == base_run_name:
-                metrics.append(client.get_run(run_info.run_id).data.metrics)
-                if not model_name:
-                    model_name = client.get_run(run_info.run_id).data.params.get('model.name', 'Unknown')
-
-        return metrics, model_name
-
-    @staticmethod
-    def aggregate_metrics(metrics):
-        aggregated_metrics = {k: [] for k in metrics[0].keys()}
-
-        for metric in metrics:
-            for k, v in metric.items():
-                aggregated_metrics.get(k, list()).append(v)
-        return aggregated_metrics
-
 
 if __name__ == '__main__':
 
@@ -214,7 +164,6 @@ if __name__ == '__main__':
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console', default=False)
     parser.add_argument('--debug', action='store_true', default=False)
-    parser.add_argument('--average_existed', action='store_true', default=False)
     parser.add_argument('--machines', '-m', help='lsf arg. Specify machines on which execute job',
                         default='airugpua01 airugpua02 airugpua03 airugpua04 airugpua05 airugpua06 '
                                 'airugpua07 airugpua08 airugpua09 airugpua10 airugpub01 airugpub02')
@@ -227,11 +176,6 @@ if __name__ == '__main__':
                               bundle_size=args.bundle_size,
                               verbose=args.verbose,
                               machines=args.machines,
-                              debug=args.debug
-                              )
+                              debug=args.debug)
 
-    if args.average_existed:
-        assert args.dataset_type is not 'leaderboard'
-        leaderboard.average_metrics(args.dataset_type)
-    else:
-        leaderboard.submit()
+    leaderboard.submit()
