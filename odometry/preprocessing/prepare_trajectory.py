@@ -23,7 +23,7 @@ def work_with_parser(root, parser):
             for index, elem in enumerate(single_frame_df[column]):
                 _, file_extension = os.path.splitext(elem)
                 assert os.path.exists(elem), elem
-                symlink_path = os.path.join(column_dst_dir, '{}{}'.format(index, file_extension))
+                symlink_path = os.path.join(column_dst_dir, f'{index}{file_extension}')
                 os.symlink(elem, os.path.abspath(os.path.join(root, symlink_path)))
                 single_frame_df.at[index, column] = symlink_path
 
@@ -41,7 +41,7 @@ def work_with_estimator(root, df, estimator):
 def transform_single_frame_df_to_paired(single_frame_df, stride):
     first_part_df = single_frame_df.iloc[:-stride].copy().reset_index(drop=True)
     second_part_df = single_frame_df.iloc[stride:].copy().reset_index(drop=True)
-    second_part_df.rename(columns=lambda c: '{}_next'.format(c), inplace=True)
+    second_part_df.rename(columns=lambda col: f'{col}_next', inplace=True)
     return pd.concat((first_part_df, second_part_df), axis=1)
 
 
