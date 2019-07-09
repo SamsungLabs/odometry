@@ -68,5 +68,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     average_metrics(args.run_name, args.dataset_type)
-
-
