@@ -119,6 +119,7 @@ def construct_outputs_with_confidences(outputs,
                                activation='relu',
                                kernel_regularizer=l2(regularization),
                                kernel_initializer=kernel_initializer,
+                               trainable=False,
                                name=f'{output_name}_confidence')(x)
             confidences.append(confidence)
             names.append(f'{output_name}_with_confidence')
