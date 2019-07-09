@@ -18,8 +18,9 @@ def average_metrics(run_name, dataset_type):
     mlflow.set_tracking_uri(env.TRACKING_URI)
     mlflow.set_experiment(dataset_type)
 
-    with mlflow.start_run(run_name=(run_name + "_av")):
-        mlflow.log_param('run_name', run_name + "_av")
+    run_name = run_name + '_avg'
+    with mlflow.start_run(run_name=run_name):
+        mlflow.log_param('run_name', run_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
 
         mlflow.log_param('model.name', model_name)
