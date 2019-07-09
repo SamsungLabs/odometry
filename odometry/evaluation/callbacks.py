@@ -113,11 +113,11 @@ class Evaluate(keras.callbacks.Callback):
     def _create_trajectory(self, df):
         return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
 
-    def _maybe_save_trajectory(self, prediction_id, subset, trajectory_id, trajectory):
+    def _maybe_save_predictions(self, prediction_id, subset, trajectory_id, predictions):
         if not self.save_predictions:
             return
         file_path = self._create_prediction_file_path(prediction_id, subset, trajectory_id)
-        trajectory.to_dataframe().to_csv(file_path)
+        predictions.to_csv(file_path)
 
     def _maybe_visualize_trajectory(self, prediction_id, subset, trajectory_id, predicted_trajectory,
                                     gt_trajectory=None, trajectory_metrics=None):
@@ -130,7 +130,7 @@ class Evaluate(keras.callbacks.Callback):
             visualize_trajectory(predicted_trajectory, title=title, file_path=file_path)
         else:
             normalized_metrics = normalize_metrics(trajectory_metrics)
-            normalized_metrics_as_str = ', '.join(['{}: {:.6f}'.format(key, value)
+            normalized_metrics_as_str = ', '.join([f'{key}: {value:.6f}'
                                                    for key, value in normalized_metrics.items()])
             title = f'{trajectory_id.upper()}: {normalized_metrics_as_str}'
             visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_path=file_path)
@@ -148,7 +148,7 @@ class Evaluate(keras.callbacks.Callback):
                                                                desc=f'Evaluate on {subset}')):
             gt_trajectory = self._create_trajectory(gt.iloc[indices])
             predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
-            self._maybe_save_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
+            self._maybe_save_predictions(prediction_id, subset, trajectory_id, predictions.iloc[indices])
 
             trajectory_metrics = calculate_metrics(gt_trajectory, predicted_trajectory)
             records.append(trajectory_metrics)
@@ -171,14 +171,14 @@ class Evaluate(keras.callbacks.Callback):
                                                 total=gt.trajectory_id.nunique(),
                                                 desc=f'Visualize {subset}'):
             predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
-            self._maybe_save_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
+            self._maybe_save_predictions(prediction_id, subset, trajectory_id, predictions.iloc[indices])
             self._maybe_visualize_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
 
     def _predict(self, generator, gt):
         generator.reset()
         generator.y_cols = self.y_cols[:]
         model_output = self.model.predict_generator(generator, steps=len(generator))
-        data = np.stack(model_output).transpose(1, 0, 2)
+        data = np.stack(model_output).transpose(1, 2, 0)
         data = data.reshape((len(data), -1))
         columns = self.y_cols[:]
         assert data.shape[1] in (len(columns), 2 * len(columns))
@@ -200,7 +200,7 @@ class Evaluate(keras.callbacks.Callback):
 
         self.best_loss = min(val_loss, self.best_loss)
 
-        prediction_id = '{:03d}_train:{:.6f}_val:{:.6f}'.format(epoch + 1, train_loss, val_loss)
+        prediction_id = f'{(epoch + 1):03d}_train:{train_loss:.6f}_val:{val_loss:.6f}'
 
         train_metrics = self._evaluate(self.train_generator, self.df_train, 'train', prediction_id)
         val_metrics = self._evaluate(self.val_generator, self.df_val, 'val', prediction_id)
