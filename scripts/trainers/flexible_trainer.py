@@ -50,8 +50,6 @@ class FlexibleTrainer(BaseTrainer):
             image_col=['path_to_optical_flow'],
             load_mode=['flow_xy'],
             preprocess_mode=['flow_xy'],
-            val_sampling_step=2,
-            test_sampling_step=2,
             cached_images={}
         )
 
