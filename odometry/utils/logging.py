@@ -24,8 +24,7 @@ def mlflow_logging(func):
 
         return params
 
-    def filter_ignore(params, kwargs):
-        print(params)
+    def filter_ignore(params):
         ignore = params.get('ignore', list())
         for k in ignore:
             params.pop(k, None)
@@ -36,18 +35,15 @@ def mlflow_logging(func):
 
     def log(*args, **kwargs):
 
-        # if not mlflow.active_run():
-        #     return func(*args, **kwargs)
-
-        print(args)
-        print(kwargs)
+        if not mlflow.active_run():
+            return func(*args, **kwargs)
 
         arg_spec = inspect.getargspec(func)
 
         params = initialize(arg_spec)
         params = log_default(params, arg_spec)
         params = log_input(params, arg_spec, args, kwargs)
-        params = filter_ignore(params, kwargs)
+        params = filter_ignore(params)
 
         print(params)
 
