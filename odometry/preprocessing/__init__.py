@@ -32,5 +32,5 @@ __all__ = [
     'Quaternion2EulerEstimator',
     'Struct2DepthEstimator',
     'Global2RelativeEstimator',
-    'PWCNetEstimator'
+    'PWCNetEstimator',
 ]
