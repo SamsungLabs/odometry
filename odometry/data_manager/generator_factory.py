@@ -14,7 +14,7 @@ from odometry.data_manager.generator import ExtendedDataFrameIterator
 class GeneratorFactory:
     def __init__(self,
                  dataset_root,
-                 csv_name,
+                 csv_name='df.csv',
                  train_trajectories=None,
                  val_trajectories=None,
                  test_trajectories=None,
