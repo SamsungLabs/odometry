@@ -10,6 +10,7 @@ from .discoman_parser import OldDISCOMANParser
 from .discoman_parser import DISCOMANCSVParser
 
 from .euroc_parser import EuRoCParser
+from .euroc_parser import ZJUParser
 
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     'DISCOMANJSONParser',
     'OldDISCOMANParser',
     'DISCOMANCSVParser',
-    'EuRoCParser'
+    'EuRoCParser',
+    'ZJUParser'
 ]
