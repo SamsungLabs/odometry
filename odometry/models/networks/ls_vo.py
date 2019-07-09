@@ -50,8 +50,10 @@ def construct_flow_decoder(conv4,
 
 def construct_st_vo_model(inputs,
                           kernel_initializer='glorot_normal'):
-    mlflow.log_param('model.name', 'ST-VO')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+
+    if mlflow.active_run():
+        mlflow.log_param('model.name', 'ST-VO')
+        mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
     inputs = concat(inputs)
     conv1 = Conv2D(64, kernel_size=3, strides=2,
                    kernel_initializer=kernel_initializer, name='conv1')(inputs)
@@ -74,8 +76,9 @@ def construct_ls_vo_model(inputs,
                           hidden_size=1000,
                           regularization=0,
                           kernel_initializer='glorot_normal'):
-    mlflow.log_param('model.name', 'LS-VO')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+    if mlflow.active_run():
+        mlflow.log_param('model.name', 'LS-VO')
+        mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
     inputs = concat(inputs)
     features, bottleneck = construct_encoder(inputs,
                                              kernel_initializer=kernel_initializer)
@@ -95,8 +98,9 @@ def construct_ls_vo_rt_model(inputs,
                              hidden_size=500,
                              regularization=0,
                              kernel_initializer='glorot_normal'):
-    mlflow.log_param('model.name', 'LS-VO_rt')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+    if mlflow.active_run():
+        mlflow.log_param('model.name', 'LS-VO_rt')
+        mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
     inputs = concat(inputs)
     features, bottleneck = construct_encoder(inputs,
                                              kernel_initializer=kernel_initializer)

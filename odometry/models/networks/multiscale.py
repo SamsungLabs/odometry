@@ -94,8 +94,9 @@ def construct_multiscale_model(inputs,
                                use_gated_convolutions=False,
                                return_confidence=False
                               ):
-    mlflow.log_param('model.name', 'Multiscale')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+    if mlflow.active_run():
+        mlflow.log_param('model.name', 'Multiscale')
+        mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
 
     inputs = concat(inputs)
     features = construct_encoder(inputs,

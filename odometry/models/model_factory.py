@@ -72,9 +72,11 @@ class ModelFactory:
                  loss=mean_squared_error,
                  scale_rotation=1.,
                  scale_translation=1.):
-        params = locals()
-        params.pop('self', None)
-        mlflow.log_params({'model_factory.' + k: repr(v) for k, v in params.items()})
+
+        if mlflow.active_run():
+            params = locals()
+            params.pop('self', None)
+            mlflow.log_params({'model_factory.' + k: repr(v) for k, v in params.items()})
         self.model = None
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
@@ -119,7 +121,8 @@ class ModelFactory:
         self.model = Model(inputs=inputs, outputs=outputs)
         self._compile()
 
-        mlflow.log_metric('Number of parameters', count_params(self.model.trainable_weights))
+        if mlflow.active_run():
+            mlflow.log_metric('Number of parameters', count_params(self.model.trainable_weights))
         return self.model
 
 

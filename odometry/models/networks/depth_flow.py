@@ -108,8 +108,9 @@ def construct_depth_flow_model(inputs,
                                c_y=0.5,
                                kernel_initializer='glorot_normal'):
 
-    mlflow.log_param('model.name', 'Depth flow')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+    if mlflow.active_run():
+        mlflow.log_param('model.name', 'Depth flow')
+        mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
 
     flatten = construct_encoder(inputs,
                                 use_depth=use_depth,

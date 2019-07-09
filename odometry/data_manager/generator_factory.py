@@ -35,22 +35,24 @@ class GeneratorFactory:
                  cached_images=None,
                  *args, **kwargs):
 
-        mlflow.log_params({'generator.' + k: repr(v) for k, v in locals().items() if not ('trajectories' in k or 'self' in k)})
+        if mlflow.active_run():
+            params = {'generator.' + k: repr(v) for k, v in locals().items() if 'trajectories' not in k}
+            params.pop('self')
+            mlflow.log_params(params)
+
+            dataset_config_path = os.path.join(dataset_root, 'prepare_dataset.json')
+            try:
+                with open(dataset_config_path, 'r') as f:
+                    dataset_config = json.load(f)
+                    mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
+                    mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
+            except FileNotFoundError:
+                warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun '
+                              f'prepare_dataset.py for this dataset. Path {dataset_config_path}', UserWarning)
+                mlflow.log_param('depth_checkpoint', None)
+                mlflow.log_param('optical_flow_checkpoint', None)
 
         self.dataset_root = dataset_root
-
-        dataset_config_path = os.path.join(dataset_root, 'prepare_dataset.json')
-        try:
-            with open(dataset_config_path, 'r') as f:
-                dataset_config = json.load(f)
-                mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
-                mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
-        except FileNotFoundError:
-            warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun prepare_dataset.py'
-                          f'for this dataset. Path {dataset_config_path}', UserWarning)
-            mlflow.log_param('depth_checkpoint', None)
-            mlflow.log_param('optical_flow_checkpoint', None)
-
         self.csv_name = csv_name
 
         self.x_col = list(x_col)
