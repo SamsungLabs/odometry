@@ -131,8 +131,7 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                           'target_size': target_size}
         json.dump(dataset_config, f)
 
-    for trajectory in tqdm(trajectories):
-        trajectory_name = trajectory[len(dataset_root):] if dataset_root[:-1] == '/' else trajectory[len(dataset_root)+1:]
+    for trajectory_name in tqdm(trajectories):
         output_dir = output_root.joinpath(trajectory_name)
         logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}')
 

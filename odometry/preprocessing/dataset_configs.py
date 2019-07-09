@@ -33,13 +33,6 @@ def get_config(dataset_root: str, dataset_type: str) -> Dict:
     return config
 
 
-def append_root(config, dataset_root):
-    for key in ['train_trajectories', 'val_trajectories', 'test_trajectories']:
-        if config[key] is not None:
-            config[key] = [os.path.join(dataset_root, i) for i in config[key]]
-    return config
-
-
 def get_kitti_8_3_config(dataset_root):
     config = {'train_trajectories': ['00',
                                      '01',
@@ -60,8 +53,6 @@ def get_kitti_8_3_config(dataset_root):
               'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
               }
-
-    config = append_root(config, dataset_root)
     return config
 
 
@@ -82,7 +73,6 @@ def get_kitti_4_6_config(dataset_root):
               'exp_name': 'kitti_4/6',
               'target_size': (96, 320)
               }
-    config = append_root(config, dataset_root)
     return config
 
 
@@ -99,7 +89,8 @@ def get_discoman_v10_config(dataset_root):
     for d in sub_dirs:
         for trajectory in Path(dataset_root).joinpath(d).glob('*'):
             if is_int(trajectory.name):
-                config[f'{d}_trajectories'].append(trajectory.as_posix())
+                trajectory_name = trajectory.as_posix()[len(dataset_root)+int(dataset_root[-1] == '/'):]
+                config[f'{d}_trajectories'].append(trajectory_name)
 
     return config
 
@@ -111,7 +102,6 @@ def get_discoman_debug_config(dataset_root):
               'exp_name': 'discoman_debug',
               'target_size': (90, 160),
               }
-    config = append_root(config, dataset_root)
     return config
 
 
@@ -122,7 +112,6 @@ def get_tum_debug_config(dataset_root):
               'exp_name': 'tum_debug',
               'target_size': (120, 160),
               }
-    config = append_root(config, dataset_root)
     return config
 
 
@@ -140,7 +129,6 @@ def get_fr1_config(dataset_root):
               'exp_name': 'fr1',
               'target_size': (120, 160),
               }
-    config = append_root(config, dataset_root)
     return config
 
 
@@ -160,7 +148,6 @@ def get_fr2_config(dataset_root):
               'exp_name': 'fr2',
               'target_size': (120, 160),
               }
-    config = append_root(config, dataset_root)
     return config
 
 
@@ -210,7 +197,6 @@ def get_fr3_config(dataset_root):
               'exp_name': 'fr3',
               'target_size': (120, 160),
               }
-    config = append_root(config, dataset_root)
     return config
 
 
