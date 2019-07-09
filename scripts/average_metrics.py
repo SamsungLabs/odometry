@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_type', '-t', type=str, required=True,
-                        help='You can find availible exp names in odometry.preprocessing.dataset_configs.py')
+                        help='You can find available exp names in odometry.preprocessing.dataset_configs.py')
 
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
                         required=True)
