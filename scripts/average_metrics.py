@@ -13,7 +13,7 @@ def average_metrics(run_name, dataset_type):
     aggregated_metrics = aggregate_metrics(metrics)
 
     metrics_mean = {k + '_mean': np.mean(v) for k, v in aggregated_metrics.items() if 'test' in k}
-    metrics_var = {k + '_var': np.var(v) for k, v in aggregated_metrics.items() if 'test' in k}
+    metrics_std = {k + '_std': np.std(v) for k, v in aggregated_metrics.items() if 'test' in k}
 
     mlflow.set_tracking_uri(env.TRACKING_URI)
     mlflow.set_experiment(dataset_type)
@@ -27,7 +27,7 @@ def average_metrics(run_name, dataset_type):
         mlflow.log_param('num_of_runs_to_average', len(metrics))
 
         mlflow.log_metrics(metrics_mean)
-        mlflow.log_metrics(metrics_var)
+        mlflow.log_metrics(metrics_std)
 
 
 def load_metrics(run_name, dataset_type):
