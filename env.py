@@ -16,7 +16,7 @@ os.environ['NUMEXPR_NUM_THREADS'] = '6'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 warnings.simplefilter('ignore')
 
-TRACKING_URI = 'sqlite:////dbstore/datasets/robotics/mlflow/odometry/database.db'
+TRACKING_URI = 'postgresql://odometry:YyXr9f8R@airulsf01/odometrydb'
 mlflow.set_tracking_uri(TRACKING_URI)
 
 TUM_PATH = '/dbstore/datasets/Odometry_team/tum_rgbd/'
