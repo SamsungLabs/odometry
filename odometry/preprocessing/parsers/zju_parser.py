@@ -16,6 +16,7 @@ class ZJUParser(TUMParser):
                                         gt_txt_path=gt_txt_path,
                                         rgb_txt_path=rgb_txt_path,
                                         cols=['path_to_rgb'])
+
         self.name = 'ZJUParser'
 
     def _load_txt(self, txt_path, columns, scale=1):
