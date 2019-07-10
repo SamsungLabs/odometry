@@ -10,7 +10,7 @@ from .discoman_parser import OldDISCOMANParser
 from .discoman_parser import DISCOMANCSVParser
 
 from .euroc_parser import EuRoCParser
-from .euroc_parser import ZJUParser
+from .zju_parser import ZJUParser
 
 
 __all__ = [
