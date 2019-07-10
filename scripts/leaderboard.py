@@ -162,8 +162,8 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('--bundle_size', '-b', type=int, help='Number runs in evaluate', required=True)
 
-    parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console', default=False)
-    parser.add_argument('--debug', action='store_true', default=False)
+    parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console')
+    parser.add_argument('--debug', action='store_true')
     parser.add_argument('--machines', '-m', help='lsf arg. Specify machines on which execute job',
                         default='airugpua01 airugpua02 airugpua03 airugpua04 airugpua05 airugpua06 '
                                 'airugpua07 airugpua08 airugpua09 airugpua10 airugpub01 airugpub02')

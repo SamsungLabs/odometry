@@ -1,4 +1,3 @@
-import mlflow
 from keras.layers.convolutional import Conv2D
 from keras.layers.merge import concatenate
 from keras.layers.pooling import MaxPooling2D
@@ -10,6 +9,8 @@ from odometry.models.layers import (concat,
                                     construct_fc,
                                     construct_double_fc,
                                     construct_outputs)
+
+from odometry.utils import mlflow_logging
 
 
 def construct_encoder(inputs,
@@ -48,10 +49,9 @@ def construct_flow_decoder(conv4,
     return upsampling2
 
 
-def construct_st_vo_model(inputs,
-                          kernel_initializer='glorot_normal'):
-    mlflow.log_param('model.name', 'ST-VO')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='ST-VO')
+def construct_st_vo_model(inputs, kernel_initializer='glorot_normal'):
+
     inputs = concat(inputs)
     conv1 = Conv2D(64, kernel_size=3, strides=2,
                    kernel_initializer=kernel_initializer, name='conv1')(inputs)
@@ -69,13 +69,13 @@ def construct_st_vo_model(inputs,
     return outputs
 
 
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO')
 def construct_ls_vo_model(inputs,
                           cropping=((0, 0), (0, 0)),
                           hidden_size=1000,
                           regularization=0,
                           kernel_initializer='glorot_normal'):
-    mlflow.log_param('model.name', 'LS-VO')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+
     inputs = concat(inputs)
     features, bottleneck = construct_encoder(inputs,
                                              kernel_initializer=kernel_initializer)
@@ -90,13 +90,13 @@ def construct_ls_vo_model(inputs,
     return outputs
 
 
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO_rt')
 def construct_ls_vo_rt_model(inputs,
                              cropping=((0, 0), (0, 0)),
                              hidden_size=500,
                              regularization=0,
                              kernel_initializer='glorot_normal'):
-    mlflow.log_param('model.name', 'LS-VO_rt')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
+
     inputs = concat(inputs)
     features, bottleneck = construct_encoder(inputs,
                                              kernel_initializer=kernel_initializer)
@@ -117,6 +117,7 @@ def construct_ls_vo_rt_model(inputs,
     return outputs
 
 
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO_rt_no_decoder')
 def construct_ls_vo_rt_no_decoder_model(inputs,
                                         hidden_size=500,
                                         regularization=0,

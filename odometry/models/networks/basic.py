@@ -1,19 +1,18 @@
-import mlflow
 from keras.applications.resnet50 import ResNet50
 from keras.layers.convolutional import Conv2D
 from keras.layers.merge import concatenate
 from keras.layers import Flatten, Dense
 from keras.regularizers import l2
 
+
 from odometry.models.layers import concat, conv2d, ConstLayer
+from odometry.utils import mlflow_logging
 
 
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='ResNet50')
 def construct_resnet50_model(inputs,
                              weights='imagenet', 
                              kernel_initializer='glorot_normal'):
-
-    mlflow.log_param('model.name', 'ResNet50')
-    mlflow.log_params({'model.' + k: repr(v) for k, v in locals().items() if 'inputs' not in k})
 
     inputs = concat(inputs)
     conv0 = Conv2D(3, kernel_size=7, padding='same', activation='relu',

@@ -5,8 +5,9 @@ import argparse
 
 import __init_path__
 import env
+
 from odometry.data_manager import GeneratorFactory
-from odometry.evaluation import PredictCallback
+from odometry.evaluation import Evaluate
 from odometry.models import ModelFactory, construct_resnet50_model
 from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
 from odometry.base_trainer import BaseTrainer
@@ -36,7 +37,7 @@ class ResNet50Trainer(BaseTrainer):
         config = get_config(self.dataset_root, self.dataset_type)
 
         #  All parameters
-        epochs = 3
+        epochs = 1
         mlflow.log_param('epochs', epochs)
 
         dataset = GeneratorFactory(
@@ -50,8 +51,6 @@ class ResNet50Trainer(BaseTrainer):
             image_col=['path_to_optical_flow'],
             load_mode=['flow_xy'],
             preprocess_mode=['flow_xy'],
-            val_sampling_step=2,
-            test_sampling_step=2,
             cached_images={}
         )
 
@@ -68,12 +67,12 @@ class ResNet50Trainer(BaseTrainer):
         train_generator = dataset.get_train_generator()
         val_generator = dataset.get_val_generator()
         val_steps = len(val_generator) if val_generator else None
-        callback = PredictCallback(model,
-                                   dataset,
-                                   predictions_dir=self.prediction_dir,
-                                   visuals_dir=self.visuals_dir,
-                                   period=self.period,
-                                   save_best_only=self.save_best_only)
+        callback = Evaluate(model,
+                            dataset,
+                            predictions_dir=self.prediction_dir,
+                            visuals_dir=self.visuals_dir,
+                            period=self.period,
+                            save_best_only=self.save_best_only)
 
         model.fit_generator(
             train_generator,
