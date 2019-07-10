@@ -1,24 +1,20 @@
 import inspect
 import mlflow
 from typing import Tuple
+from functools import wraps
 
 
-def mlflow_logging(ignore: Tuple[str], prefix: str = '', **factory_kwargs):
+def mlflow_logging(ignore: Tuple[str], prefix: str = '', **kwargs):
 
     def decorator(func):
-        def initialize(arg_spec):
-            params = {k: None for k in arg_spec.args}
 
-            return params
+        def log_default(arg_spec):
+            return dict(zip(arg_spec.args[::-1], arg_spec.defaults[::-1]))
 
-        def log_default(params, arg_spec):
-            for i in range(len(arg_spec.defaults)):
-                params[arg_spec.args[-(i + 1)]] = arg_spec.defaults[-(i + 1)]
-
-            return params
-
-        def log_input(params, arg_spec, args, kwargs):
-            return {**dict(zip(arg_spec.args, args)), **kwargs, **factory_kwargs, **params}
+        def log_input(default_params, arg_spec, input_args, input_kwargs):
+            assert not set(input_kwargs.keys()) & set(kwargs.keys())
+            input_params = dict(zip(arg_spec.args, input_args))
+            return {**default_params, **input_params, **input_kwargs, **kwargs}
 
         def filter_ignore(params):
             for k in ignore:
@@ -30,25 +26,27 @@ def mlflow_logging(ignore: Tuple[str], prefix: str = '', **factory_kwargs):
 
             return params
 
-        def log(*args, **kwargs):
+        def add_prefix(params):
+            return {prefix + k: v for k, v in params.items()}
+
+        @wraps(func)
+        def wrapper(*args, **wrapper_kwargs):
 
             if not mlflow.active_run():
                 print("Not active run")
-                return func(*args, **kwargs)
+                return func(*args, **wrapper_kwargs)
 
             arg_spec = inspect.getargspec(func)
 
-            params = initialize(arg_spec)
-            params = log_default(params, arg_spec)
-            params = log_input(params, arg_spec, args, kwargs)
+            params = log_default(arg_spec)
+            params = log_input(params, arg_spec, args, wrapper_kwargs)
             params = filter_ignore(params)
-
-            params = {prefix + k: v for k, v in params.items()}
+            params = add_prefix(params)
 
             mlflow.log_params(params)
 
-            return func(*args, **kwargs)
+            return func(*args, **wrapper_kwargs)
 
-        return log
+        return wrapper
 
     return decorator
