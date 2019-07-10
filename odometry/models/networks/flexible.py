@@ -40,7 +40,8 @@ def construct_encoder(inputs,
     flatten1 = Flatten()(inputs)
     return flatten1
 
-@mlflow_logging
+
+@mlflow_logging(ignore=('inputs',), model_name='Flexible')
 def construct_flexible_model(inputs,
                              kernel_sizes=[7, 5, 3, 3, 3, 3],
                              strides=[2, 1, 4, 1 ,2, 1],
@@ -51,9 +52,7 @@ def construct_flexible_model(inputs,
                              kernel_initializer='glorot_normal',
                              use_gated_convolutions=True,
                              use_batchnorm=False,
-                             return_confidence=False,
-                             model_name='Flexible',
-                             ignore=('inputs',)):
+                             return_confidence=False):
 
     inputs = concat(inputs)
     features = construct_encoder(inputs,

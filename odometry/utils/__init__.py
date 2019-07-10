@@ -12,4 +12,4 @@ from .visualization_utils import visualize_trajectory
 
 from .video_utils import parse_video
 
-from .logging import mlflow_logging
+from .logging_utils import mlflow_logging

@@ -14,7 +14,7 @@ from odometry.utils import mlflow_logging
 
 class GeneratorFactory:
 
-    @mlflow_logging
+    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'))
     def __init__(self,
                  dataset_root,
                  csv_name,
@@ -36,9 +36,6 @@ class GeneratorFactory:
                  test_sampling_step=1,
                  batch_size=128,
                  cached_images=None,
-                 ignore=('train_trajectories',
-                         'val_trajectories',
-                         'test_trajectories'),
                  *args, **kwargs):
 
         self.dataset_root = dataset_root

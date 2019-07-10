@@ -70,15 +70,14 @@ class PretrainedModelFactory(BaseModelFactory):
 
 class ModelFactory:
 
-    @mlflow_logging
+    @mlflow_logging(ignore=('construct_graph_fn',))
     def __init__(self,
                  construct_graph_fn,
                  input_shapes=((60, 80, 3), (60, 80, 3)),
                  lr=0.001,
                  loss=mean_squared_error,
                  scale_rotation=1.,
-                 scale_translation=1.,
-                 ignore=('construct_graph_fn',)):
+                 scale_translation=1.):
 
         self.model = None
         self.construct_graph_fn = construct_graph_fn
