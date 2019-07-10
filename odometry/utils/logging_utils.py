@@ -3,7 +3,7 @@ import mlflow
 from typing import Tuple
 
 
-def mlflow_logging(ignore : Tuple[str], **factory_kwargs):
+def mlflow_logging(ignore: Tuple[str], prefix: str = '', **factory_kwargs):
 
     def decorator(func):
         def initialize(arg_spec):
@@ -42,6 +42,8 @@ def mlflow_logging(ignore : Tuple[str], **factory_kwargs):
             params = log_default(params, arg_spec)
             params = log_input(params, arg_spec, args, kwargs)
             params = filter_ignore(params)
+
+            params = {prefix + k: v for k, v in params.items()}
 
             mlflow.log_params(params)
 

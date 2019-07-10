@@ -81,7 +81,7 @@ def construct_encoder(inputs,
     return flatten
 
 
-@mlflow_logging
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='Multiscale')
 def construct_multiscale_model(inputs,
                                layers=4,
                                filters=[[16, 16, 32]] * 4,
@@ -93,10 +93,7 @@ def construct_multiscale_model(inputs,
                                activation='relu',
                                kernel_initializer='glorot_normal',
                                use_gated_convolutions=False,
-                               return_confidence=False,
-                               model_name='Multiscale',
-                               ignore=('inputs',)
-                               ):
+                               return_confidence=False):
 
     inputs = concat(inputs)
     features = construct_encoder(inputs,

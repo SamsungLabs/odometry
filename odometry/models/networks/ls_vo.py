@@ -49,11 +49,8 @@ def construct_flow_decoder(conv4,
     return upsampling2
 
 
-@mlflow_logging
-def construct_st_vo_model(inputs,
-                          kernel_initializer='glorot_normal',
-                          model_name='ST-VO',
-                          ignore=('inputs',)):
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='ST-VO')
+def construct_st_vo_model(inputs, kernel_initializer='glorot_normal'):
 
     inputs = concat(inputs)
     conv1 = Conv2D(64, kernel_size=3, strides=2,
@@ -72,15 +69,12 @@ def construct_st_vo_model(inputs,
     return outputs
 
 
-@mlflow_logging
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO')
 def construct_ls_vo_model(inputs,
                           cropping=((0, 0), (0, 0)),
                           hidden_size=1000,
                           regularization=0,
-                          kernel_initializer='glorot_normal',
-                          model_name='LS-VO',
-                          ignore=('inputs',)
-                          ):
+                          kernel_initializer='glorot_normal'):
 
     inputs = concat(inputs)
     features, bottleneck = construct_encoder(inputs,
@@ -96,15 +90,12 @@ def construct_ls_vo_model(inputs,
     return outputs
 
 
-@mlflow_logging
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO_rt')
 def construct_ls_vo_rt_model(inputs,
                              cropping=((0, 0), (0, 0)),
                              hidden_size=500,
                              regularization=0,
-                             kernel_initializer='glorot_normal',
-                             model_name='LS-VO_rt',
-                             ignore=('inputs',)
-                             ):
+                             kernel_initializer='glorot_normal'):
 
     inputs = concat(inputs)
     features, bottleneck = construct_encoder(inputs,
@@ -126,14 +117,11 @@ def construct_ls_vo_rt_model(inputs,
     return outputs
 
 
-@mlflow_logging
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO_rt_no_decoder')
 def construct_ls_vo_rt_no_decoder_model(inputs,
                                         hidden_size=500,
                                         regularization=0,
-                                        kernel_initializer='glorot_normal',
-                                        model_name='LS-VO_rt_no_decoder',
-                                        ignore=('inputs',)
-                                        ):
+                                        kernel_initializer='glorot_normal'):
     inputs = concat(inputs)
     features, _ = construct_encoder(inputs,
                                     kernel_initializer=kernel_initializer)

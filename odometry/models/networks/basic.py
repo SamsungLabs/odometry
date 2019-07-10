@@ -9,12 +9,10 @@ from odometry.models.layers import concat, conv2d, ConstLayer
 from odometry.utils import mlflow_logging
 
 
-@mlflow_logging
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='ResNet50')
 def construct_resnet50_model(inputs,
                              weights='imagenet', 
-                             kernel_initializer='glorot_normal',
-                             model_name='ResNet50',
-                             ignore=('inputs',)):
+                             kernel_initializer='glorot_normal'):
 
     inputs = concat(inputs)
     conv0 = Conv2D(3, kernel_size=7, padding='same', activation='relu',

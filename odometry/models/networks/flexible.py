@@ -41,7 +41,7 @@ def construct_encoder(inputs,
     return flatten1
 
 
-@mlflow_logging(ignore=('inputs',), model_name='Flexible')
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='Flexible')
 def construct_flexible_model(inputs,
                              kernel_sizes=[7, 5, 3, 3, 3, 3],
                              strides=[2, 1, 4, 1 ,2, 1],

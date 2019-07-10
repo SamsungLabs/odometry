@@ -89,7 +89,7 @@ def construct_encoder(inputs,
     return flatten
 
 
-@mlflow_logging
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='DepthFlow')
 def construct_depth_flow_model(inputs,
                                use_depth=True,
                                use_flow=True,
@@ -108,10 +108,7 @@ def construct_depth_flow_model(inputs,
                                f_y=1,
                                c_x=0.5,
                                c_y=0.5,
-                               kernel_initializer='glorot_normal',
-                               model_name='DepthFlow',
-                               ignore=('inputs',),
-                               ):
+                               kernel_initializer='glorot_normal'):
 
     flatten = construct_encoder(inputs,
                                 use_depth=use_depth,

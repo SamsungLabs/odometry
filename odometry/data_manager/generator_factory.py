@@ -14,10 +14,10 @@ from odometry.utils import mlflow_logging
 
 class GeneratorFactory:
 
-    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'))
+    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.')
     def __init__(self,
                  dataset_root,
-                 csv_name,
+                 csv_name='df.csv',
                  train_trajectories=None,
                  val_trajectories=None,
                  test_trajectories=None,
