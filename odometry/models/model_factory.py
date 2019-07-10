@@ -157,10 +157,10 @@ class ModelWithConfidenceFactory(ModelFactory):
 
     def freeze(self):
         for layer in self.model.layers:
-            layer.trainable = ~layer.trainable
+            layer.trainable = not layer.trainable
 
         self.loss = confidence_error
         self._compile()
         for layer in self.model.layers:
-            print('{:<30} {}'.format(layer.name, layer.trainable))
+            print(f'{layer.name:<30} {layer.trainable}')
         return self.model
