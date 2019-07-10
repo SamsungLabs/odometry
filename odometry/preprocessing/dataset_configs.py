@@ -89,7 +89,7 @@ def get_discoman_v10_config(dataset_root):
     for d in sub_dirs:
         for trajectory in Path(dataset_root).joinpath(d).glob('*'):
             if is_int(trajectory.name):
-                trajectory_name = trajectory.as_posix()[len(dataset_root)+int(dataset_root[-1] == '/'):]
+                trajectory_name = trajectory.as_posix()[len(dataset_root) + int(dataset_root[-1] != '/'):]
                 config[f'{d}_trajectories'].append(trajectory_name)
 
     return config
