@@ -4,8 +4,11 @@ from keras.layers.merge import concatenate
 from keras.layers import Flatten, Dense
 from keras.regularizers import l2
 
-
-from odometry.models.layers import concat, conv2d, ConstLayer
+from odometry.models.layers import (concat,
+                                    conv2d,
+                                    construct_fc,
+                                    construct_double_fc,
+                                    construct_outputs)
 from odometry.utils import mlflow_logging
 
 
@@ -15,89 +18,77 @@ def construct_resnet50_model(inputs,
                              kernel_initializer='glorot_normal'):
 
     inputs = concat(inputs)
-    conv0 = Conv2D(3, kernel_size=7, padding='same', activation='relu',
-                   kernel_initializer=kernel_initializer, name='conv0')(inputs)
+    conv0 = Conv2D(3,
+                   kernel_size=7,
+                   padding='same',
+                   activation='relu',
+                   kernel_initializer=kernel_initializer,
+                   name='conv0')(inputs)
 
-    base_model = ResNet50(weights=weights, include_top=False, pooling=None)
+    features = ResNet50(weights=weights, include_top=False, pooling=None)(conv0)
+    flatten = Flatten()(features)
 
-    outputs = base_model(conv0)
-    embedding = Flatten()(outputs)
-
-    fc1 = Dense(500, activation='relu',
-                kernel_initializer=kernel_initializer, name='fc1')(embedding)
-    fc2 = Dense(500, activation='relu',
-                kernel_initializer=kernel_initializer, name='fc2')(fc1)
-
-    r_x = Dense(1, name='r_x')(fc2)
-    r_y = Dense(1, name='r_y')(fc2)
-    r_z = Dense(1, name='r_z')(fc2)
-    t_x = Dense(1, name='t_x')(fc2)
-    t_y = Dense(1, name='t_y')(fc2)
-    t_z = Dense(1, name='t_z')(fc2)
-
-    outputs = [r_x, r_y, r_z, t_x, t_y, t_z]
+    fc2 = construct_double_fc(flatten,
+                              hidden_size=500,
+                              activation='relu',
+                              kernel_initializer=kernel_initializer)
+    outputs = construct_outputs(fc2, fc2)
     return outputs
 
 
+@mlflow_logging(ignore=('inputs',), prefix='model.', name='Simple')
 def construct_simple_model(inputs,
-                           conv_layers_count=3,
+                           conv_layers=3,
                            conv_filters=64,
                            kernel_sizes=3,
                            strides=1,
                            paddings='same',
-                           fc_layers_count=2,
-                           fc_sizes=500,
+                           fc_layers=2,
+                           hidden_sizes=500,
                            activations='elu',
                            regularizations=0,
                            batch_norms=True):
     if type(conv_filters) != list:
-        conv_filters = [conv_filters] * conv_layers_count
+        conv_filters = [conv_filters] * conv_layers
     if type(kernel_sizes) != list:
-        kernel_sizes = [kernel_sizes] * conv_layers_count
+        kernel_sizes = [kernel_sizes] * conv_layers
     if type(strides) != list:
-        strides = [strides] * conv_layers_count
+        strides = [strides] * conv_layers
     if type(paddings) != list:
-        paddings = [paddings] * conv_layers_count
-    if type(fc_sizes) != list:
-        fc_sizes = [fc_sizes] * fc_layers_count
+        paddings = [paddings] * conv_layers
+    if type(hidden_sizes) != list:
+        hidden_sizes = [hidden_sizes] * fc_layers
     if type(activations) != list:
-        activations = [activations] * (conv_layers_count + fc_layers_count)
+        activations = [activations] * (conv_layers + fc_layers)
     if type(regularizations) != list:
-        regularizations = [regularizations] * (conv_layers_count + fc_layers_count)
+        regularizations = [regularizations] * (conv_layers + fc_layers)
     if type(batch_norms) != list:
-        batch_norms = [batch_norms] * (conv_layers_count + fc_layers_count)
+        batch_norms = [batch_norms] * (conv_layers + fc_layers)
 
-    layer = concat(inputs)
+    inputs = concat(inputs)
 
-    for i in range(conv_layers_count):
-        layer = conv2d(
-            layer,
-            conv_filters[i],
-            kernel_size=kernel_sizes[i],
-            batchnorm=batch_norms[i],
-            padding=paddings[i],
-            kernel_initializer='glorot_normal',
-            strides=strides[i],
-            activation=activations[i],
-            activity_regularizer=l2(regularizations[i]))
+    conv = inputs
+    for i in range(conv_layers):
+        conv = conv2d(conv,
+                      conv_filters[i],
+                      kernel_size=kernel_sizes[i],
+                      batchnorm=batch_norms[i],
+                      padding=paddings[i],
+                      kernel_initializer='glorot_normal',
+                      strides=strides[i],
+                      activation=activations[i],
+                      activity_regularizer=l2(regularizations[i]))
 
-    layer = Flatten(name='flatten1')(layer)
+    flatten = Flatten()(conv)
 
-    for i in range(fc_layers_count):
-        layer = Dense(
-            fc_sizes[i],
-            kernel_initializer='glorot_normal',
-            activation=activations[i + conv_layers_count],
-            activity_regularizer=l2(regularizations[i]))(layer)
+    fc = flatten
+    for i in range(fc_layers):
+        fc = Dense(hidden_sizes[i],
+                   kernel_initializer='glorot_normal',
+                   activation=activations[i + conv_layers],
+                   activity_regularizer=l2(regularizations[i]))(fc)
 
-    r_x = Dense(1, name='r_x')(layer)
-    r_y = Dense(1, name='r_y')(layer)
-    r_z = Dense(1, name='r_z')(layer)
-    t_x = Dense(1, name='t_x')(layer)
-    t_y = Dense(1, name='t_y')(layer)
-    t_z = Dense(1, name='t_z')(layer)
-
-    outputs = [r_x, r_y, r_z, t_x, t_y, t_z]
+    outputs = construct_outputs(fc, fc)
     return outputs
 
 
