@@ -13,7 +13,6 @@ from odometry.models.losses import (mean_squared_error,
                                     confidence_error,
                                     rmse,
                                     smooth_L1)
-
 from odometry.models.layers import (activ,
                                     concat,
                                     conv2d,
@@ -66,7 +65,7 @@ class PretrainedModelFactory(BaseModelFactory):
 
 class ModelFactory:
 
-    @mlflow_logging(ignore=('construct_graph_fn',))
+    @mlflow_logging(ignore=('construct_graph_fn',), prefix='model_factory.')
     def __init__(self,
                  construct_graph_fn,
                  input_shapes=((60, 80, 3), (60, 80, 3)),
@@ -74,6 +73,7 @@ class ModelFactory:
                  loss=mean_squared_error,
                  scale_rotation=1.,
                  scale_translation=1.):
+
         self.model = None
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
