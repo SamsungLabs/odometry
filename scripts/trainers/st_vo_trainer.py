@@ -4,10 +4,10 @@ import __init_path__
 import env
 
 from odometry.base_trainer import BaseTrainer
-from odometry.models import construct_resnet50_model
+from odometry.models import construct_st_vo_model
 
 
-class ResNet50Trainer(BaseTrainer):
+class STVOTrainer(BaseTrainer):
 
     def get_dataset(self,
                     train_trajectories=None,
@@ -22,7 +22,7 @@ class ResNet50Trainer(BaseTrainer):
                                    test_trajectories=test_trajectories)
 
     def get_model_factory(self, input_shapes):
-        self.construct_model_fn = construct_resnet50_model
+        self.construct_model_fn = construct_st_vo_model
         self.lr = 0.001
         self.loss = 'mae'
         self.scale_rotation = 50
@@ -43,8 +43,8 @@ class ResNet50Trainer(BaseTrainer):
 
 if __name__ == '__main__':
 
-    parser = ResNet50Trainer.get_parser()
+    parser = STVOTrainer.get_parser()
     args = parser.parse_args()
 
-    trainer = ResNet50Trainer(**vars(args))
+    trainer = STVOTrainer(**vars(args))
     trainer.train()
