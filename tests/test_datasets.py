@@ -57,7 +57,7 @@ class TestDatasets(unittest.TestCase):
         print('Started ZJU test')
 
         num_files = 4
-        prepare_dataset(dataset_type='ZJU_full',
+        prepare_dataset(dataset_type='ZJU',
                         dataset_root=os.path.join(env.DATASET_PATH, 'zju'),
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
