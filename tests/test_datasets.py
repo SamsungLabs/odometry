@@ -37,7 +37,7 @@ class TestDatasets(unittest.TestCase):
         print('Started TUM test')
 
         num_files = 7
-        prepare_dataset(dataset_type='tum',
+        prepare_dataset(dataset_type='TUM',
                         dataset_root=os.path.join(env.DATASET_PATH, 'tum_rgbd_flow'),
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
@@ -59,7 +59,7 @@ class TestDatasets(unittest.TestCase):
 
         num_files = 5
 
-        prepare_dataset(dataset_type='discoman',
+        prepare_dataset(dataset_type='DISCOMAN',
                         dataset_root=os.path.join(env.DATASET_PATH, 'renderbox'),
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
@@ -81,7 +81,7 @@ class TestDatasets(unittest.TestCase):
 
         num_files = 10
 
-        prepare_dataset(dataset_type='kitti',
+        prepare_dataset(dataset_type='KITTI',
                         dataset_root=os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012'),
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
@@ -103,7 +103,7 @@ class TestDatasets(unittest.TestCase):
 
         num_files = 2
 
-        prepare_dataset(dataset_type='retailbot',
+        prepare_dataset(dataset_type='RetailBot',
                         dataset_root=os.path.join(env.DATASET_PATH, 'retail_bot'),
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),

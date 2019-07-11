@@ -19,7 +19,7 @@ __all__ = [
     'TUMParser',
     'RetailBotParser',
     'DISCOMANJSONParser',
-    'OldDISCOMANParser'
+    'OldDISCOMANParser',
     'Quaternion2EulerEstimator',
     'Struct2DepthEstimator',
     'Global2RelativeEstimator',

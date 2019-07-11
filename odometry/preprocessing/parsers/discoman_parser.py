@@ -86,17 +86,17 @@ class OldDISCOMANParser(DISCOMANJSONParser):
     @staticmethod
     def get_translation(item):
         return item['info']['agent_state']['position']
+
     
-    
-class DISCOMANCSVParser(BaseParser):
+class DISCOMANParser(BaseParser):
     """For DISCOMAN from verison v10 with csv files
     """
     def __init__(self, src_dir):
-        super(DISCOMANCSVParser, self).__init__(src_dir)
+        super(DISCOMANParser, self).__init__(src_dir)
 
-        self.name = DISCOMANCSVParser
+        self.name = DISCOMANParser
 
-        self.csv_path = os.path.join(src_dir, "camera_gt.csv")
+        self.csv_path = os.path.join(src_dir, 'camera_gt.csv')
         if not os.path.exists(self.csv_path):
             raise RuntimeError(f'Could not find csv file {self.csv_path}')
 
