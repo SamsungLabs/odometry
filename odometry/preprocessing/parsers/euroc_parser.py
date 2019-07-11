@@ -28,8 +28,7 @@ class EuRoCParser(TUMParser):
         df = df[df.columns[:len(columns)]]
         df.columns = columns
         timestamp_col = columns[0]
-        scale = 1e-9
-        df[timestamp_col] = df[timestamp_col].apply(float) * scale
+        df[timestamp_col] = df[timestamp_col].apply(float) * 1e-9
         return df
     
     def _load_gt_txt(self):

@@ -60,6 +60,7 @@ def get_kitti_8_3_config(dataset_root):
 
 def get_ZJU_full(dataset_root):
     config = {    'train_sequences': [ 'B1',
+                                       'A0',
                                        'B2',
                                        'B3',
                                        'B4',
@@ -86,7 +87,7 @@ def get_ZJU_full(dataset_root):
 
 def get_EuRoC(dataset_root):
     config = {     'train_sequences': [
-                                        'MH_02_easy',
+                                         'MH_01_easy',  
                                         'MH_04_difficult',
                                         'V1_02_medium',
                                         'V2_01_easy',
@@ -98,7 +99,7 @@ def get_EuRoC(dataset_root):
                                          ],
 
                     'val_sequences': [
-                                        'MH_01_easy',    
+                                        'MH_02_easy',
                                         'MH_05_difficult'
 
                                          ],
