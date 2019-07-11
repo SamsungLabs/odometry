@@ -11,7 +11,9 @@ DATASET_TYPES = ['kitti_8/3',
                  'fr1',
                  'fr2',
                  'fr3',
-                 'tum']
+                 'tum',
+                 'ZJU_full',
+                 'EuRoC']
 
 
 def is_int(string: str):
@@ -52,6 +54,58 @@ def get_kitti_8_3_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
+              }
+    return config
+
+
+def get_ZJU_full(dataset_root):
+    config = {    'train_sequences': [ 'B1',
+                                       'B2',
+                                       'B3',
+                                       'B4',
+                                       'A1',
+                                       'A2',
+                                       'A3',
+                                       'A4'
+                                        ],
+
+                    'val_sequences': [ 'B5',
+                                       'A5',
+                                       'B6',        
+                                       'B7',
+                                       'A6',        
+                                       'A7' 
+                                        ],
+
+              'test_trajectories': None,
+              'exp_name': 'ZJU_full',
+              'target_size': (120, 160),
+              }
+    return config
+
+
+def get_EuRoC(dataset_root):
+    config = {     'train_sequences': [
+                                        'MH_02_easy',
+                                        'MH_04_difficult',
+                                        'V1_02_medium',
+                                        'V2_01_easy',
+                                        'V1_01_easy',
+                                        'V2_03_difficult',
+                                        'V1_03_difficult',
+                                        'V2_02_medium',
+                                        'MH_03_medium'
+                                         ],
+
+                    'val_sequences': [
+                                        'MH_01_easy',    
+                                        'MH_05_difficult'
+
+                                         ],
+
+              'test_trajectories': None,
+              'exp_name': 'EuRoC',
+              'target_size': (120, 160),
               }
     return config
 
