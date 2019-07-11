@@ -87,7 +87,7 @@ def get_ZJU_full(dataset_root):
 
 def get_EuRoC(dataset_root):
     config = {     'train_sequences': [
-                                         'MH_01_easy',  
+                                         'MH_01_easy',
                                         'MH_04_difficult',
                                         'V1_02_medium',
                                         'V2_01_easy',
