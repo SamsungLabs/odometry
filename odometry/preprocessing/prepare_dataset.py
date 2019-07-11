@@ -54,6 +54,40 @@ def initialize_parser(dataset_type):
     return getattr(parsers, f'{dataset_type}Parser')
 
 
+def get_all_trajectories(dataset_root):
+
+    if not isinstance(dataset_root, Path):
+        dataset_root = Path(dataset_root)
+
+    logger = logging.getLogger('prepare_dataset')
+
+    trajectories = list()
+
+    if list(dataset_root.glob('*traj.json')) or \
+            list(dataset_root.glob('rgb.txt')) or \
+            list(dataset_root.glob('image_2')) or \
+            list(dataset_root.glob('camera')) or \
+            list(dataset_root.glob('mav0')) or \
+            list(dataset_root.glob('camera_gt.csv')):
+
+        logger.info(f'Trajectory {dataset_root.as_posix()} added')
+        trajectories.append(dataset_root.as_posix())
+
+    for d in dataset_root.rglob('**/*'):
+        if list(d.glob('*traj.json')) or \
+                list(d.glob('rgb.txt')) or \
+                list(d.glob('image_2')) or \
+                list(d.glob('camera')) or \
+                list(d.glob('mav0')) or \
+                list(d.glob('camera_gt.csv')):
+
+            logger.info(f'Trajectory {d.as_posix()} added')
+            trajectories.append(d.as_posix())
+
+    logger.info(f'Total: {len(trajectories)}')
+    return trajectories
+
+
 def set_logger(output_dir):
     fh = logging.FileHandler(output_dir.joinpath('log.txt').as_posix(), mode='w+')
     fh.setLevel(logging.DEBUG)
