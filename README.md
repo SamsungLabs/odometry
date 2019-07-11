@@ -7,3 +7,5 @@ For depth estimation download pretrained struct2depth weights from official site
 For OF estimation download pretrained tfoptflow weights from repo https://github.com/philferriere/tfoptflow
 
 To dowload use git clone --recursive https://github.sec.samsung.net/AIMC-TSU/odometry.git
+
+To run unittests: python -m unittest discover -s tests
