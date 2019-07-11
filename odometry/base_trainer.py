@@ -49,7 +49,8 @@ class BaseTrainer:
     def is_unique_run_name(self, exp_name, run_name):
         client = mlflow.tracking.MlflowClient(self.tracking_uri)
         exp = client.get_experiment_by_name(exp_name)
-        mlflow.create_experiment(exp_name, os.path.join(env.ARTIFACT_URI, exp_name)) if exp is None else None
+        exp_name = exp_name.replace('/','_')
+        mlflow.create_experiment(exp_name, os.path.join(env.ARTIFACT_PATH, exp_name)) if exp is None else None
 
         exp_id = exp.experiment_id
 
