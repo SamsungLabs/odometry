@@ -9,7 +9,6 @@ from odometry.models.layers import (concat,
                                     construct_fc,
                                     construct_double_fc,
                                     construct_outputs)
-
 from odometry.utils import mlflow_logging
 
 
