@@ -127,7 +127,9 @@ class Leaderboard:
             job_ids = {outs[i].split(' ')[0] for i in range(1, len(outs) - 1)}
 
             still_running_jobs = started_jobs_id.intersection(job_ids)
-            logger.info(f'Dataset {dataset_type}. Jobs {still_running_jobs} are still running')
+            sorted_jobs = list(still_running_jobs)
+            sorted_jobs.sort()
+            logger.info(f'Dataset {dataset_type}. Jobs {sorted_jobs} are still running')
 
             if still_running_jobs:
                 time.sleep(10)

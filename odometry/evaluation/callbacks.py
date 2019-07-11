@@ -51,7 +51,7 @@ class TerminateOnLR(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         lr = K.get_value(self.model.optimizer.lr)
-        mlflow.log_metric('lr', lr) if mlflow.active_run() else None
+        mlflow.log_metric('lr', lr, step=epoch) if mlflow.active_run() else None
         if lr < self.min_lr:
             self.stopped_epoch = epoch
             self.model.stop_training = True
@@ -206,6 +206,8 @@ class Evaluate(keras.callbacks.Callback):
         val_metrics = self._evaluate(self.val_generator, self.df_val, 'val', prediction_id)
 
         if mlflow.active_run():
+            mlflow.log_metric('train_loss', train_loss, step=epoch)
+            mlflow.log_metric('val_loss', val_loss, step=epoch)
             [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in train_metrics.items()]
             [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in val_metrics.items()]
 

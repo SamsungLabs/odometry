@@ -25,7 +25,8 @@ def average_metrics(run_name, dataset_type):
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
 
         mlflow.log_param('model.name', model_name)
-        mlflow.log_param('num_of_runs_to_average', len(metrics))
+        mlflow.log_param('num_of_runs', len(metrics))
+        mlflow.log_param('avg', True)
 
         mlflow.log_metrics(metrics_mean)
         mlflow.log_metrics(metrics_std)
