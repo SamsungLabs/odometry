@@ -135,7 +135,6 @@ def get_fr1_config(dataset_root):
 def get_fr2_config(dataset_root):
     config = {'train_trajectories': ['rgbd_dataset_freiburg2_xyz',
                                      'rgbd_dataset_freiburg2_rpy',
-                                     'rgbd_dataset_freiburg2_360_hemisphere',
                                      'rgbd_dataset_freiburg2_flowerbouquet_brownbackground',
                                      'rgbd_dataset_freiburg2_coke',
                                      'rgbd_dataset_freiburg2_metallic_sphere',
@@ -144,7 +143,8 @@ def get_fr2_config(dataset_root):
                                      'rgbd_dataset_freiburg2_pioneer_360',
                                      ],
               'val_trajectories': ['rgbd_dataset_freiburg2_flowerbouquet'],
-              'test_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam3'],
+              'test_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam3',
+                                    'rgbd_dataset_freiburg2_360_hemisphere'],
               'exp_name': 'fr2',
               'target_size': (120, 160),
               }
