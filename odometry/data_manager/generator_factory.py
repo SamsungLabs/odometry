@@ -9,9 +9,12 @@ import pandas as pd
 from keras_preprocessing.image import ImageDataGenerator
 
 from odometry.data_manager.generator import ExtendedDataFrameIterator
+from odometry.utils import mlflow_logging
 
 
 class GeneratorFactory:
+
+    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.')
     def __init__(self,
                  dataset_root,
                  csv_name='df.csv',
@@ -35,21 +38,9 @@ class GeneratorFactory:
                  cached_images=None,
                  *args, **kwargs):
 
-        mlflow.log_params({'generator.' + k: repr(v) for k, v in locals().items() if not ('trajectories' in k or 'self' in k)})
-
         self.dataset_root = dataset_root
 
-        dataset_config_path = os.path.join(dataset_root, 'prepare_dataset.json')
-        try:
-            with open(dataset_config_path, 'r') as f:
-                dataset_config = json.load(f)
-                mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
-                mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
-        except FileNotFoundError:
-            warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun prepare_dataset.py'
-                          f'for this dataset. Path {dataset_config_path}', UserWarning)
-            mlflow.log_param('depth_checkpoint', None)
-            mlflow.log_param('optical_flow_checkpoint', None)
+        self._log_dataset_params()
 
         self.csv_name = csv_name
 
@@ -103,6 +94,21 @@ class GeneratorFactory:
 
         self.input_shapes = self.get_train_generator().input_shapes \
             if self.train_trajectories else self.get_val_generator().input_shapes
+
+    def _log_dataset_params(self,):
+        if mlflow.active_run():
+
+            dataset_config_path = os.path.join(self.dataset_root, 'prepare_dataset.json')
+            try:
+                with open(dataset_config_path, 'r') as f:
+                    dataset_config = json.load(f)
+                    mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
+                    mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
+            except FileNotFoundError:
+                warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun '
+                              f'prepare_dataset.py for this dataset. Path {dataset_config_path}', UserWarning)
+                mlflow.log_param('depth_checkpoint', None)
+                mlflow.log_param('optical_flow_checkpoint', None)
 
     def _get_multi_df_dataset(self, trajectories, subset=''):
         df = None

@@ -3,7 +3,6 @@ import mlflow
 import datetime
 import argparse
 
-import __init_path__
 import env
 
 from odometry.preprocessing.dataset_configs import get_config, DATASET_TYPES
@@ -33,6 +32,7 @@ class BaseTrainer:
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(self.config['exp_name'])
         mlflow.start_run(run_name=run_name)
+        print(f'Active run {mlflow.active_run()}')
         mlflow.log_param('run_name', run_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
 
@@ -49,9 +49,8 @@ class BaseTrainer:
     def is_unique_run_name(self, exp_name, run_name):
         client = mlflow.tracking.MlflowClient(self.tracking_uri)
         exp = client.get_experiment_by_name(exp_name)
-        if exp is None:
-            raise RuntimeError(f'Could not find exp. Got {exp_name}.'
-                               f' Available names {DATASET_TYPES}')
+        exp_name = exp_name.replace('/','_')
+        mlflow.create_experiment(exp_name, os.path.join(env.ARTIFACT_PATH, exp_name)) if exp is None else None
 
         exp_id = exp.experiment_id
 

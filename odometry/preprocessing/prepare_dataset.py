@@ -91,6 +91,8 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
     trajectories = [d.as_posix() for d in list(Path(dataset_root).rglob('*/**'))]
     trajectories.append(dataset_root)
 
+    counter = 0
+
     for trajectory in tqdm(trajectories):
         try:
             trajectory_parser = parser_class(trajectory)
@@ -105,5 +107,11 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                                     pair_frames_estimators=pf_estimators,
                                     stride=1)
             df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
+
+            counter += 1
+            logger.info(f'Trajectory {trajectory} processed')
+
         except Exception as e:
             logger.info(e)
+
+    logger.info(f'{counter} trajectories has been processed')
