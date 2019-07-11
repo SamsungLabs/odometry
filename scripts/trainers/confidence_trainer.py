@@ -40,11 +40,9 @@ class ConfidenceTrainer(BaseTrainer):
 
     def get_dataset(self,
                     train_trajectories=None,
-                    val_trajectories=None,
-                    test_trajectories=None):
+                    val_trajectories=None):
         return super().get_dataset(train_trajectories=train_trajectories,
-                                   val_trajectories=val_trajectories,
-                                   test_trajectories=test_trajectories)
+                                   val_trajectories=val_trajectories)
 
     def get_model_factory(self, input_shapes):
         return ModelWithConfidenceFactory(self.construct_model_fn,

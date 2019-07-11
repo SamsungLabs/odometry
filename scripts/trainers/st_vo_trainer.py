@@ -11,15 +11,13 @@ class STVOTrainer(BaseTrainer):
 
     def get_dataset(self,
                     train_trajectories=None,
-                    val_trajectories=None,
-                    test_trajectories=None):
+                    val_trajectories=None):
         self.x_col = ['path_to_optical_flow']
         self.image_col = ['path_to_optical_flow']
         self.load_mode = ['flow_xy']
         self.preprocess_mode = ['flow_xy']
         return super().get_dataset(train_trajectories=train_trajectories,
-                                   val_trajectories=val_trajectories,
-                                   test_trajectories=test_trajectories)
+                                   val_trajectories=val_trajectories)
 
     def get_model_factory(self, input_shapes):
         self.construct_model_fn = construct_st_vo_model
