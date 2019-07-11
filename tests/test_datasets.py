@@ -43,8 +43,7 @@ class TestDatasets(unittest.TestCase):
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
-                        pwc_features=True
-                        )
+                        pwc_features=True)
 
         csv_path = list(self.output_dir.rglob("*.csv"))
         self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
@@ -65,8 +64,7 @@ class TestDatasets(unittest.TestCase):
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
-                        pwc_features=True
-                        )
+                        pwc_features=True)
 
         csv_path = list(self.output_dir.rglob("*.csv"))
         self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
@@ -87,8 +85,7 @@ class TestDatasets(unittest.TestCase):
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
-                        pwc_features=True
-                        )
+                        pwc_features=True)
 
         csv_path = list(self.output_dir.rglob("*.csv"))
         self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
@@ -109,8 +106,7 @@ class TestDatasets(unittest.TestCase):
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
-                        pwc_features=True
-                        )
+                        pwc_features=True)
 
         csv_path = list(self.output_dir.rglob("*.csv"))
         self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
