@@ -155,13 +155,16 @@ class Evaluate(keras.callbacks.Callback):
             visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory,
                                          title=title, file_path=file_path)
 
-    def _evaluate(self, generator, gt, subset, prediction_id):
+    def _evaluate(self, generator, gt, subset, prediction_id, max_to_visualize):
         if generator is None:
             return dict()
 
         predictions = self._predict(generator, gt)
 
         records = []
+
+        max_to_visualize = max_to_visualize if max_to_visualize > 0 else gt.trajectory_id.nunique()
+
         gt_by_trajectory = gt.groupby(by='trajectory_id').indices.items()
         for i, (trajectory_id, indices) in enumerate(tqdm.tqdm(gt_by_trajectory,
                                                                total=gt.trajectory_id.nunique(),
@@ -173,26 +176,12 @@ class Evaluate(keras.callbacks.Callback):
             trajectory_metrics = calculate_metrics(gt_trajectory, predicted_trajectory)
             records.append(trajectory_metrics)
 
-            if i < self.max_to_visualize:
+            if i < max_to_visualize:
                 self._visualize_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory,
                                            gt_trajectory, trajectory_metrics)
 
         total_metrics = {f'{subset}_{key}': value for key, value in average_metrics(records).items()}
         return total_metrics
-
-    def _visualize(self, generator, gt, subset, prediction_id):
-        if generator is None:
-            return
-
-        predictions = self._predict(generator, gt)
-
-        gt_by_trajectory = gt.groupby(by='trajectory_id').indices.items()
-        for trajectory_id, indices in tqdm.tqdm(gt_by_trajectory,
-                                                total=gt.trajectory_id.nunique(),
-                                                desc=f'Visualize {subset}'):
-            predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
-            self._save_predictions(prediction_id, subset, trajectory_id, predictions.iloc[indices])
-            self._visualize_trajectory(prediction_id, subset, trajectory_id, predicted_trajectory)
 
     def _predict(self, generator, gt):
         generator.reset()
@@ -222,8 +211,10 @@ class Evaluate(keras.callbacks.Callback):
 
         prediction_id = f'{(epoch + 1):03d}_train:{train_loss:.6f}_val:{val_loss:.6f}'
 
-        train_metrics = self._evaluate(self.train_generator, self.df_train, 'train', prediction_id)
-        val_metrics = self._evaluate(self.val_generator, self.df_val, 'val', prediction_id)
+        train_metrics = self._evaluate(self.train_generator, self.df_train, 'train', prediction_id,
+                                       self.max_to_visualize)
+        val_metrics = self._evaluate(self.val_generator, self.df_val, 'val', prediction_id,
+                                     self.max_to_visualize)
 
         if mlflow.active_run():
             [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in train_metrics.items()]
@@ -234,9 +225,8 @@ class Evaluate(keras.callbacks.Callback):
 
     def on_train_end(self, logs={}):
         prediction_id = 'test'
-        test_metrics = self._evaluate(self.test_generator, self.df_test, 'test', prediction_id)
+        test_metrics = self._evaluate(self.test_generator, self.df_test, 'test', prediction_id, max_to_visualize=-1)
         mlflow.log_metrics(test_metrics)
 
-        self._visualize(self.test_generator, self.df_test, 'test', 'test')
         if self.save_artifacts:
             mlflow.log_artifacts(self.run_dir, self.artifact_dir)
