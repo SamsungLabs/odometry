@@ -23,8 +23,7 @@ class EuRoCParser(TUMParser):
                                           cols=['path_to_rgb'])
         self.name = 'EuRoCParser'
 
-    def _load_txt(self, txt_path, columns, scale=1):
-        scale = 1e-9
+    def _load_txt(self, txt_path, columns, scale=1e-9):
         df = pd.read_csv(txt_path, index_col=False)
         df = df[df.columns[:len(columns)]]
         df.columns = columns
