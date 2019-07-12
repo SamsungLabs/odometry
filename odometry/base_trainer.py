@@ -26,17 +26,13 @@ class BaseTrainer:
                  reduce_factor=0.5):
 
         self.tracking_uri = env.TRACKING_URI
+        self.artifact_path = env.ARTIFACT_PATH
+        self.project_path = env.PROJECT_PATH
 
         self.config = get_config(dataset_root, dataset_type)
 
-        if not self.is_unique_run_name(self.config['exp_name'], run_name):
-            raise RuntimeError('run_name must be unique')
+        self.start_run(self.config['exp_name'], run_name)
 
-        # MLFlow initialization
-        mlflow.set_tracking_uri(self.tracking_uri)
-        mlflow.set_experiment(self.config['exp_name'])
-        mlflow.start_run(run_name=run_name)
-        print(f'Active run {mlflow.active_run()}')
         mlflow.log_param('run_name', run_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
         mlflow.log_param('epochs', epochs)
@@ -52,34 +48,45 @@ class BaseTrainer:
         self.min_lr = min_lr
         self.reduce_factor = reduce_factor
 
-        if self.period:
-            self.artifact_dir = self.run_name
-            self.run_dir = os.path.join(env.PROJECT_PATH, 'experiments',
-                                        self.config['exp_name'], self.run_name)
+        self.set_model_args()
 
+        self.set_dataset_args()
+
+    def set_model_args(self):
         self.construct_model_fn = None
         self.lr = None
         self.loss = None
         self.scale_rotation = None
 
+    def set_dataset_args(self):
         self.x_col = None
         self.image_col = None
         self.load_mode = None
         self.preprocess_mode = None
 
-    def is_unique_run_name(self, exp_name, run_name):
+    def start_run(self, exp_name, run_name):
         client = mlflow.tracking.MlflowClient(self.tracking_uri)
         exp = client.get_experiment_by_name(exp_name)
-        exp_name = exp_name.replace('/','_')
-        mlflow.create_experiment(exp_name, os.path.join(env.ARTIFACT_PATH, exp_name)) if exp is None else None
 
-        exp_id = exp.experiment_id
+        exp_dir = exp_name.replace('/', '_')
+        if exp is None:
+            exp_path = os.path.join(self.artifact_path, exp_dir)
+            os.makedirs(exp_path, exist_ok=True)
+            os.chmod(exp_path, 0o777)
+            mlflow.create_experiment(exp_name, exp_path)
 
         run_names = list()
-        for info in client.list_run_infos(exp_id):
+        for info in client.list_run_infos(exp.experiment_id):
             run_names.append(client.get_run(info.run_id).data.params.get('run_name', ''))
 
-        return run_name not in run_names
+        if run_name in run_names:
+            raise RuntimeError('run_name must be unique')
+
+        self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
+
+        mlflow.set_tracking_uri(self.tracking_uri)
+        mlflow.set_experiment(exp_name)
+        mlflow.start_run(run_name=run_name)
 
     def get_dataset(self,
                     train_trajectories=None,
@@ -127,7 +134,7 @@ class BaseTrainer:
             evaluate_callback = Evaluate(model=model,
                                          dataset=dataset,
                                          run_dir=self.run_dir,
-                                         artifact_dir=self.artifact_dir,
+                                         artifact_dir=self.run_name,
                                          period=self.period,
                                          save_best_only=self.save_best_only)
             callbacks.extend([checkpoint_callback,
