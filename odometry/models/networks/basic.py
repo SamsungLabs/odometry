@@ -90,20 +90,3 @@ def construct_simple_model(inputs,
 
     outputs = construct_outputs(fc, fc)
     return outputs
-
-
-def construct_constant_model(inputs,
-                             rot_and_trans_array):
-    inputs = concat(inputs)
-
-    mean_r_x, mean_r_y, mean_r_z, mean_t_x, mean_t_y, mean_t_z = rot_and_trans_array.mean(axis=0)
-
-    r_x = ConstLayer(mean_r_x, name='r_x')(inputs)
-    r_y = ConstLayer(mean_r_y, name='r_y')(inputs)
-    r_z = ConstLayer(mean_r_z, name='r_z')(inputs)
-    t_x = ConstLayer(mean_t_x, name='t_x')(inputs)
-    t_y = ConstLayer(mean_t_y, name='t_y')(inputs)
-    t_z = ConstLayer(mean_t_z, name='t_z')(inputs)
-
-    outputs = [r_x, r_y, r_z, t_x, t_y, t_z]
-    return outputs

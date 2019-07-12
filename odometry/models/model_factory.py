@@ -6,7 +6,6 @@ from keras.models import Model, load_model
 from keras.optimizers import Adam
 from keras.utils.layer_utils import count_params
 
-
 from odometry.models.losses import (mean_squared_error,
                                     mean_absolute_error,
                                     mean_squared_logarithmic_error,
@@ -23,7 +22,6 @@ from odometry.models.layers import (activ,
                                     construct_fc,
                                     construct_double_fc,
                                     construct_outputs,
-                                    ConstLayer,
                                     AssociationLayer,
                                     AddGridLayer)
 
@@ -61,7 +59,6 @@ class PretrainedModelFactory(BaseModelFactory):
                             'construct_fc': construct_fc,
                             'construct_double_fc': construct_double_fc,
                             'construct_outputs': construct_outputs,
-                            'ConstLayer': ConstLayer,
                             'AssociationLayer': AssociationLayer,
                             'AddGridLayer': AddGridLayer,
                             })
@@ -146,16 +143,6 @@ class ModelWithDecoderFactory(ModelFactory):
                          scale_translation=scale_translation)
         self.loss.append(flow_reconstruction_loss)
         self.loss_weights.append(flow_loss_weight)
-
-
-class ConstantModelFactory(ModelFactory):
-    def __init__(self,
-                 rot_and_trans_array,
-                 input_shapes=((60, 80, 3), (60, 80, 3))):
-        from odometry.models.networks.basic import construct_constant_model
-        super().__init__(construct_graph_fn=partial(construct_constant_model,
-                                                    rot_and_trans_array=rot_and_trans_array),
-                         input_shapes=input_shapes)
 
 
 class ModelWithConfidenceFactory(ModelFactory):
