@@ -51,14 +51,18 @@ class ConfidenceTrainer(BaseTrainer):
                                           loss=self.loss,
                                           scale_rotation=self.scale_rotation)
 
-    def get_callbacks(self, model, dataset):
+    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None):
         return super().get_callbacks(model=model,
-                                     dataset=dataset)
+                                     dataset=dataset,
+                                     evaluate=evaluate,
+                                     save_dir=save_dir)
 
-    def fit_generator(self, model, dataset, epochs):
+    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
         return super().fit_generator(model=model,
                                      dataset=dataset,
-                                     epochs=epochs)
+                                     epochs=epochs,
+                                     evaluate=evaluate,
+                                     save_dir=save_dir)
 
     def train(self):
         train_trajectories = self.config['train_trajectories']
@@ -73,7 +77,9 @@ class ConfidenceTrainer(BaseTrainer):
 
         self.fit_generator(model=model,
                            dataset=dataset,
-                           epochs=self.epochs)
+                           epochs=self.epochs,
+                           evaluate=True,
+                           save_dir='dof')
 
         dataset_confidence = self.get_dataset(train_trajectories=confidence_trajectories)
 
@@ -81,7 +87,9 @@ class ConfidenceTrainer(BaseTrainer):
 
         self.fit_generator(model=model,
                            dataset=dataset_confidence,
-                           epochs=self.epochs_confidence)
+                           epochs=self.epochs_confidence,
+                           evaluate=False,
+                           save_dir='confidence')
 
         mlflow.end_run()
 

@@ -8,7 +8,7 @@ import env
 
 from odometry.data_manager import GeneratorFactory
 from odometry.models import ModelFactory
-from odometry.evaluation import MlflowLogger, Evaluate, TerminateOnLR
+from odometry.evaluation import MlflowLogger, Predict, TerminateOnLR
 from odometry.preprocessing import get_config, DATASET_TYPES
 
 
@@ -83,6 +83,7 @@ class BaseTrainer:
             raise RuntimeError('run_name must be unique')
 
         self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
+        self.save_dir = self.run_dir
 
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(exp_name)
@@ -112,7 +113,7 @@ class BaseTrainer:
                             loss=self.loss,
                             scale_rotation=self.scale_rotation)
 
-    def get_callbacks(self, model, dataset):
+    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None):
         terminate_on_nan_callback = TerminateOnNaN()
         reduce_lr_callback = ReduceLROnPlateau(factor=self.reduce_factor)
         terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr)
@@ -123,30 +124,36 @@ class BaseTrainer:
                      mlflow_callback]
 
         if self.period:
-            weights_dir = os.path.join(self.run_dir, 'weights')
+            save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
+            weights_dir = os.path.join(save_dir, 'weights')
             os.makedirs(weights_dir, exist_ok=True)
             weights_path = os.path.join(weights_dir, '{epoch:03d}-{val_loss:.6f}.hdf5')
             checkpoint_callback = ModelCheckpoint(filepath=weights_path,
                                                   save_best_only=self.save_best_only,
                                                   mode='min',
                                                   period=self.period)
+            callbacks.append(checkpoint_callback)
 
-            evaluate_callback = Evaluate(model=model,
-                                         dataset=dataset,
-                                         run_dir=self.run_dir,
-                                         artifact_dir=self.run_name,
-                                         period=self.period,
-                                         save_best_only=self.save_best_only,
-                                         rpe_indices=self.config['rpe_indices'])
-            callbacks.extend([checkpoint_callback,
-                              evaluate_callback])
+            predict_callback = Predict(model=model,
+                                       dataset=dataset,
+                                       run_dir=self.run_dir,
+                                       save_dir=save_dir,
+                                       artifact_dir=self.run_name,
+                                       period=self.period,
+                                       save_best_only=self.save_best_only,
+                                       evaluate=evaluate,
+                                       rpe_indices=self.config['rpe_indices'])
+            callbacks.append(predict_callback)
 
         return callbacks
 
-    def fit_generator(self, model, dataset, epochs):
+    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
         train_generator = dataset.get_train_generator()
         val_generator = dataset.get_val_generator()
-        callbacks = self.get_callbacks(model, dataset)
+        callbacks = self.get_callbacks(model,
+                                       dataset,
+                                       evaluate=evaluate,
+                                       save_dir=save_dir)
 
         model.fit_generator(train_generator,
                             steps_per_epoch=len(train_generator),

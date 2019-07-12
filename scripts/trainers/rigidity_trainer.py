@@ -26,14 +26,18 @@ class RigidityTrainer(BaseTrainer):
         self.scale_rotation = 50
         return super().get_model_factory(input_shapes)
 
-    def get_callbacks(self, model, dataset):
+    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None):
         return super().get_callbacks(model=model,
-                                     dataset=dataset)
+                                     dataset=dataset,
+                                     evaluate=evaluate,
+                                     save_dir=save_dir)
 
-    def fit_generator(self, model, dataset, epochs):
+    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
         return super().fit_generator(model=model,
                                      dataset=dataset,
-                                     epochs=epochs)
+                                     epochs=epochs,
+                                     evaluate=evaluate,
+                                     save_dir=save_dir)
 
     def train(self):
         return super().train()
