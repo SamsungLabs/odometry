@@ -28,9 +28,9 @@ __all__ = [
     'DISCOMANJSONParser',
     'OldDISCOMANParser',
     'EuRoCParser',
+    'ZJUParser',
     'Quaternion2EulerEstimator',
     'Struct2DepthEstimator',
     'Global2RelativeEstimator',
-    'PWCNetEstimator',
-    'ZJUParser'
+    'PWCNetEstimator'
 ]
