@@ -139,7 +139,6 @@ def get_fr2_config(dataset_root):
                                      'rgbd_dataset_freiburg2_metallic_sphere',
                                      'rgbd_dataset_freiburg2_metallic_sphere2',
                                      'rgbd_dataset_freiburg2_dishes',
-                                     'rgbd_dataset_freiburg2_pioneer_360',
                                      ],
               'val_trajectories': ['rgbd_dataset_freiburg2_flowerbouquet'],
               'test_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam3',
