@@ -106,9 +106,9 @@ def get_discoman_debug_config(dataset_root):
 
 
 def get_tum_debug_config(dataset_root):
-    config = {'train_trajectories': ['rgbd_dataset_freiburg2_large_with_loop'],
-              'val_trajectories': ['rgbd_dataset_freiburg1_floor'],
-              'test_trajectories': ['rgbd_dataset_freiburg1_floor'],
+    config = {'train_trajectories': ['rgbd_dataset_freiburg1_desk'],
+              'val_trajectories': ['rgbd_dataset_freiburg1_desk'],
+              'test_trajectories': ['rgbd_dataset_freiburg1_desk'],
               'exp_name': 'tum_debug',
               'target_size': (120, 160),
               }
@@ -121,7 +121,6 @@ def get_fr1_config(dataset_root):
                                      'rgbd_dataset_freiburg1_360',
                                      'rgbd_dataset_freiburg1_rpy',
                                      'rgbd_dataset_freiburg1_teddy',
-                                     'rgbd_dataset_freiburg1_floor',
                                      'rgbd_dataset_freiburg1_plant',
                                      ],
               'val_trajectories': ['rgbd_dataset_freiburg1_room'],
@@ -140,7 +139,6 @@ def get_fr2_config(dataset_root):
                                      'rgbd_dataset_freiburg2_metallic_sphere',
                                      'rgbd_dataset_freiburg2_metallic_sphere2',
                                      'rgbd_dataset_freiburg2_dishes',
-                                     'rgbd_dataset_freiburg2_pioneer_360',
                                      ],
               'val_trajectories': ['rgbd_dataset_freiburg2_flowerbouquet'],
               'test_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam3',
