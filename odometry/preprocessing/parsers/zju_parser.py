@@ -13,9 +13,9 @@ class ZJUParser(TUMParser):
         rgb_txt_path = os.path.join(src_dir, 'camera/data.csv')
 
         super(ZJUParser, self).__init__(src_dir,
-                                          gt_txt_path=gt_txt_path,
-                                          rgb_txt_path=rgb_txt_path,
-                                          cols=['path_to_rgb'])
+                                        gt_txt_path=gt_txt_path,
+                                        rgb_txt_path=rgb_txt_path,
+                                        cols=['path_to_rgb'])
         self.name = 'ZJUParser'
 
     def _load_txt(self, txt_path, columns, scale=1):
