@@ -4,7 +4,7 @@ from functools import partial
 import __init_path__
 import env
 
-from confidence_trainer import ConfidenceTrainer
+from .confidence_trainer import ConfidenceTrainer
 from odometry.models import construct_multiscale_model
 
 
