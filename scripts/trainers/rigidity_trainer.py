@@ -20,7 +20,7 @@ class RigidityTrainer(BaseTrainer):
                                    val_trajectories=val_trajectories)
 
     def get_model_factory(self, input_shapes):
-        self.construct_model_fn = construct_resnet50_model
+        self.construct_model_fn = construct_rigidity_model
         self.lr = 0.001
         self.loss = 'mae'
         self.scale_rotation = 50
