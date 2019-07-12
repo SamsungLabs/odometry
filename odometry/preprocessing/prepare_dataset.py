@@ -6,9 +6,6 @@ import argparse
 from tqdm import tqdm
 from pathlib import Path
 
-import __init_path__
-import env
-
 from odometry.utils.computation_utils import limit_resources
 from odometry.preprocessing import parsers, estimators, prepare_trajectory
 
@@ -54,54 +51,7 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
 
 
 def initialize_parser(dataset_type):
-    if dataset_type == 'kitti':
-        return parsers.KITTIParser
-    elif dataset_type == 'discoman':
-        return parsers.DISCOMANCSVParser
-    elif dataset_type == 'tum':
-        return parsers.TUMParser
-    elif dataset_type == 'retailbot':
-        return parsers.RetailBotParser
-    elif dataset_type == 'ZJU_full':
-        return parsers.ZJUParser
-    elif dataset_type == 'EuRoC':
-        return parsers.EuRoCParser
-    else:
-        raise RuntimeError('Unexpected dataset type')
-
-
-def get_all_trajectories(dataset_root):
-
-    if not isinstance(dataset_root, Path):
-        dataset_root = Path(dataset_root)
-
-    logger = logging.getLogger('prepare_dataset')
-
-    trajectories = list()
-
-    if list(dataset_root.glob('*traj.json')) or \
-            list(dataset_root.glob('rgb.txt')) or \
-            list(dataset_root.glob('image_2')) or \
-            list(dataset_root.glob('camera')) or \
-            list(dataset_root.glob('mav0')) or \
-            list(dataset_root.glob('camera_gt.csv')):
-
-        logger.info(f'Trajectory {dataset_root.as_posix()} added')
-        trajectories.append(dataset_root.as_posix())
-
-    for d in dataset_root.rglob('**/*'):
-        if list(d.glob('*traj.json')) or \
-                list(d.glob('rgb.txt')) or \
-                list(d.glob('image_2')) or \
-                list(d.glob('camera')) or \
-                list(d.glob('mav0')) or \
-                list(d.glob('camera_gt.csv')):
-
-            logger.info(f'Trajectory {d.as_posix()} added')
-            trajectories.append(d.as_posix())
-
-    logger.info(f'Total: {len(trajectories)}')
-    return trajectories
+    return getattr(parsers, f'{dataset_type}Parser')
 
 
 def set_logger(output_dir):
@@ -131,7 +81,6 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                                                          pwc_features=pwc_features)
 
     parser_class = initialize_parser(dataset_type)
-    trajectories = get_all_trajectories(dataset_root)
 
     with open(output_root.joinpath('prepare_dataset.json').as_posix(), mode='w+') as f:
         dataset_config = {'depth_checkpoint': depth_checkpoint,
@@ -139,12 +88,18 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                           'target_size': target_size}
         json.dump(dataset_config, f)
 
-    for trajectory in tqdm(trajectories):
-        trajectory_name = trajectory[len(dataset_root) + int(dataset_root[-1] != '/'):]
-        output_dir = output_root.joinpath(trajectory_name)
+    trajectories = [d.as_posix() for d in list(Path(dataset_root).rglob('*/**'))]
+    trajectories.append(dataset_root)
 
+    counter = 0
+
+    for trajectory in tqdm(trajectories):
         try:
             trajectory_parser = parser_class(trajectory)
+            trajectory_name = trajectory[len(dataset_root) + int(dataset_root[:-1] != '/'):]
+            output_dir = output_root.joinpath(trajectory_name)
+
+            logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}')
 
             df = prepare_trajectory(output_dir,
                                     parser=trajectory_parser,
@@ -152,7 +107,11 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                                     pair_frames_estimators=pf_estimators,
                                     stride=1)
             df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
+
+            counter += 1
+            logger.info(f'Trajectory {trajectory} processed')
+
         except Exception as e:
             logger.info(e)
-            logger.info(f'WARNING! Trajectory {trajectory} failed to prepare')
-            shutil.rmtree(output_dir.as_posix(), ignore_errors=True)
+
+    logger.info(f'{counter} trajectories has been processed')

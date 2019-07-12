@@ -7,7 +7,7 @@ from .kitti_parser import KITTIParser
 
 from .discoman_parser import DISCOMANJSONParser
 from .discoman_parser import OldDISCOMANParser
-from .discoman_parser import DISCOMANCSVParser
+from .discoman_parser import DISCOMANParser
 
 from .euroc_parser import EuRoCParser
 from .zju_parser import ZJUParser
@@ -20,7 +20,7 @@ __all__ = [
     'SAICOfficeParser',
     'DISCOMANJSONParser',
     'OldDISCOMANParser',
-    'DISCOMANCSVParser',
+    'DISCOMANParser',
     'EuRoCParser',
     'ZJUParser'
 ]
