@@ -8,7 +8,7 @@ import env
 
 from odometry.data_manager import GeneratorFactory
 from odometry.models import ModelFactory
-from odometry.evaluation import MLFlowLogger, Evaluate, TerminateOnLR
+from odometry.evaluation import MlflowLogger, Evaluate, TerminateOnLR
 from odometry.preprocessing import get_config, DATASET_TYPES
 
 
@@ -116,7 +116,7 @@ class BaseTrainer:
         terminate_on_nan_callback = TerminateOnNaN()
         reduce_lr_callback = ReduceLROnPlateau(factor=self.reduce_factor)
         terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr)
-        mlflow_callback = MLFlowLogger()
+        mlflow_callback = MlflowLogger()
         callbacks = [terminate_on_nan_callback,
                      reduce_lr_callback,
                      terminate_on_lr_callback,

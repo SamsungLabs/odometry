@@ -75,7 +75,7 @@ class TerminateOnLR(keras.callbacks.Callback):
             print(f'Epoch {self.stopped_epoch}: terminated on lr = {lr} < {self.min_lr}')
 
 
-class MLFlowLogger(keras.callbacks.Callback):
+class MlflowLogger(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         train_loss = logs['loss']
