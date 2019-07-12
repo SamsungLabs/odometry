@@ -24,11 +24,12 @@ class EuRoCParser(TUMParser):
         self.name = 'EuRoCParser'
 
     def _load_txt(self, txt_path, columns, scale=1):
+        scale = 1e-9
         df = pd.read_csv(txt_path, index_col=False)
         df = df[df.columns[:len(columns)]]
         df.columns = columns
         timestamp_col = columns[0]
-        df[timestamp_col] = df[timestamp_col].apply(float) * 1e-9
+        df[timestamp_col] = df[timestamp_col].apply(float) * scale
         return df
     
     def _load_gt_txt(self):
