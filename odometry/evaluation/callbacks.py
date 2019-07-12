@@ -93,6 +93,7 @@ class Evaluate(keras.callbacks.Callback):
                  artifact_dir=None,
                  period=10,
                  save_best_only=True,
+                 rpe_indices='full',
                  max_to_visualize=5):
         super(Evaluate, self).__init__()
         self.model = model
@@ -103,6 +104,7 @@ class Evaluate(keras.callbacks.Callback):
         self.epoch_counter = 0
         self.best_loss = np.inf
         self.save_best_only = save_best_only
+        self.rpe_indices = rpe_indices
         self.max_to_visualize = max_to_visualize
 
         self.train_generator = dataset.get_train_generator(trajectory=True)
@@ -173,7 +175,8 @@ class Evaluate(keras.callbacks.Callback):
             predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
             self._save_predictions(prediction_id, subset, trajectory_id, predictions.iloc[indices])
 
-            trajectory_metrics = calculate_metrics(gt_trajectory, predicted_trajectory)
+            trajectory_metrics = calculate_metrics(gt_trajectory, predicted_trajectory,
+                                                   rpe_indices=self.rpe_indices)
             records.append(trajectory_metrics)
 
             if i < max_to_visualize:

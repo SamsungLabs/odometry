@@ -136,7 +136,8 @@ class BaseTrainer:
                                          run_dir=self.run_dir,
                                          artifact_dir=self.run_name,
                                          period=self.period,
-                                         save_best_only=self.save_best_only)
+                                         save_best_only=self.save_best_only,
+                                         rpe_indices=self.config['rpe_indices'])
             callbacks.extend([checkpoint_callback,
                               evaluate_callback])
 
