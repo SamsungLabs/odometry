@@ -112,7 +112,7 @@ def get_kitti_4_6_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_4/6',
               'target_size': (96, 320),
-              'rpe_indices': 'kitti'
+              'rpe_indices': 'kitti',
              }
     return config
 
