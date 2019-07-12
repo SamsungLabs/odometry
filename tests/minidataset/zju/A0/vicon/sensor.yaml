@@ -1,0 +1,16 @@
+%YAML 1.0
+# sense-slam sensor.yaml
+type: vicon
+description: ""
+frequency: 400  # [hz]
+
+# noise parameters
+intrinsic:
+  sigma_q: 0.015  # [rad]
+  sigma_p: 0.001  # [m]
+
+# sensor to body transform
+extrinsic:
+  q: [-0.002652490592181614, -0.01028101048761887, 0.9935471038412665, -0.1129221748180736]  # x y z w
+  p: [-0.02580816835897214, -0.05898083681836226, 0.01663192641790228]  # [m]
+  t: 771810.4476670771  # [s]

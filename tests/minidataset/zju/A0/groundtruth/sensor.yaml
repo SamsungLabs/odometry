@@ -1,0 +1,16 @@
+%YAML 1.0
+# sense-slam sensor.yaml
+type: groundtruth
+description: ""
+frequency: 400  # [hz]
+
+# noise parameters
+intrinsic:
+  sigma_q: 0.015  # [rad]
+  sigma_p: 0.001  # [m]
+
+# sensor to body transform
+extrinsic:
+  q: [0, 0, 0, 1]  # x y z w
+  p: [0, 0, 0]  # [m]
+  t: 0  # [s]

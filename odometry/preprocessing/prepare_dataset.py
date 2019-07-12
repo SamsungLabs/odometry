@@ -62,6 +62,10 @@ def initialize_parser(dataset_type):
         return parsers.TUMParser
     elif dataset_type == 'retailbot':
         return parsers.RetailBotParser
+    elif dataset_type == 'ZJU_full':
+        return parsers.ZJUParser
+    elif dataset_type == 'EuRoC':
+        return parsers.EuRoCParser
     else:
         raise RuntimeError('Unexpected dataset type')
 
@@ -78,6 +82,8 @@ def get_all_trajectories(dataset_root):
     if list(dataset_root.glob('*traj.json')) or \
             list(dataset_root.glob('rgb.txt')) or \
             list(dataset_root.glob('image_2')) or \
+            list(dataset_root.glob('camera')) or \
+            list(dataset_root.glob('mav0')) or \
             list(dataset_root.glob('camera_gt.csv')):
 
         logger.info(f'Trajectory {dataset_root.as_posix()} added')
@@ -87,6 +93,8 @@ def get_all_trajectories(dataset_root):
         if list(d.glob('*traj.json')) or \
                 list(d.glob('rgb.txt')) or \
                 list(d.glob('image_2')) or \
+                list(d.glob('camera')) or \
+                list(d.glob('mav0')) or \
                 list(d.glob('camera_gt.csv')):
 
             logger.info(f'Trajectory {d.as_posix()} added')

@@ -7,22 +7,24 @@ from .base_parser import BaseParser
 
 class TUMParser(BaseParser):
 
-    def __init__(self, src_dir, gt_txt_path=None, depth_txt_path=None, rgb_txt_path=None):
+    def __init__(self, src_dir, gt_txt_path=None, rgb_txt_path=None, depth_txt_path=None, cols=None):
         super(TUMParser, self).__init__(src_dir)
-
         self.name = 'TUMParser'
 
-        self.gt_txt_path = gt_txt_path if gt_txt_path else os.path.join(self.src_dir, 'groundtruth.txt')
+        self.cols = cols or self.cols
+
+        self.gt_txt_path = gt_txt_path or os.path.join(self.src_dir, 'groundtruth.txt')
         if not os.path.exists(self.gt_txt_path):
             raise RuntimeError(f'Could not find groundtruth.txt: {self.gt_txt_path}')
 
-        self.depth_txt_path = depth_txt_path if depth_txt_path else os.path.join(self.src_dir, 'depth.txt')
-        if not os.path.exists(self.depth_txt_path):
-            raise RuntimeError(f'Could not find depth.txt: {self.depth_txt_path}')
-
-        self.rgb_txt_path = rgb_txt_path if rgb_txt_path else os.path.join(self.src_dir, 'rgb.txt')
+        self.rgb_txt_path = rgb_txt_path or os.path.join(self.src_dir, 'rgb.txt')
         if not os.path.exists(self.rgb_txt_path):
             raise RuntimeError(f'Could not find rgb.txt: {self.rgb_txt_path}')
+
+        if 'path_to_depth' in self.cols:
+            self.depth_txt_path = depth_txt_path or os.path.join(self.src_dir, 'depth.txt')
+            if not os.path.exists(self.depth_txt_path):
+                raise RuntimeError(f'Could not find depth.txt: {self.depth_txt_path}')
 
         self.skiprows = 3
 
@@ -68,7 +70,6 @@ class TUMParser(BaseParser):
 
     def _load_txt(self, txt_path, columns):
         df = pd.read_csv(txt_path, skiprows=self.skiprows, sep=' ', index_col=False, names=columns)
-        df.columns = columns
         timestamp_col = columns[0]
         df[timestamp_col] = df[timestamp_col].apply(float)
         return df
@@ -81,7 +82,8 @@ class TUMParser(BaseParser):
         return self._load_txt(self.rgb_txt_path, columns=['timestamp_rgb', 'path_to_rgb'])
 
     def _load_depth_txt(self):
-        return self._load_txt(self.depth_txt_path, columns=['timestamp_depth', 'path_to_depth'])
+        if 'path_to_depth' in self.cols:
+            return self._load_txt(self.depth_txt_path, columns=['timestamp_depth', 'path_to_depth'])
 
     def _load_data(self):
         self.dataframes = [self._load_depth_txt(), self._load_rgb_txt(), self._load_gt_txt()]

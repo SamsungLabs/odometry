@@ -1,0 +1,18 @@
+%YAML 1.0
+# sense-slam sensor.yaml
+type: camera
+description: Xiaomi Mi 8
+frequency: 30  # [hz]
+camera_model: pinhole
+distortion_model: radtan
+
+# intrinsic parameters
+intrinsic:
+  camera: [493.0167, 491.55953, 317.97856, 242.392]  # fx fy cx cy
+  distortion: [0, 0, 0, 0]  # k1 k2 r1 r2
+
+# sensor to body transform
+extrinsic:
+  q: [0.707107, -0.707107, 0, 0]  # x y z w
+  p: [-0.00165, -0.009950000000000001, 0.00067]  # [m]
+  t: 0  # [s]

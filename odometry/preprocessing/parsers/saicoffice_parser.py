@@ -11,6 +11,3 @@ class SAICOfficeParser(RetailBotParser):
     def _load_data(self):
         self.dataframes = [self._load_rgb_txt(), self._load_gt_txt()]
         self.timestamp_cols = ['timestamp_rgb', 'timestamp_gt']
-
-    def _load_depth_txt(self):
-        pass
