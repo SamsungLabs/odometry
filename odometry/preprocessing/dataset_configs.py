@@ -12,8 +12,8 @@ DATASET_TYPES = ['kitti_8/3',
                  'fr2',
                  'fr3',
                  'tum',
-                 'ZJU_full',
-                 'EuRoC']
+                 'zju',
+                 'euroc']
 
 
 def is_int(string: str):
@@ -35,6 +35,50 @@ def get_config(dataset_root: str, dataset_type: str) -> Dict:
     return config
 
 
+def get_zju_config(dataset_root):
+    config = {'train_trajectories': ['A0',
+                                     'A1',
+                                     'A2',
+                                     'A3',
+                                     'A4',
+                                     'B1',
+                                     'B2',
+                                     'B3',
+                                     'B4'],
+              'val_trajectories': ['A5',
+                                   'A6',
+                                   'A7',
+                                   'B5',
+                                   'B6',     
+                                   'B7'],
+              'test_trajectories': None,
+              'exp_name': 'zju',
+              'target_size': (120, 160),
+              'rpe_indices': 'full',
+              }
+    return config
+
+
+def get_euroc_config(dataset_root):
+    config = {'train_trajectories': ['MH_01_easy',
+                                     'MH_03_medium',
+                                     'MH_04_difficult',
+                                     'V1_01_easy',
+                                     'V1_02_medium',
+                                     'V1_03_difficult',
+                                     'V2_01_easy',
+                                     'V2_02_medium'
+                                     'V2_03_difficult'],
+              'val_trajectories': ['MH_02_easy',
+                                   'MH_05_difficult'],
+              'test_trajectories': None,
+              'exp_name': 'euroc',
+              'target_size': (120, 160),
+              'rpe_indices': 'full',
+              }
+    return config
+
+
 def get_kitti_8_3_config(dataset_root):
     config = {'train_trajectories': ['00',
                                      '01',
@@ -43,70 +87,13 @@ def get_kitti_8_3_config(dataset_root):
                                      '04',
                                      '05',
                                      '06',
-                                     '07'
-                                     ],
-
+                                     '07'],
               'val_trajectories': ['08',
                                    '09',
-                                   '10'
-                                   ],
-
+                                   '10'],
               'test_trajectories': None,
               'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
-              }
-    return config
-
-
-def get_ZJU_full(dataset_root):
-    config = {    'train_sequences': [ 'B1',
-                                       'A0',
-                                       'B2',
-                                       'B3',
-                                       'B4',
-                                       'A1',
-                                       'A2',
-                                       'A3',
-                                       'A4'
-                                        ],
-
-                    'val_sequences': [ 'B5',
-                                       'A5',
-                                       'B6',        
-                                       'B7',
-                                       'A6',        
-                                       'A7' 
-                                        ],
-
-              'test_trajectories': None,
-              'exp_name': 'ZJU_full',
-              'target_size': (120, 160),
-              }
-    return config
-
-
-def get_EuRoC(dataset_root):
-    config = {     'train_sequences': [
-                                        'MH_01_easy',
-                                        'MH_04_difficult',
-                                        'V1_02_medium',
-                                        'V2_01_easy',
-                                        'V1_01_easy',
-                                        'V2_03_difficult',
-                                        'V1_03_difficult',
-                                        'V2_02_medium',
-                                        'MH_03_medium'
-                                         ],
-
-                    'val_sequences': [
-                                        'MH_02_easy',
-                                        'MH_05_difficult'
-
-                                         ],
-
-              'test_trajectories': None,
-              'exp_name': 'EuRoC',
-              'target_size': (120, 160),
               }
     return config
 
@@ -115,30 +102,29 @@ def get_kitti_4_6_config(dataset_root):
     config = {'train_trajectories': ['00',
                                      '02',
                                      '08',
-                                     '09',
-                                     ],
+                                     '09'],
               'val_trajectories': ['03',
                                    '04',
                                    '05',
                                    '06',
                                    '07',
-                                   '10'
-                                   ],
+                                   '10'],
               'test_trajectories': None,
               'exp_name': 'kitti_4/6',
-              'target_size': (96, 320)
-              }
+              'target_size': (96, 320),
+              'rpe_indices': 'kitti'
+             }
     return config
 
 
 def get_discoman_v10_config(dataset_root):
-    config = {
-        'train_trajectories': list(),
-        'val_trajectories': list(),
-        'test_trajectories': list(),
-        'exp_name': 'discoman_v10',
-        'target_size': (90, 160),
-         }
+    config = {'train_trajectories': list(),
+              'val_trajectories': list(),
+              'test_trajectories': list(),
+              'exp_name': 'discoman_v10',
+              'target_size': (90, 160),
+              'rpe_indices': 'full',
+             }
 
     sub_dirs = ['train', 'val', 'test']
     for d in sub_dirs:
@@ -156,6 +142,7 @@ def get_discoman_debug_config(dataset_root):
               'test_trajectories': ['test/000200'],
               'exp_name': 'discoman_debug',
               'target_size': (90, 160),
+              'rpe_indices': 'full',
               }
     return config
 
@@ -166,6 +153,7 @@ def get_tum_debug_config(dataset_root):
               'test_trajectories': ['rgbd_dataset_freiburg1_desk'],
               'exp_name': 'tum_debug',
               'target_size': (120, 160),
+              'rpe_indices': 'full',
               }
     return config
 
@@ -176,12 +164,12 @@ def get_fr1_config(dataset_root):
                                      'rgbd_dataset_freiburg1_360',
                                      'rgbd_dataset_freiburg1_rpy',
                                      'rgbd_dataset_freiburg1_teddy',
-                                     'rgbd_dataset_freiburg1_plant',
-                                     ],
+                                     'rgbd_dataset_freiburg1_plant'],
               'val_trajectories': ['rgbd_dataset_freiburg1_room'],
               'test_trajectories': ['rgbd_dataset_freiburg1_desk2'],
               'exp_name': 'fr1',
               'target_size': (120, 160),
+              'rpe_indices': 'full',
               }
     return config
 
@@ -193,13 +181,13 @@ def get_fr2_config(dataset_root):
                                      'rgbd_dataset_freiburg2_coke',
                                      'rgbd_dataset_freiburg2_metallic_sphere',
                                      'rgbd_dataset_freiburg2_metallic_sphere2',
-                                     'rgbd_dataset_freiburg2_dishes',
-                                     ],
+                                     'rgbd_dataset_freiburg2_dishes'],
               'val_trajectories': ['rgbd_dataset_freiburg2_flowerbouquet'],
               'test_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam3',
                                     'rgbd_dataset_freiburg2_360_hemisphere'],
               'exp_name': 'fr2',
               'target_size': (120, 160),
+              'rpe_indices': 'full',
               }
     return config
 
@@ -224,8 +212,7 @@ def get_fr3_config(dataset_root):
                                      'rgbd_dataset_freiburg3_walking_rpy',
                                      'rgbd_dataset_freiburg3_cabinet',
                                      'rgbd_dataset_freiburg3_structure_notexture_near',
-                                     'rgbd_dataset_freiburg3_teddy',
-                                     ],
+                                     'rgbd_dataset_freiburg3_teddy'],
               'val_trajectories': ['rgbd_dataset_freiburg3_sitting_xyz_validation',
                                    'rgbd_dataset_freiburg3_walking_xyz_validation',
                                    'rgbd_dataset_freiburg3_walking_static_validation',
@@ -238,17 +225,15 @@ def get_fr3_config(dataset_root):
                                    'rgbd_dataset_freiburg3_sitting_static_validation',
                                    'rgbd_dataset_freiburg3_walking_rpy_validation',
                                    'rgbd_dataset_freiburg3_cabinet_validation',
-                                   'rgbd_dataset_freiburg3_structure_notexture_near_validation',
-
-                                   ],
+                                   'rgbd_dataset_freiburg3_structure_notexture_near_validation'],
               'test_trajectories': ['rgbd_dataset_freiburg3_structure_texture_far_validation',
                                     'rgbd_dataset_freiburg3_long_office_household_validation',
                                     'rgbd_dataset_freiburg3_sitting_halfsphere_validation',
                                     'rgbd_dataset_freiburg3_nostructure_texture_far_validation',
-                                    'rgbd_dataset_freiburg3_walking_halfsphere_validation',
-                                    ],
+                                    'rgbd_dataset_freiburg3_walking_halfsphere_validation'],
               'exp_name': 'fr3',
               'target_size': (120, 160),
+              'rpe_indices': 'full',
               }
     return config
 
