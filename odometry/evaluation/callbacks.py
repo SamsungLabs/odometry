@@ -155,7 +155,7 @@ class Evaluate(keras.callbacks.Callback):
             visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory,
                                          title=title, file_path=file_path)
 
-    def _evaluate(self, generator, gt, subset, prediction_id, max_to_visualize):
+    def _evaluate(self, generator, gt, subset, prediction_id, max_to_visualize=None):
         if generator is None:
             return dict()
 
@@ -163,7 +163,7 @@ class Evaluate(keras.callbacks.Callback):
 
         records = []
 
-        max_to_visualize = max_to_visualize if max_to_visualize > 0 else gt.trajectory_id.nunique()
+        max_to_visualize = max_to_visualize or gt.trajectory_id.nunique()
 
         gt_by_trajectory = gt.groupby(by='trajectory_id').indices.items()
         for i, (trajectory_id, indices) in enumerate(tqdm.tqdm(gt_by_trajectory,
@@ -225,7 +225,7 @@ class Evaluate(keras.callbacks.Callback):
 
     def on_train_end(self, logs={}):
         prediction_id = 'test'
-        test_metrics = self._evaluate(self.test_generator, self.df_test, 'test', prediction_id, max_to_visualize=-1)
+        test_metrics = self._evaluate(self.test_generator, self.df_test, 'test', prediction_id)
         mlflow.log_metrics(test_metrics)
 
         self._visualize(self.test_generator, self.df_test, 'test', 'test')
