@@ -220,13 +220,14 @@ class Evaluate(keras.callbacks.Callback):
             [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in train_metrics.items()]
             [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in val_metrics.items()]
 
-        if self.save_artifacts:
-            mlflow.log_artifacts(self.run_dir, self.artifact_dir)
+            if self.save_artifacts:
+                mlflow.log_artifacts(self.run_dir, self.artifact_dir)
 
     def on_train_end(self, logs={}):
         prediction_id = 'test'
         test_metrics = self._evaluate(self.test_generator, self.df_test, 'test', prediction_id, max_to_visualize=-1)
         mlflow.log_metrics(test_metrics)
 
-        if self.save_artifacts:
+        self._visualize(self.test_generator, self.df_test, 'test', 'test')
+        if mlflow.active_run() and self.save_artifacts:
             mlflow.log_artifacts(self.run_dir, self.artifact_dir)
