@@ -53,7 +53,7 @@ class TestDatasets(unittest.TestCase):
         df = pd.read_csv(csv_path)
         self.assert_df(df, trajectory_dir=trajectory_dir, num_files=num_files)
 
-    def test_ZJU(self) -> None:
+    def test_zju(self) -> None:
         print('Started ZJU test')
 
         num_files = 4
@@ -73,7 +73,7 @@ class TestDatasets(unittest.TestCase):
         df = pd.read_csv(csv_path)
         self.assert_df(df, trajectory_dir=trajectory_dir, num_files=num_files)
 
-    def test_EuRoC(self) -> None:
+    def test_euroc(self) -> None:
         print('Started EuRoC test')
 
         num_files = 2
