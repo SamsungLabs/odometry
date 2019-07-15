@@ -1,11 +1,9 @@
 from .model_factory import PretrainedModelFactory
 from .model_factory import ModelFactory
 from .model_factory import ModelWithDecoderFactory
-from .model_factory import ConstantModelFactory
 from .model_factory import ModelWithConfidenceFactory
 
 from .networks import construct_simple_model
-from .networks import construct_constant_model
 from .networks import construct_resnet50_model
 from .networks import construct_depth_flow_model
 from .networks import construct_st_vo_model
@@ -21,10 +19,8 @@ __all__ = [
     'PretrainedModelFactory',
     'ModelFactory',
     'ModelWithDecoderFactory',
-    'ConstantModelFactory',
     'ModelWithConfidenceFactory',
     'construct_simple_model',
-    'construct_constant_model',
     'construct_resnet50_model',
     'construct_depth_flow_model',
     'construct_st_vo_model',
