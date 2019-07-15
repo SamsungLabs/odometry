@@ -27,4 +27,3 @@ SAIC_OFFICE_PATH = '/dbstore/datasets/Odometry_team/saic_office_prepare_v1_1_aga
 RETAIL_BOT_PATH = '/dbstore/datasets/Odometry_team/retail_bot/'
 EUROC_PATH = '/dbstore/datasets/Odometry_team/EuRoC_prepare/'
 ZJU_PATH = '/dbstore/datasets/Odometry_team/zju_prepare/'
-
