@@ -1,5 +1,6 @@
 import os
 import time
+import datetime
 import logging
 import argparse
 import subprocess as sp
@@ -50,7 +51,7 @@ class Leaderboard:
 
         pool = Pool(len(self.leader_boards))
         for d_type in self.leader_boards:
-            print(f'Submiting {d_type}')
+            print(f'[{datetime.datetime.now().isoformat()}] Submitting {d_type}')
             pool.apply_async(self.submit_bundle, (d_type, ))
         pool.close()
         pool.join()
@@ -60,17 +61,17 @@ class Leaderboard:
         self.setup_logger(dataset_type)
         logger = logging.getLogger('leaderboard')
 
-        logger.info(f'Dataset {dataset_type}. Started submitting jobs')
+        logger.info(f'[{datetime.datetime.now().isoformat()}] Dataset {dataset_type}. Started submitting jobs')
 
         started_jobs_id = set()
         for b in range(self.bundle_size):
             job_id = self.submit_job(dataset_type, b)
             started_jobs_id.add(job_id)
 
-        logger.info(f'Dataset {dataset_type}. Started started_jobs_id {started_jobs_id}')
+        logger.info(f'[{datetime.datetime.now().isoformat()}] Dataset {dataset_type}. Started started_jobs_id {started_jobs_id}')
         self.wait_jobs(dataset_type, started_jobs_id)
 
-        logger.info(f'Dataset {dataset_type}. Averaging metrics')
+        logger.info(f'[{datetime.datetime.now().isoformat()}] Dataset {dataset_type}. Averaging metrics')
         try:
             average_metrics(self.run_name, dataset_type)
         except Exception as e:
@@ -79,7 +80,7 @@ class Leaderboard:
     def submit_job(self, dataset_type, bundle_id):
         logger = logging.getLogger('leaderboard')
         cmd = self.get_lsf_command(dataset_type, self.run_name + f'_b_{bundle_id}')
-        logger.info(f'Running command: {cmd}')
+        logger.info(f'[{datetime.datetime.now().isoformat()}] Running command: {cmd}')
 
         p = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
         outs, errs = p.communicate(timeout=4)
@@ -131,13 +132,13 @@ class Leaderboard:
             still_running_jobs = started_jobs_id.intersection(job_ids)
             sorted_jobs = list(still_running_jobs)
             sorted_jobs.sort()
-            logger.info(f'Dataset {dataset_type}. Jobs {sorted_jobs} are still running')
+            logger.info(f'[{datetime.datetime.now().isoformat()}] Dataset {dataset_type}. Jobs {sorted_jobs} are still running')
 
             if still_running_jobs:
                 time.sleep(10)
             else:
                 finished = True
-                logger.info(f'Dataset {dataset_type}. All jobs has been finished')
+                logger.info(f'[{datetime.datetime.now().isoformat()}] Dataset {dataset_type}. All jobs has been finished')
 
     def setup_logger(self, dataset_type):
 
