@@ -2,7 +2,6 @@ import mlflow
 import datetime
 import numpy as np
 import argparse
-import itertools
 from collections import defaultdict
 
 import __init_path__
