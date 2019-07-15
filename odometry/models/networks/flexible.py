@@ -50,7 +50,7 @@ def construct_flexible_model(inputs,
                              regularization=0,
                              activation='relu',
                              kernel_initializer='glorot_normal',
-                             use_gated_convolutions=True,
+                             use_gated_convolutions=False,
                              use_batchnorm=False,
                              return_confidence=False):
 
