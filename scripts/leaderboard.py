@@ -35,7 +35,14 @@ class Leaderboard:
         if debug:
             self.leader_boards = ['tum_debug', 'discoman_debug']
         else:
-            self.leader_boards = ['kitti_4/6', 'kitti_8/3', 'discoman_v10', 'tum']
+            self.leader_boards = ['kitti_4/6',
+                                  'kitti_8/3',
+                                  'discoman_v10',
+                                  'tum',
+                                  'saic_office',
+                                  'retail_bot',
+                                  'euroc',
+                                  'zju']
 
         self.verbose = verbose
         self.machines = machines
@@ -102,6 +109,14 @@ class Leaderboard:
             dataset_root = env.TUM_PATH
         elif dataset_type == 'tum_debug':
             dataset_root = env.TUM_PATH
+        elif dataset_type == 'saic_office':
+            dataset_root = env.SAIC_OFFICE_PATH
+        elif dataset_type == 'retail_bot':
+            dataset_root = env.RETAIL_BOT_PATH
+        elif dataset_type == 'euroc':
+            dataset_root = env.EUROC_PATH
+        elif dataset_type == 'zju':
+            dataset_root = env.ZJU_PATH
         else:
             raise RuntimeError('Unknown dataset_type')
 
