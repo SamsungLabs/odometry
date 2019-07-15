@@ -1,24 +1,22 @@
 from keras.layers.merge import concatenate
 from keras.layers import Flatten
 
-
 from odometry.models.layers import (concat,
                                     conv2d,
                                     gated_conv2d,
                                     construct_double_fc,
                                     construct_outputs,
                                     construct_outputs_with_confidences)
-
 from odometry.utils import mlflow_logging
 
 
 def construct_encoder(inputs,
-                      use_gated_convolutions=False,
-                      use_batchnorm=False,
-                      strides=[2, 1, 4, 1 ,2, 1],
-                      dilation_rates=None,
                       kernel_sizes=[7, 5, 3, 3, 3, 3],
-                      kernel_initializer='glorot_normal'):
+                      strides=[2, 1, 4, 1, 2, 1],
+                      dilation_rates=None,
+                      kernel_initializer='glorot_normal',
+                      use_gated_convolutions=False,
+                      use_batchnorm=False):
     conv = gated_conv2d if use_gated_convolutions else conv2d
 
     layers = len(strides)
@@ -37,8 +35,8 @@ def construct_encoder(inputs,
                       activation='relu',
                       kernel_initializer=kernel_initializer)
 
-    flatten1 = Flatten()(inputs)
-    return flatten1
+    flatten = Flatten()(inputs)
+    return flatten
 
 
 @mlflow_logging(ignore=('inputs',), prefix='model.', name='Flexible')
@@ -56,7 +54,7 @@ def construct_flexible_model(inputs,
 
     inputs = concat(inputs)
     features = construct_encoder(inputs,
-                                 kernel_sizes = kernel_sizes,
+                                 kernel_sizes=kernel_sizes,
                                  strides=strides,
                                  dilation_rates=dilation_rates,
                                  kernel_initializer=kernel_initializer,

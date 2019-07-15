@@ -129,22 +129,6 @@ def construct_outputs_with_confidences(outputs,
     return outputs_with_confidences
 
 
-class ConstLayer(Layer):
-    def __init__(self, value, **kwargs):
-        self.value = value
-        super(ConstLayer, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        super(ConstLayer, self).build(input_shape)
-
-    def call(self, x):
-        return K.expand_dims(
-            K.max(K.ones_like(x) * self.value, axis=(1,2,3)))
-
-    def compute_output_shape(self, input_shape):
-        return (input_shape[0], 1)
-
-
 def grid_sample(x, shifted_grid):
     input_shape = K.shape(x)
     batch_size = input_shape[0]
