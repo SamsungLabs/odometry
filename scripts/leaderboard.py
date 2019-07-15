@@ -34,7 +34,7 @@ class Leaderboard:
         if debug:
             self.leader_boards = ['tum_debug', 'discoman_debug']
         else:
-            self.leader_boards = ['kitti_4/6', 'discoman_v10', 'tum']
+            self.leader_boards = ['kitti_4/6', 'kitti_8/3', 'discoman_v10', 'tum']
 
         self.verbose = verbose
         self.machines = machines
@@ -94,6 +94,8 @@ class Leaderboard:
         elif dataset_type == 'discoman_debug':
             dataset_root = env.DISCOMAN_V10_PATH
         elif dataset_type == 'kitti_4/6':
+            dataset_root = env.KITTI_PATH
+        elif dataset_type == 'kitti_8/3':
             dataset_root = env.KITTI_PATH
         elif dataset_type == 'tum':
             dataset_root = env.TUM_PATH
