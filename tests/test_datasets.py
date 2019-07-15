@@ -53,7 +53,7 @@ class TestDatasets(unittest.TestCase):
         df = pd.read_csv(csv_path)
         self.assert_df(df, trajectory_dir=trajectory_dir, num_files=num_files)
 
-    def test_ZJU(self) -> None:
+    def test_zju(self) -> None:
         print('Started ZJU test')
 
         num_files = 4
@@ -63,8 +63,7 @@ class TestDatasets(unittest.TestCase):
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
-                        pwc_features=True
-                        )
+                        pwc_features=True)
 
         csv_path = list(self.output_dir.rglob("*.csv"))
         self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')
@@ -74,7 +73,7 @@ class TestDatasets(unittest.TestCase):
         df = pd.read_csv(csv_path)
         self.assert_df(df, trajectory_dir=trajectory_dir, num_files=num_files)
 
-    def test_EuRoC(self) -> None:
+    def test_euroc(self) -> None:
         print('Started EuRoC test')
 
         num_files = 2
@@ -84,8 +83,7 @@ class TestDatasets(unittest.TestCase):
                         target_size=(120, 160),
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
-                        pwc_features=True
-                        )
+                        pwc_features=True)
 
         csv_path = list(self.output_dir.rglob("*.csv"))
         self.assertTrue(len(csv_path) == 1, f'Found {len(csv_path)} csv files')

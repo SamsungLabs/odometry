@@ -13,7 +13,6 @@ from odometry.models.losses import (mean_squared_error,
                                     confidence_error,
                                     rmse,
                                     smooth_L1)
-
 from odometry.models.layers import (activ,
                                     concat,
                                     conv2d,
@@ -24,7 +23,6 @@ from odometry.models.layers import (activ,
                                     construct_outputs,
                                     AssociationLayer,
                                     AddGridLayer)
-
 from odometry.utils import mlflow_logging
 
 

@@ -26,7 +26,7 @@ def mean_squared_signed_logarithmic_error(y_true, y_pred, scale=1.):
 
 
 def rmse(y_true, y_pred):
-    return K.sqrt(K.clip(mean_squared_error(y_true, y_pred), K.epsilon(), None))
+    return K.sqrt(K.clip(mean_squared_error(y_true[:, :1], y_pred[:, :1]), K.epsilon(), None))
 
 
 def smooth_L1(y_true, y_pred, clip_delta=0.5):

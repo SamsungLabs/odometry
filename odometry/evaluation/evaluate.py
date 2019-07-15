@@ -61,38 +61,39 @@ def get_steps(trajectory_length, indices):
     raise Exception('Unsupported indices option: "{}"'.format(indices))
 
 
-def calculate_relative_pose_error(gt_trajectory, predicted_trajectory, indices='full', mode='rpe'):
+def calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
+                                  rpe_indices='full', rpe_mode='rpe'):
     '''
     Calculates RPE translation and RPE rotation for 2 global trajectories.
     Args:
         gt_trajectory: GlobalTrajectory
         predicted_trajectory: GlobalTrajectory
-        indices: `sqrt`(fast yet inaccurate),
-                 `log`,
-                 `full`(slow but most accurate),
-                 `kitti`(for distance-based metrics on KITTI)
-        mode: `rpe` of `rmse`
+        rpe_indices: `sqrt`(fast yet inaccurate),
+                     `log`,
+                     `full`(slow but most accurate),
+                     `kitti`(for distance-based metrics on KITTI)
+        rpe_mode: `rpe` of `rmse`
     Returns:
         RPE translation, RPE rotation
     '''
-
-    rpe_translation = 0
-    rpe_rotation = 0
-
-    distance_based = (indices == 'kitti')
-    if distance_based:
-        distances = calculate_cumulative_distances_along_trajectory(gt_trajectory)
-        stride = 1 if mode == 'rmse' else 10
-
-    trajectory_length = len(gt_trajectory)
-    num_samples = 0
-    steps = get_steps(trajectory_length, indices)
 
     gt_points = gt_trajectory.points
     gt_rotation_matrices = gt_trajectory.rotation_matrices
 
     predicted_points = predicted_trajectory.points
     predicted_rotation_matrices = predicted_trajectory.rotation_matrices
+
+    distance_based = (rpe_indices == 'kitti')
+    if distance_based:
+        distances = calculate_cumulative_distances_along_trajectory(gt_points)
+        stride = 1 if rpe_mode == 'rmse' else 10
+
+    trajectory_length = len(gt_trajectory)
+    num_samples = 0
+    steps = get_steps(trajectory_length, rpe_indices)
+
+    rpe_translation = 0
+    rpe_rotation = 0
 
     for step in steps:
         if distance_based:
@@ -122,7 +123,7 @@ def calculate_relative_pose_error(gt_trajectory, predicted_trajectory, indices='
         E_rotation = R_second_inv_gt @ R_first_gt @ R_first_inv_predicted @ R_second_predicted
         thetas = np.arccos(np.clip((np.trace(E_rotation, axis1=1, axis2=2) - 1) / 2, -1, 1))
 
-        if mode == 'rmse':
+        if rpe_mode == 'rmse':
             t_err = np.mean(l2_norms) ** 0.5
             r_err = np.mean(thetas ** 2) ** 0.5
         else:
@@ -133,7 +134,7 @@ def calculate_relative_pose_error(gt_trajectory, predicted_trajectory, indices='
         rpe_rotation += np.rad2deg(r_err) * scale
         num_samples += len(first_indices)
 
-    if mode == 'rmse':
+    if rpe_mode == 'rmse':
         rpe_translation /= len(steps)
         rpe_rotation /= len(steps)
         divider = 1.
@@ -158,12 +159,12 @@ def calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory):
     return np.mean(pointwise_distances) ** 0.5
 
 
-def calculate_metrics(gt_trajectory, predicted_trajectory, indices='full'):
+def calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices='full'):
     ate = calculate_absolute_trajectory_error(gt_trajectory, predicted_trajectory)
     rpe_t, rpe_r, divider = calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
-                                                          indices=indices, mode='rpe')
+                                                          rpe_indices=rpe_indices, rpe_mode='rpe')
     rmse_t, rmse_r, _ = calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
-                                                      indices=indices, mode='rmse')
+                                                      rpe_indices=rpe_indices, rpe_mode='rmse')
     metrics = {
        'ATE': ate,
        'RMSE_t': rmse_t,

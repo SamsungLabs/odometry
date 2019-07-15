@@ -8,6 +8,7 @@ from .parsers import TUMParser
 from .parsers import RetailBotParser
 from .parsers import DISCOMANJSONParser
 from .parsers import OldDISCOMANParser
+from .parsers import DISCOMANParser
 from .parsers import EuRoCParser
 from .parsers import ZJUParser
 
@@ -26,11 +27,12 @@ __all__ = [
     'TUMParser',
     'RetailBotParser',
     'DISCOMANJSONParser',
+    'DISCOMANParser',
     'OldDISCOMANParser',
     'EuRoCParser',
     'ZJUParser',
     'Quaternion2EulerEstimator',
     'Struct2DepthEstimator',
     'Global2RelativeEstimator',
-    'PWCNetEstimator'
+    'PWCNetEstimator',
 ]
