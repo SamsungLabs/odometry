@@ -2,6 +2,7 @@ import mlflow
 import datetime
 import numpy as np
 import argparse
+import itertools
 from collections import defaultdict
 
 import __init_path__
@@ -13,8 +14,10 @@ def average_metrics(run_name, dataset_type):
 
     aggregated_metrics = aggregate_metrics(metrics)
 
-    metrics_mean = {k + '_mean': np.mean(v) for k, v in aggregated_metrics.items() if 'test' in k}
-    metrics_std = {k + '_std': np.std(v) for k, v in aggregated_metrics.items() if 'test' in k}
+    metrics_mean = {k + '_mean': np.mean(v) for k, v in aggregated_metrics.items()}
+    metrics_std = {k + '_std': np.std(v) for k, v in aggregated_metrics.items()}
+
+    num_of_runs = len(list(itertools.chain.from_iterable(aggregated_metrics.values()))) / len(aggregated_metrics.keys())
 
     mlflow.set_tracking_uri(env.TRACKING_URI)
     mlflow.set_experiment(dataset_type)
@@ -25,7 +28,7 @@ def average_metrics(run_name, dataset_type):
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
 
         mlflow.log_param('model.name', model_name)
-        mlflow.log_param('num_of_runs', len(metrics))
+        mlflow.log_param('num_of_runs', num_of_runs)
         mlflow.log_param('avg', True)
 
         mlflow.log_metrics(metrics_mean)
@@ -55,7 +58,9 @@ def aggregate_metrics(metrics):
 
     for metric in metrics:
         for k, v in metric.items():
-            aggregated_metrics[k].append(v)
+            if 'test' in k:
+                aggregated_metrics[k].append(v)
+
     return aggregated_metrics
 
 
