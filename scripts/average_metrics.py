@@ -17,7 +17,7 @@ def average_metrics(run_name, dataset_type):
     metrics_mean = {k + '_mean': np.mean(v) for k, v in aggregated_metrics.items()}
     metrics_std = {k + '_std': np.std(v) for k, v in aggregated_metrics.items()}
 
-    num_of_runs = len(list(itertools.chain.from_iterable(aggregated_metrics.values()))) / len(aggregated_metrics.keys())
+    num_of_runs = len(next(iter(aggregated_metrics.values())))
 
     mlflow.set_tracking_uri(env.TRACKING_URI)
     mlflow.set_experiment(dataset_type)
