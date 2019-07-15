@@ -173,6 +173,7 @@ class BaseTrainer:
                            dataset=dataset,
                            epochs=self.epochs)
 
+        mlflow.log_metric('successfully_finished', 1)
         mlflow.end_run()
 
     @staticmethod
