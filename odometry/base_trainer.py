@@ -74,6 +74,7 @@ class BaseTrainer:
             os.makedirs(exp_path, exist_ok=True)
             os.chmod(exp_path, 0o777)
             mlflow.create_experiment(exp_name, exp_path)
+            exp = client.get_experiment_by_name(exp_name)
 
         run_names = list()
         for info in client.list_run_infos(exp.experiment_id):
