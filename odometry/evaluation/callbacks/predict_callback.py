@@ -203,8 +203,8 @@ class Predict(keras.callbacks.Callback):
                                     self.max_to_visualize)
 
         if self.evaluate and mlflow.active_run():
-            [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in train_metrics.items()]
-            [mlflow.log_metric(key=key, value=value, step=epoch) for key, value in val_metrics.items()]
+            [mlflow.log_metric(key=key, value=value, step=epoch + 1) for key, value in train_metrics.items()]
+            [mlflow.log_metric(key=key, value=value, step=epoch + 1) for key, value in val_metrics.items()]
 
         if self.save_artifacts:
             mlflow.log_artifacts(self.run_dir, self.artifact_dir)
