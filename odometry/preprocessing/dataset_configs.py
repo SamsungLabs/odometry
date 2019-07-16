@@ -35,23 +35,22 @@ def get_config(dataset_root: str, dataset_type: str) -> Dict:
     return config
 
 
-def get_zju_config(dataset_root):
+def get_zji_config(dataset_root):
     config = {'train_trajectories': ['A0',
-                                     'A1',
-                                     'A2',
                                      'A3',
                                      'A4',
-                                     'B1',
-                                     'B2',
-                                     'B3',
-                                     'B4'],
-              'val_trajectories': ['A5',
+                                     'A5',
+                                     'B0',
+                                     'B2'
+                                     ],
+              'val_trajectories': ['A1',
                                    'A6',
-                                   'A7',
-                                   'B5',
-                                   'B6',     
-                                   'B7'],
-              'test_trajectories': None,
+                                   'B1'
+                                   ],
+              'test_trajectories': ['A2',
+                                    'A7',
+                                    'B3'
+                                    ],
               'exp_name': 'zju',
               'target_size': (120, 160),
               'rpe_indices': 'full',
