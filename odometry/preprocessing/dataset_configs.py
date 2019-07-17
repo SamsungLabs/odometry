@@ -35,7 +35,7 @@ def get_config(dataset_root: str, dataset_type: str) -> Dict:
     return config
 
 
-def get_zji_config(dataset_root):
+def get_zju_config(dataset_root):
     config = {'train_trajectories': ['A0',
                                      'A3',
                                      'A4',
