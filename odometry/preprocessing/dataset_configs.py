@@ -66,7 +66,7 @@ def get_euroc_config(dataset_root):
                                      'V1_02_medium',
                                      'V1_03_difficult',
                                      'V2_01_easy',
-                                     'V2_02_medium'
+                                     'V2_02_medium',
                                      'V2_03_difficult'],
               'val_trajectories': ['MH_02_easy',
                                    'V1_02_medium'],
