@@ -4,6 +4,7 @@ import datetime
 import logging
 import argparse
 import subprocess as sp
+import numpy as np
 from pathlib import Path
 from multiprocessing import Pool
 
@@ -42,7 +43,8 @@ class Leaderboard:
                                   'saic_office',
                                   'retail_bot',
                                   'euroc',
-                                  'zju']
+                                  'zju'
+                                 ]
 
         self.verbose = verbose
         self.machines = machines
@@ -86,7 +88,10 @@ class Leaderboard:
 
     def submit_job(self, dataset_type, bundle_id):
         logger = logging.getLogger('leaderboard')
-        cmd = self.get_lsf_command(dataset_type, self.run_name + f'_b_{bundle_id}')
+
+        run_name = self.run_name + f'_b_{bundle_id}'
+        seed = np.random.randint(1000000)
+        cmd = self.get_lsf_command(dataset_type, run_name, seed)
         logger.info(f'{datetime.datetime.now().isoformat()} Running command: {cmd}')
 
         p = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
@@ -95,7 +100,7 @@ class Leaderboard:
         job_id = str(outs).split(' ')[1][1:-1]
         return job_id
 
-    def get_lsf_command(self, dataset_type: str, run_name: str) -> str:
+    def get_lsf_command(self, dataset_type: str, run_name: str, seed: int) -> str:
 
         if dataset_type == 'discoman_v10':
             dataset_root = env.DISCOMAN_V10_PATH
@@ -129,6 +134,7 @@ class Leaderboard:
                    f'--dataset_root {dataset_root}',
                    f'--dataset_type {dataset_type}',
                    f'--run_name {run_name}',
+                   f'--seed {seed}',
                    ]
         return ' '.join(command)
 
