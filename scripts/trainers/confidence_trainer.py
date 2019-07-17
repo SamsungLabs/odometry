@@ -91,6 +91,7 @@ class ConfidenceTrainer(BaseTrainer):
                            evaluate=False,
                            save_dir='confidence')
 
+        mlflow.log_metric('successfully_finished', 1)
         mlflow.end_run()
 
     @staticmethod
