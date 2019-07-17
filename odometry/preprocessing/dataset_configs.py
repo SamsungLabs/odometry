@@ -8,9 +8,9 @@ DATASET_TYPES = ['kitti_8/3',
                  'discoman_v10',
                  'discoman_debug',
                  'tum_debug',
-                 'fr1',
-                 'fr2',
-                 'fr3',
+                 'tum_fr1',
+                 'tum_fr2',
+                 'tum_fr3',
                  'tum',
                  'zju',
                  'euroc']
@@ -37,21 +37,17 @@ def get_config(dataset_root: str, dataset_type: str) -> Dict:
 
 def get_zju_config(dataset_root):
     config = {'train_trajectories': ['A0',
-                                     'A1',
-                                     'A2',
                                      'A3',
                                      'A4',
-                                     'B1',
-                                     'B2',
-                                     'B3',
-                                     'B4'],
-              'val_trajectories': ['A5',
+                                     'A5',
+                                     'B0',
+                                     'B2'],
+              'val_trajectories': ['A1',
                                    'A6',
-                                   'A7',
-                                   'B5',
-                                   'B6',     
-                                   'B7'],
-              'test_trajectories': None,
+                                   'B1'],
+              'test_trajectories': ['A2',
+                                    'A7',
+                                    'B3'],
               'exp_name': 'zju',
               'target_size': (120, 160),
               'rpe_indices': 'full',
@@ -64,14 +60,13 @@ def get_euroc_config(dataset_root):
                                      'MH_03_medium',
                                      'MH_04_difficult',
                                      'V1_01_easy',
-                                     'V1_02_medium',
                                      'V1_03_difficult',
                                      'V2_01_easy',
-                                     'V2_02_medium',
                                      'V2_03_difficult'],
               'val_trajectories': ['MH_02_easy',
-                                   'MH_05_difficult'],
-              'test_trajectories': None,
+                                   'V1_02_medium'],
+              'test_trajectories': ['MH_05_difficult',
+                                    'V2_02_medium'],
               'exp_name': 'euroc',
               'target_size': (120, 160),
               'rpe_indices': 'full',
@@ -94,6 +89,7 @@ def get_kitti_8_3_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
+              'rpe_indices': 'kitti'
               }
     return config
 
@@ -158,7 +154,7 @@ def get_tum_debug_config(dataset_root):
     return config
 
 
-def get_fr1_config(dataset_root):
+def get_tum_fr1_config(dataset_root):
     config = {'train_trajectories': ['rgbd_dataset_freiburg1_desk',
                                      'rgbd_dataset_freiburg1_xyz',
                                      'rgbd_dataset_freiburg1_360',
@@ -167,14 +163,14 @@ def get_fr1_config(dataset_root):
                                      'rgbd_dataset_freiburg1_plant'],
               'val_trajectories': ['rgbd_dataset_freiburg1_room'],
               'test_trajectories': ['rgbd_dataset_freiburg1_desk2'],
-              'exp_name': 'fr1',
+              'exp_name': 'tum_fr1',
               'target_size': (120, 160),
               'rpe_indices': 'full',
               }
     return config
 
 
-def get_fr2_config(dataset_root):
+def get_tum_fr2_config(dataset_root):
     config = {'train_trajectories': ['rgbd_dataset_freiburg2_xyz',
                                      'rgbd_dataset_freiburg2_rpy',
                                      'rgbd_dataset_freiburg2_flowerbouquet_brownbackground',
@@ -185,14 +181,14 @@ def get_fr2_config(dataset_root):
               'val_trajectories': ['rgbd_dataset_freiburg2_flowerbouquet'],
               'test_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam3',
                                     'rgbd_dataset_freiburg2_360_hemisphere'],
-              'exp_name': 'fr2',
+              'exp_name': 'tum_fr2',
               'target_size': (120, 160),
               'rpe_indices': 'full',
               }
     return config
 
 
-def get_fr3_config(dataset_root):
+def get_tum_fr3_config(dataset_root):
     config = {'train_trajectories': ['rgbd_dataset_freiburg3_checkerboard_large',
                                      'rgbd_dataset_freiburg3_sitting_xyz',
                                      'rgbd_dataset_freiburg3_long_office_household',
@@ -231,7 +227,7 @@ def get_fr3_config(dataset_root):
                                     'rgbd_dataset_freiburg3_sitting_halfsphere_validation',
                                     'rgbd_dataset_freiburg3_nostructure_texture_far_validation',
                                     'rgbd_dataset_freiburg3_walking_halfsphere_validation'],
-              'exp_name': 'fr3',
+              'exp_name': 'tum_fr3',
               'target_size': (120, 160),
               'rpe_indices': 'full',
               }
@@ -239,9 +235,9 @@ def get_fr3_config(dataset_root):
 
 
 def get_tum_config(dataset_root):
-    fr1_config = get_fr1_config(dataset_root)
-    fr2_config = get_fr2_config(dataset_root)
-    fr3_config = get_fr3_config(dataset_root)
+    fr1_config = get_tum_fr1_config(dataset_root)
+    fr2_config = get_tum_fr2_config(dataset_root)
+    fr3_config = get_tum_fr3_config(dataset_root)
 
     config = fr1_config
     config['exp_name'] = 'tum'
