@@ -128,7 +128,8 @@ class BaseTrainer:
             save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
             weights_dir = os.path.join(save_dir, 'weights')
             os.makedirs(weights_dir, exist_ok=True)
-            weights_path = os.path.join(weights_dir, '{epoch:03d}-{val_loss:.6f}.hdf5')
+            weights_filename = '{epoch:03d}_train:{loss:.6f}_val:{val_loss:.6f}.hdf5'
+            weights_path = os.path.join(weights_dir, weights_filename)
             checkpoint_callback = ModelCheckpoint(filepath=weights_path,
                                                   save_best_only=self.save_best_only,
                                                   mode='min',
