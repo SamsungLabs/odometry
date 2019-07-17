@@ -69,8 +69,9 @@ def get_euroc_config(dataset_root):
                                      'V2_02_medium'
                                      'V2_03_difficult'],
               'val_trajectories': ['MH_02_easy',
-                                   'MH_05_difficult'],
-              'test_trajectories': None,
+                                   'V1_02_medium'],
+              'test_trajectories': ['MH_05_difficult',
+                                    'V2_02_medium'],
               'exp_name': 'euroc',
               'target_size': (120, 160),
               'rpe_indices': 'full',
