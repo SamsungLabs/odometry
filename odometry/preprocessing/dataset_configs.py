@@ -41,16 +41,13 @@ def get_zju_config(dataset_root):
                                      'A4',
                                      'A5',
                                      'B0',
-                                     'B2'
-                                     ],
+                                     'B2'],
               'val_trajectories': ['A1',
                                    'A6',
-                                   'B1'
-                                   ],
+                                   'B1'],
               'test_trajectories': ['A2',
                                     'A7',
-                                    'B3'
-                                    ],
+                                    'B3'],
               'exp_name': 'zju',
               'target_size': (120, 160),
               'rpe_indices': 'full',
@@ -92,6 +89,7 @@ def get_kitti_8_3_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
+              'rpe_indices': 'kitti'
               }
     return config
 
@@ -165,7 +163,7 @@ def get_tum_fr1_config(dataset_root):
                                      'rgbd_dataset_freiburg1_plant'],
               'val_trajectories': ['rgbd_dataset_freiburg1_room'],
               'test_trajectories': ['rgbd_dataset_freiburg1_desk2'],
-              'exp_name': 'fr1',
+              'exp_name': 'tum_fr1',
               'target_size': (120, 160),
               'rpe_indices': 'full',
               }
@@ -183,7 +181,7 @@ def get_tum_fr2_config(dataset_root):
               'val_trajectories': ['rgbd_dataset_freiburg2_flowerbouquet'],
               'test_trajectories': ['rgbd_dataset_freiburg2_pioneer_slam3',
                                     'rgbd_dataset_freiburg2_360_hemisphere'],
-              'exp_name': 'fr2',
+              'exp_name': 'tum_fr2',
               'target_size': (120, 160),
               'rpe_indices': 'full',
               }
@@ -229,7 +227,7 @@ def get_tum_fr3_config(dataset_root):
                                     'rgbd_dataset_freiburg3_sitting_halfsphere_validation',
                                     'rgbd_dataset_freiburg3_nostructure_texture_far_validation',
                                     'rgbd_dataset_freiburg3_walking_halfsphere_validation'],
-              'exp_name': 'fr3',
+              'exp_name': 'tum_fr3',
               'target_size': (120, 160),
               'rpe_indices': 'full',
               }
