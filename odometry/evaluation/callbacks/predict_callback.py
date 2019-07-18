@@ -34,6 +34,7 @@ class Predict(keras.callbacks.Callback):
 
         self.period = period
         self.epoch_counter = 0
+        self.last_evaluated_epoch = 0
         self.best_loss = np.inf
         self.save_best_only = save_best_only
         self.max_to_visualize = max_to_visualize
@@ -177,11 +178,17 @@ class Predict(keras.callbacks.Callback):
             return total_metrics
 
     def on_epoch_end(self, epoch, logs={}):
-        self.epoch_counter += 1
-        if self.period and self.epoch_counter < self.period:
+
+        # Check to not calculate metrics twice on_train_end
+        if self.last_evaluated_epoch == epoch:
             return
 
-        self.epoch_counter = 0
+        self.last_evaluated_epoch = epoch
+        self.epoch_counter += 1
+
+        if self.period and (self.epoch_counter % self.period) != 0:
+            return
+
         train_loss = logs['loss']
         val_loss = logs.get('val_loss', np.inf)
         if self.save_best_only and self.best_loss < val_loss:
@@ -206,17 +213,21 @@ class Predict(keras.callbacks.Callback):
             [mlflow.log_metric(key=key, value=value, step=epoch + 1) for key, value in train_metrics.items()]
             [mlflow.log_metric(key=key, value=value, step=epoch + 1) for key, value in val_metrics.items()]
 
-        if self.save_artifacts:
-            mlflow.log_artifacts(self.run_dir, self.artifact_dir)
+            if self.save_artifacts:
+                mlflow.log_artifacts(self.run_dir, self.artifact_dir)
 
     def on_train_end(self, logs={}):
+
+        self.on_epoch_end(self.epoch_counter - 1, logs)
+
         prediction_id = 'test'
         test_metrics = self._predict(self.test_generator,
                                      self.df_test,
                                      'test',
                                      prediction_id)
-        if self.evaluate:
-            mlflow.log_metrics(test_metrics)
+        if mlflow.active_run():
+            if self.evaluate:
+                mlflow.log_metrics(test_metrics)
 
-        if self.save_artifacts:
-            mlflow.log_artifacts(self.run_dir, self.artifact_dir)
+            if self.save_artifacts:
+                mlflow.log_artifacts(self.run_dir, self.artifact_dir)
