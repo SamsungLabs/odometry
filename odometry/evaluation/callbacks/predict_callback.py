@@ -33,7 +33,7 @@ class Predict(keras.callbacks.Callback):
         self.artifact_dir = artifact_dir
 
         self.period = period
-        self.epoch_counter = 0
+        self.epoch = 0
         self.last_evaluated_epoch = 0
         self.best_loss = np.inf
         self.save_best_only = save_best_only
@@ -180,9 +180,9 @@ class Predict(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
 
         self.last_evaluated_epoch = epoch
-        self.epoch_counter += 1
+        self.epoch += 1
 
-        if not self.period or self.epoch_counter % self.period:
+        if not self.period or self.epoch % self.period:
             return
 
         train_loss = logs['loss']
@@ -215,9 +215,9 @@ class Predict(keras.callbacks.Callback):
     def on_train_end(self, logs={}):
 
         # Check to not calculate metrics twice on_train_end
-        if self.last_evaluated_epoch != (self.epoch_counter - 1):
+        if self.last_evaluated_epoch != (self.epoch - 1):
             self.period = 1  
-            self.on_epoch_end(self.epoch_counter - 1, logs)
+            self.on_epoch_end(self.epoch - 1, logs)
 
         prediction_id = 'test'
         test_metrics = self._predict(self.test_generator,
