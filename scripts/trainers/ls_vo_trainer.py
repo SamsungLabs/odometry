@@ -4,7 +4,7 @@ import __init_path__
 import env
 
 from odometry.base_trainer import BaseTrainer
-from odometry.models import construct_ls_vo_model
+from odometry.models import construct_ls_vo_model, ModelWithDecoderFactory
 
 
 class LSVOTrainer(BaseTrainer):
@@ -22,9 +22,13 @@ class LSVOTrainer(BaseTrainer):
     def get_model_factory(self, input_shapes):
         self.construct_model_fn = construct_ls_vo_model
         self.lr = 0.001
-        self.loss = 'huber'
+        self.loss = 'mae'
         self.scale_rotation = 50
-        return super().get_model_factory(input_shapes)
+        return ModelWithDecoderFactory(self.construct_model_fn,
+                                       input_shapes=input_shapes,
+                                       lr=self.lr,
+                                       loss=self.loss,
+                                       scale_rotation=self.scale_rotation)
 
     def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
         return super().get_callbacks(model=model,
