@@ -10,6 +10,7 @@ from odometry.data_manager import GeneratorFactory
 from odometry.models import ModelFactory
 from odometry.evaluation import MlflowLogger, Predict, TerminateOnLR
 from odometry.preprocessing import get_config, DATASET_TYPES
+from odometry.utils import set_computation
 
 
 class BaseTrainer:
@@ -17,6 +18,7 @@ class BaseTrainer:
                  dataset_root,
                  dataset_type,
                  run_name,
+                 seed=42,
                  lsf=False,
                  batch=1,
                  epochs=100,
@@ -36,10 +38,12 @@ class BaseTrainer:
         mlflow.log_param('run_name', run_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
         mlflow.log_param('epochs', epochs)
+        mlflow.log_param('seed', seed)
 
         self.dataset_root = dataset_root
         self.dataset_type = dataset_type
         self.run_name = run_name
+        self.seed = seed
         self.lsf = lsf
         self.batch = batch
         self.epochs = epochs
@@ -51,6 +55,8 @@ class BaseTrainer:
         self.set_model_args()
 
         self.set_dataset_args()
+
+        set_computation(self.seed)
 
     def set_model_args(self):
         self.construct_model_fn = None
@@ -128,7 +134,8 @@ class BaseTrainer:
             save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
             weights_dir = os.path.join(save_dir, 'weights')
             os.makedirs(weights_dir, exist_ok=True)
-            weights_path = os.path.join(weights_dir, '{epoch:03d}-{val_loss:.6f}.hdf5')
+            weights_filename = '{epoch:03d}_train:{loss:.6f}_val:{val_loss:.6f}.hdf5'
+            weights_path = os.path.join(weights_dir, weights_filename)
             checkpoint_callback = ModelCheckpoint(filepath=weights_path,
                                                   save_best_only=self.save_best_only,
                                                   mode='min',
@@ -172,7 +179,9 @@ class BaseTrainer:
 
         self.fit_generator(model=model,
                            dataset=dataset,
-                           epochs=self.epochs)
+                           epochs=self.epochs,
+                           evaluate=True,
+                           save_dir='.')
 
         mlflow.log_metric('successfully_finished', 1)
         mlflow.end_run()
@@ -187,6 +196,8 @@ class BaseTrainer:
                             choices=DATASET_TYPES, required=True)
         parser.add_argument('--run_name', '-n', type=str, required=True,
                             help='Name of the run. Must be unique and specific')
+        parser.add_argument('--seed', type=int, default=42,
+                            help='Random seed')
         parser.add_argument('--epochs', '-ep', type=int, default=100,
                             help='Number of epochs')
         parser.add_argument('--period', type=int, default=10,
