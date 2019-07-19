@@ -22,8 +22,7 @@ class Leaderboard:
                  machines,
                  bundle_size=1,
                  verbose=False,
-                 debug=False
-                 ):
+                 debug=False):
 
         if not os.path.exists(trainer_path):
             raise RuntimeError(f'Could not find trainer script {trainer_path}')
@@ -43,8 +42,7 @@ class Leaderboard:
                                   'saic_office',
                                   'retail_bot',
                                   'euroc',
-                                  'zju'
-                                 ]
+                                  'zju']
 
         self.verbose = verbose
         self.machines = machines
@@ -134,8 +132,7 @@ class Leaderboard:
                    f'--dataset_root {dataset_root}',
                    f'--dataset_type {dataset_type}',
                    f'--run_name {run_name}',
-                   f'--seed {seed}',
-                   ]
+                   f'--seed {seed}']
         return ' '.join(command)
 
     @staticmethod
