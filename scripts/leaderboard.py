@@ -22,7 +22,8 @@ class Leaderboard:
                  machines,
                  bundle_size=1,
                  verbose=False,
-                 debug=False):
+                 debug=False,
+                 shared=False):
 
         if not os.path.exists(trainer_path):
             raise RuntimeError(f'Could not find trainer script {trainer_path}')
@@ -46,6 +47,7 @@ class Leaderboard:
 
         self.verbose = verbose
         self.machines = machines
+        self.shared = shared
 
     def submit(self):
 
@@ -123,10 +125,11 @@ class Leaderboard:
         else:
             raise RuntimeError('Unknown dataset_type')
 
+        mode = 'shared' if self.shared else 'exclusive_process'
         command = ['bsub',
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
                    f'-m "{self.machines}"',
-                   '-gpu "num=1:mode=exclusive_process"',
+                   f'-gpu "num=1:mode={mode}"',
                    'python',
                    f'{self.trainer_path}',
                    f'--dataset_root {dataset_root}',
@@ -190,6 +193,7 @@ if __name__ == '__main__':
     parser.add_argument('--machines', '-m', help='lsf arg. Specify machines on which execute job',
                         default='airugpua01 airugpua02 airugpua03 airugpua04 airugpua05 airugpua06 '
                                 'airugpua07 airugpua08 airugpua09 airugpua10 airugpub01 airugpub02')
+    parser.add_argument('--shared', action='store_true')
 
     args = parser.parse_args()
 
@@ -199,6 +203,7 @@ if __name__ == '__main__':
                               bundle_size=args.bundle_size,
                               verbose=args.verbose,
                               machines=args.machines,
-                              debug=args.debug)
+                              debug=args.debug,
+                              shared=args.shared)
 
     leaderboard.submit()
