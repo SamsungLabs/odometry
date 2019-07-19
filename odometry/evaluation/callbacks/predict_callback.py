@@ -179,14 +179,10 @@ class Predict(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs={}):
 
-        # Check to not calculate metrics twice on_train_end
-        if self.last_evaluated_epoch == epoch:
-            return
-
         self.last_evaluated_epoch = epoch
         self.epoch_counter += 1
 
-        if self.period and (self.epoch_counter % self.period) != 0:
+        if not self.period or self.epoch_counter % self.period:
             return
 
         train_loss = logs['loss']
@@ -218,7 +214,10 @@ class Predict(keras.callbacks.Callback):
 
     def on_train_end(self, logs={}):
 
-        self.on_epoch_end(self.epoch_counter - 1, logs)
+        # Check to not calculate metrics twice on_train_end
+        if self.last_evaluated_epoch != (self.epoch_counter - 1):
+            self.period = 1  
+            self.on_epoch_end(self.epoch_counter - 1, logs)
 
         prediction_id = 'test'
         test_metrics = self._predict(self.test_generator,
