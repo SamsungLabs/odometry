@@ -57,7 +57,6 @@ def aggregate_metrics(metrics):
 
     for metric in metrics:
         for k, v in metric.items():
-            if 'test' in k:
                 aggregated_metrics[k].append(v)
 
     return aggregated_metrics
