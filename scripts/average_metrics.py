@@ -57,7 +57,7 @@ def aggregate_metrics(metrics):
 
     for metric in metrics:
         for k, v in metric.items():
-                aggregated_metrics[k].append(v)
+            aggregated_metrics[k].append(v)
 
     return aggregated_metrics
 
