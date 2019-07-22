@@ -38,9 +38,17 @@ def work_with_estimator(root, df, estimator):
     return enriched_df
 
 
-def transform_single_frame_df_to_paired(single_frame_df, stride):
-    first_part_df = single_frame_df.iloc[:-stride].copy().reset_index(drop=True)
-    second_part_df = single_frame_df.iloc[stride:].copy().reset_index(drop=True)
+def create_pair_indices(single_frame_df, stride):
+    first_part_indices = range(len(single_frame_df) - stride)
+    second_part_indices = range(stride, len(single_frame_df))
+    assert len(first_part_indices) == len(second_part_indices)
+    return zip(first_part_indices, second_part_indices)
+
+
+def transform_single_frame_df_to_paired(single_frame_df, pair_indices=None):
+    first_part_indices, second_part_indices = zip(*pair_indices)
+    first_part_df = single_frame_df.iloc[list(first_part_indices)].copy().reset_index(drop=True)
+    second_part_df = single_frame_df.iloc[list(second_part_indices)].copy().reset_index(drop=True)
     second_part_df.rename(columns=lambda col: f'{col}_next', inplace=True)
     return pd.concat((first_part_df, second_part_df), axis=1)
 
@@ -49,13 +57,13 @@ def prepare_trajectory(root,
                        parser,
                        single_frame_estimators=None, 
                        pair_frames_estimators=None,
-                       stride=1):
+                       stride=1,
+                       pair_indices=None):
 
     if not isinstance(root, Path):
         root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
 
-    assert stride >= 1
     if single_frame_estimators is None:
         single_frame_estimators = []
     if pair_frames_estimators is None:
@@ -66,7 +74,13 @@ def prepare_trajectory(root,
     for estimator in single_frame_estimators:
         single_frame_df = work_with_estimator(root.as_posix(), single_frame_df, estimator)
 
-    paired_frame_df = transform_single_frame_df_to_paired(single_frame_df, stride)
+    assert stride is not None or pair_indices is not None
+    assert stride is None or pair_indices is None
+    if stride:
+        assert stride >= 1
+        pair_indices = create_pair_indices(single_frame_df, stride)
+
+    paired_frame_df = transform_single_frame_df_to_paired(single_frame_df, pair_indices)
 
     for estimator in pair_frames_estimators:
         paired_frame_df = work_with_estimator(root.as_posix(), paired_frame_df, estimator)
