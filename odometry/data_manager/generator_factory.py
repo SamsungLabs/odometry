@@ -24,6 +24,7 @@ class GeneratorFactory:
                  x_col=('path_to_rgb', 'path_to_rgb_next'),
                  y_col=('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z'),
                  image_col=('path_to_rgb', 'path_to_rgb_next'),
+                 stride=1,
                  train_generator_args=None,
                  val_generator_args=None,
                  test_generator_args=None,
@@ -95,7 +96,7 @@ class GeneratorFactory:
         self.input_shapes = self.get_train_generator().input_shapes \
             if self.train_trajectories else self.get_val_generator().input_shapes
 
-    def _log_dataset_params(self,):
+    def _log_dataset_params(self):
         if mlflow.active_run():
 
             dataset_config_path = os.path.join(self.dataset_root, 'prepare_dataset.json')
@@ -104,6 +105,7 @@ class GeneratorFactory:
                     dataset_config = json.load(f)
                     mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
                     mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
+                    mlflow.log_param('stride', dataset_config['stride'])
             except FileNotFoundError:
                 warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun '
                               f'prepare_dataset.py for this dataset. Path {dataset_config_path}', UserWarning)
