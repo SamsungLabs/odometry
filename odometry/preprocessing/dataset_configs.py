@@ -50,6 +50,7 @@ def get_zju_config(dataset_root):
                                     'B3'],
               'exp_name': 'zju',
               'target_size': (120, 160),
+              'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               }
     return config
@@ -69,6 +70,7 @@ def get_euroc_config(dataset_root):
                                     'V2_02_medium'],
               'exp_name': 'euroc',
               'target_size': (120, 160),
+              'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               }
     return config
@@ -89,6 +91,7 @@ def get_kitti_8_3_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
+              'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti'
               }
     return config
@@ -108,6 +111,7 @@ def get_kitti_4_6_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_4/6',
               'target_size': (96, 320),
+              'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti',
              }
     return config
@@ -119,6 +123,7 @@ def get_discoman_v10_config(dataset_root):
               'test_trajectories': list(),
               'exp_name': 'discoman_v10',
               'target_size': (90, 160),
+              'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
              }
 
@@ -138,6 +143,7 @@ def get_discoman_debug_config(dataset_root):
               'test_trajectories': ['test/000200'],
               'exp_name': 'discoman_debug',
               'target_size': (90, 160),
+              'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               }
     return config
@@ -149,6 +155,7 @@ def get_tum_debug_config(dataset_root):
               'test_trajectories': ['rgbd_dataset_freiburg1_desk'],
               'exp_name': 'tum_debug',
               'target_size': (120, 160),
+              'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               }
     return config
@@ -165,6 +172,7 @@ def get_tum_fr1_config(dataset_root):
               'test_trajectories': ['rgbd_dataset_freiburg1_desk2'],
               'exp_name': 'tum_fr1',
               'target_size': (120, 160),
+              'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               }
     return config
@@ -183,6 +191,7 @@ def get_tum_fr2_config(dataset_root):
                                     'rgbd_dataset_freiburg2_360_hemisphere'],
               'exp_name': 'tum_fr2',
               'target_size': (120, 160),
+              'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               }
     return config
@@ -229,6 +238,7 @@ def get_tum_fr3_config(dataset_root):
                                     'rgbd_dataset_freiburg3_walking_halfsphere_validation'],
               'exp_name': 'tum_fr3',
               'target_size': (120, 160),
+              'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               }
     return config
