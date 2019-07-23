@@ -39,6 +39,7 @@ class ConfidenceTrainer(BaseTrainer):
                          reduce_factor=reduce_factor)
         self.holdout = holdout
         self.epochs_confidence = epochs_confidence
+        self.max_to_visualize = 0
 
     def get_dataset(self,
                     train_trajectories=None,
