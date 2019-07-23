@@ -6,6 +6,7 @@ import __init_path__
 import env
 
 from odometry.base_trainer import BaseTrainer
+from odometry.data_manager import GeneratorFactory
 from odometry.models import ModelWithConfidenceFactory
 
 
@@ -24,7 +25,7 @@ class ConfidenceTrainer(BaseTrainer):
                  min_lr=1e-5,
                  reduce_factor=0.5,
                  holdout=0.1,
-                 epochs_confidence=10):
+                 epochs_confidence=100):
 
         super().__init__(dataset_root=dataset_root,
                          dataset_type=dataset_type,
@@ -43,8 +44,21 @@ class ConfidenceTrainer(BaseTrainer):
     def get_dataset(self,
                     train_trajectories=None,
                     val_trajectories=None):
-        return super().get_dataset(train_trajectories=train_trajectories,
-                                   val_trajectories=val_trajectories)
+        train_trajectories = train_trajectories or self.config['train_trajectories']
+        val_trajectories = val_trajectories or self.config['val_trajectories']
+        test_trajectories = self.config['test_trajectories']
+        return GeneratorFactory(dataset_root=self.dataset_root,
+                                train_trajectories=train_trajectories,
+                                val_trajectories=val_trajectories,
+                                test_trajectories=test_trajectories,
+                                target_size=self.config['target_size'],
+                                x_col=self.x_col,
+                                image_col=self.image_col,
+                                load_mode=self.load_mode,
+                                preprocess_mode=self.preprocess_mode,
+                                depth_multiplicator=self.config['depth_multiplicator'],
+                                cached_images={},
+                                return_confidences=True)
 
     def get_model_factory(self, input_shapes):
         return ModelWithConfidenceFactory(self.construct_model_fn,
@@ -67,12 +81,15 @@ class ConfidenceTrainer(BaseTrainer):
                                      save_dir=save_dir)
 
     def train(self):
-        train_trajectories = self.config['train_trajectories']
-        train_trajectories, confidence_trajectories = train_test_split(train_trajectories,
-                                                                       test_size=self.holdout,
-                                                                       random_state=42)
+        dataset = self.get_dataset()
 
-        dataset = self.get_dataset(train_trajectories=train_trajectories)
+        train_index, confidence_index = train_test_split(dataset.df_train.index,
+                                                         test_size=self.holdout,
+                                                         random_state=42)
+        df_train = dataset.df_train.loc[train_index]
+        df_confidence = dataset.df_train.loc[confidence_index]
+
+        dataset.df_train = df_train
 
         model_factory = self.get_model_factory(dataset.input_shapes)
         model = model_factory.construct()
@@ -80,14 +97,14 @@ class ConfidenceTrainer(BaseTrainer):
         self.fit_generator(model=model,
                            dataset=dataset,
                            epochs=self.epochs,
-                           evaluate=True,
+                           evaluate=False,
                            save_dir='dof')
 
-        dataset_confidence = self.get_dataset(train_trajectories=confidence_trajectories)
+        dataset.df_train = df_confidence
 
         model = model_factory.freeze()
         self.fit_generator(model=model,
-                           dataset=dataset_confidence,
+                           dataset=dataset,
                            epochs=self.epochs_confidence,
                            evaluate=False,
                            save_dir='confidence')
@@ -100,7 +117,7 @@ class ConfidenceTrainer(BaseTrainer):
         parser = super(ConfidenceTrainer, ConfidenceTrainer).get_parser()
         parser.add_argument('--holdout', type=float, default=0.1,
                             help='Ratio of dataset to train confidence')
-        parser.add_argument('--epochs_confidence', type=int, default=10,
+        parser.add_argument('--epochs_confidence', type=int, default=100,
                             help='Number of epochs to train confidence')
 
         return parser
