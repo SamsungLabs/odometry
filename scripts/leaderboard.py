@@ -15,6 +15,7 @@ from scripts.average_metrics import average_metrics
 
 
 class Leaderboard:
+
     def __init__(self,
                  trainer_path,
                  dataset_type,
@@ -60,7 +61,7 @@ class Leaderboard:
 
         pool = Pool(len(self.leader_boards))
         for d_type in self.leader_boards:
-            print(f'{datetime.datetime.now().isoformat()} Submitting {d_type}')
+            print(f'{self.get_timestamp()} Submitting {d_type}')
             pool.apply_async(self.submit_bundle, (d_type, ))
         pool.close()
         pool.join()
@@ -68,31 +69,29 @@ class Leaderboard:
     def submit_bundle(self, dataset_type):
 
         self.setup_logger(dataset_type)
-        logger = logging.getLogger('leaderboard')
 
-        logger.info(f'{datetime.datetime.now().isoformat()} Dataset {dataset_type}. Started submitting jobs')
+        self.log('Started submitting jobs', dataset_type)
 
         started_jobs_id = set()
         for b in range(self.bundle_size):
             job_id = self.submit_job(dataset_type, b)
             started_jobs_id.add(job_id)
 
-        logger.info(f'{datetime.datetime.now().isoformat()} Dataset {dataset_type}. Started started_jobs_id {started_jobs_id}')
+        self.log(f'Started started_jobs_id {started_jobs_id}', dataset_type)
         self.wait_jobs(dataset_type, started_jobs_id)
 
-        logger.info(f'{datetime.datetime.now().isoformat()} Dataset {dataset_type}. Averaging metrics')
+        self.log('Averaging metrics', dataset_type)
         try:
             average_metrics(self.run_name, dataset_type)
         except Exception as e:
             logger.info(e)
 
     def submit_job(self, dataset_type, bundle_id):
-        logger = logging.getLogger('leaderboard')
 
         run_name = self.run_name + f'_b_{bundle_id}'
         seed = np.random.randint(1000000)
         cmd = self.get_lsf_command(dataset_type, run_name, seed)
-        logger.info(f'{datetime.datetime.now().isoformat()} Running command: {cmd}')
+        self.log(f'Running command: {cmd}')
 
         p = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
         outs, errs = p.communicate(timeout=4)
@@ -138,10 +137,8 @@ class Leaderboard:
                    f'--seed {seed}']
         return ' '.join(command)
 
-    @staticmethod
-    def wait_jobs(dataset_type, started_jobs_id):
+    def wait_jobs(self, dataset_type, started_jobs_id):
 
-        logger = logging.getLogger('leaderboard')
         finished = False
         while not finished:
 
@@ -153,13 +150,13 @@ class Leaderboard:
             still_running_jobs = started_jobs_id.intersection(job_ids)
             sorted_jobs = list(still_running_jobs)
             sorted_jobs.sort()
-            logger.info(f'{datetime.datetime.now().isoformat()} Dataset {dataset_type}. Jobs {sorted_jobs} are still running')
+            self.log(f'Jobs {sorted_jobs} are still running', dataset_type)
 
             if still_running_jobs:
                 time.sleep(10)
             else:
                 finished = True
-                logger.info(f'{datetime.datetime.now().isoformat()} Dataset {dataset_type}. All jobs has been finished')
+                self.log('All jobs has been finished', dataset_type)
 
     def setup_logger(self, dataset_type):
 
@@ -175,6 +172,18 @@ class Leaderboard:
             sh = logging.StreamHandler()
             sh.setLevel(logging.DEBUG)
             logger.addHandler(sh)
+
+    @staticmethod
+    def log(info, dataset_type=None):
+
+        logger = logging.getLogger('leaderboard')
+
+        timestamp = datetime.datetime.now().isoformat().replace('T', ' ')
+
+        if dataset_type:
+            logger.info(f'{timestamp} Dataset {dataset_type}. {info}')
+        else:
+            logger.info(f'{timestamp} {info}')
 
 
 if __name__ == '__main__':
