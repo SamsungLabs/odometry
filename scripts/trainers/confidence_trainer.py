@@ -68,18 +68,20 @@ class ConfidenceTrainer(BaseTrainer):
                                           loss=self.loss,
                                           scale_rotation=self.scale_rotation)
 
-    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None):
+    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
         return super().get_callbacks(model=model,
                                      dataset=dataset,
                                      evaluate=evaluate,
-                                     save_dir=save_dir)
+                                     save_dir=save_dir,
+                                     prefix=prefix)
 
-    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
+    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
         return super().fit_generator(model=model,
                                      dataset=dataset,
                                      epochs=epochs,
                                      evaluate=evaluate,
-                                     save_dir=save_dir)
+                                     save_dir=save_dir,
+                                     prefix=prefix)
 
     def train(self):
         dataset = self.get_dataset()
@@ -108,7 +110,8 @@ class ConfidenceTrainer(BaseTrainer):
                            dataset=dataset,
                            epochs=self.epochs_confidence,
                            evaluate=False,
-                           save_dir='confidence')
+                           save_dir='confidence',
+                           prefix='confidence')
 
         mlflow.log_metric('successfully_finished', 1)
         mlflow.end_run()
