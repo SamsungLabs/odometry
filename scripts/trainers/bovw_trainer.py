@@ -4,9 +4,9 @@ import __init_path__
 import env
 
 from odometry.base_trainer import BaseTrainer
-from image_retrieval.bovw import BoVW
-import datetime
+from relocalization.bovw import BoVW
 from odometry.data_manager.generator_factory import GeneratorFactory
+
 
 class BoVWTrainer(BaseTrainer):
 
@@ -35,21 +35,15 @@ class BoVWTrainer(BaseTrainer):
                                 cached_images={})
 
     def get_model(self):
-        self.voc_size = 128
+        self.voc_size = 512
         model = BoVW(self.voc_size)
         return model
 
     def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
         train_generator = dataset.get_train_generator()
-        test_generator = dataset.get_test_generator()
 
-        start_time = datetime.datetime.now()
         model.fit(train_generator)
-        model.save(f'/home/d-zhukov/Projects/odometry/vocabulary_surf_{self.voc_size}.pkl')
-        end_time = datetime.datetime.now()
-        print(f' Calc time {(end_time - start_time).total_seconds()}')
-        # matches = model.predict(test_generator)
-        # return matches
+        model.save(f'/home/d-zhukov/Projects/odometry/vocabulary_{self.voc_size}.pkl')
 
     def train(self):
 
@@ -57,12 +51,12 @@ class BoVWTrainer(BaseTrainer):
 
         model = self.get_model()
 
-        matches = self.fit_generator(model=model, dataset=dataset, epochs=self.epochs)
+        self.fit_generator(model=model,
+                           dataset=dataset,
+                           epochs=self.epochs)
 
         mlflow.log_param('successfully_finished', 1)
         mlflow.end_run()
-
-        return matches
 
 
 if __name__ == '__main__':
@@ -71,4 +65,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     trainer = BoVWTrainer(**vars(args))
-    matches = trainer.train()
+    trainer.train()
