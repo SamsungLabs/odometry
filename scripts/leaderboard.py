@@ -124,11 +124,12 @@ class Leaderboard:
         else:
             raise RuntimeError('Unknown dataset_type')
 
+        gpu_specs = "gmem=6G:gtile='!'"
         mode = 'shared' if self.shared else 'exclusive_process'
         command = ['bsub',
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
                    f'-m "{self.machines}"',
-                   f'-gpu "num=1:mode={mode}"',
+                   f'-gpu "num=1:mode={mode}:{gpu_specs}"',
                    'python',
                    f'{self.trainer_path}',
                    f'--dataset_root {dataset_root}',
