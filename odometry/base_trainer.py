@@ -20,6 +20,7 @@ class BaseTrainer:
                  run_name,
                  seed=42,
                  lsf=False,
+                 cache=False,
                  batch=1,
                  epochs=100,
                  period=10,
@@ -46,6 +47,7 @@ class BaseTrainer:
         self.run_name = run_name
         self.seed = seed
         self.lsf = lsf
+        self.cache = cache
         self.batch = batch
         self.epochs = epochs
         self.period = period
@@ -113,7 +115,7 @@ class BaseTrainer:
                                 load_mode=self.load_mode,
                                 preprocess_mode=self.preprocess_mode,
                                 depth_multiplicator=self.config['depth_multiplicator'],
-                                cached_images={})
+                                cached_images={} if self.cache else None)
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
@@ -198,6 +200,8 @@ class BaseTrainer:
                             choices=DATASET_TYPES, required=True)
         parser.add_argument('--run_name', '-n', type=str, required=True,
                             help='Name of the run. Must be unique and specific')
+        parser.add_argument('--cache', action='store_true',
+                            help='Cache inputs in RAM')
         parser.add_argument('--seed', type=int, default=42,
                             help='Random seed')
         parser.add_argument('--epochs', '-ep', type=int, default=100,
