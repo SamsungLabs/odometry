@@ -47,7 +47,7 @@ class Leaderboard:
                                   'zju']
 
         self.verbose = verbose
-        self.machines = machines
+        self.machines = machines.split(' ')
         self.shared = shared
 
     def submit(self):
@@ -89,8 +89,10 @@ class Leaderboard:
     def submit_job(self, dataset_type, bundle_id):
 
         run_name = self.run_name + f'_b_{bundle_id}'
+
+        machines = np.random.choice(self.machines, min(len(self.machines), 4), replace=False)
         seed = np.random.randint(1000000)
-        cmd = self.get_lsf_command(dataset_type, run_name, seed)
+        cmd = self.get_lsf_command(dataset_type, run_name, ' '.join(machines), seed)
         self.log(f'Running command: {cmd}')
 
         p = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
@@ -99,7 +101,7 @@ class Leaderboard:
         job_id = str(outs).split(' ')[1][1:-1]
         return job_id
 
-    def get_lsf_command(self, dataset_type: str, run_name: str, seed: int) -> str:
+    def get_lsf_command(self, dataset_type: str, run_name: str, machines: str, seed: int) -> str:
 
         if dataset_type == 'discoman_v10':
             dataset_root = env.DISCOMAN_V10_PATH
@@ -128,7 +130,7 @@ class Leaderboard:
         mode = 'shared' if self.shared else 'exclusive_process'
         command = ['bsub',
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
-                   f'-m "{self.machines}"',
+                   f'-m "{machines}"',
                    f'-gpu "num=1:mode={mode}:{gpu_specs}"',
                    'python',
                    f'{self.trainer_path}',
