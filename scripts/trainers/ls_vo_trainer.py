@@ -9,21 +9,24 @@ from odometry.models import construct_ls_vo_model, ModelWithDecoderFactory
 
 class LSVOTrainer(BaseTrainer):
 
-    def get_dataset(self,
-                    train_trajectories=None,
-                    val_trajectories=None):
-        self.x_col = ['path_to_optical_flow']
-        self.image_col = ['path_to_optical_flow']
-        self.load_mode = ['flow_xy']
-        self.preprocess_mode = ['flow_xy']
-        return super().get_dataset(train_trajectories=train_trajectories,
-                                   val_trajectories=val_trajectories)
-
-    def get_model_factory(self, input_shapes):
+    def set_model_args(self):
         self.construct_model_fn = construct_ls_vo_model
         self.lr = 0.001
         self.loss = 'mae'
         self.scale_rotation = 50
+
+    def set_dataset_args(self):
+        self.x_col = ['path_to_optical_flow']
+        self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z', 'path_to_optical_flow']
+        self.image_col = ['path_to_optical_flow']
+        self.load_mode = ['flow_xy']
+        self.preprocess_mode = ['flow_xy']
+
+    def get_dataset(self, train_trajectories=None, val_trajectories=None):
+        return super().get_dataset(train_trajectories=train_trajectories,
+                                   val_trajectories=val_trajectories)
+
+    def get_model_factory(self, input_shapes):
         return ModelWithDecoderFactory(self.construct_model_fn,
                                        input_shapes=input_shapes,
                                        lr=self.lr,
