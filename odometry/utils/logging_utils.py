@@ -4,10 +4,9 @@ from typing import Tuple
 from functools import wraps
 
 
-def mlflow_logging(ignore: Tuple[str], prefix: str = '', **kwargs):
+def mlflow_logging(ignore: Tuple[str] = (), prefix: str = '', **kwargs):
 
     def decorator(func):
-
         def log_default(arg_spec):
             return dict(zip(arg_spec.args[::-1], arg_spec.defaults[::-1]))
 

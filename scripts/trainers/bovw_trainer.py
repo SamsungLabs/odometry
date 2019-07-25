@@ -1,5 +1,6 @@
 import mlflow
 
+import os
 import __init_path__
 import env
 
@@ -22,6 +23,8 @@ class BoVWTrainer(BaseTrainer):
         self.load_mode = 'rgb'
         self.preprocess_mode = 'rgb'
 
+        self.run_dir = os.path.join(self.project_path, 'experiments', self.config['exp_name'], self.run_name)
+
         return GeneratorFactory(dataset_root=self.dataset_root,
                                 train_trajectories=train_trajectories,
                                 val_trajectories=val_trajectories,
@@ -43,7 +46,10 @@ class BoVWTrainer(BaseTrainer):
         train_generator = dataset.get_train_generator()
 
         model.fit(train_generator)
-        model.save(f'/home/d-zhukov/Projects/odometry/vocabulary_{self.voc_size}.pkl')
+
+        if mlflow.active_run:
+            model.save(os.path.join(self.run_dir, f'vocabulary.pkl'))
+            mlflow.log_artifact(self.run_dir, self.run_name)
 
     def train(self):
 
