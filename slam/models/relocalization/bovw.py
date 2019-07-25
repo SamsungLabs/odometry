@@ -1,73 +1,104 @@
-import os
 import cv2
+import mlflow
 import pickle
+from pathlib import Path
 from tqdm import trange
 import numpy as np
 
+from slam.utils import mlflow_logging
 
-class BoVW():
-    def __init__(self, clusters_num=64):
 
-        self.extractor = cv2.xfeatures2d.SIFT_create()
-        self.knn_matcher = cv2.BFMatcher()
+class BoVW:
+
+    @mlflow_logging(ignore=('run_dir',), name='BoW', prefix='model.')
+    def __init__(self, clusters_num=64, knn=20, feature='SIFT', matcher='BruteForce', run_dir=None):
+
+        if feature == 'SIFT':
+            self.extractor = cv2.xfeatures2d.SIFT_create()
+        else:
+            raise RuntimeError('No other type of features except SIFT is implemented')
+
+        if matcher == 'BruteForce':
+            self.knn_matcher = cv2.BFMatcher()
+        else:
+            flann_params = dict(algorithm=1, trees=5)
+            self.knn_matcher = cv2.FlannBasedMatcher(flann_params, {})
+
         self.clusters_num = clusters_num
         self.BoVW = cv2.BOWKMeansTrainer(clusters_num)
         self.voc = None
         self.descriptor_extractor = cv2.BOWImgDescriptorExtractor(self.extractor, self.knn_matcher)
-        self.knn = 20
+        self.knn = knn
 
         self.histograms = list()
-        self.key_frames = list()
+        self.images = list()
         self.matches = list()
         self.counter = 0
 
+        self.run_dir = run_dir
+
     def fit(self, generator):
 
-        for i in trange(len(generator)):
-            x, y = next(generator)
-            for b in range(x[0].shape[0]):
-                    kp, des = self.extractor.detectAndCompute(np.uint8(x[0][b]), None)
-                    if des is not None:
-                        self.BoVW.add(des)
+        for _ in trange(len(generator)):
+            x, _ = next(generator)
+            images = x[0]
+            for i in range(images.shape[0]):
+                image = np.uint8(images[i])
+                kp, des = self.extractor.detectAndCompute(image, None)
+                self.BoVW.add(des) if des is not None else None
 
         self.voc = self.BoVW.cluster()
         self.descriptor_extractor.setVocabulary(self.voc)
 
+        self.save(Path(self.run_dir)/f'vocabulary.pkl') if self.run_dir else None
+
     def save(self, path):
-        with open(path, 'wb') as f:
+
+        if not isinstance(path, Path):
+            path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(path.as_posix(), 'wb') as f:
             pickle.dump(self.voc, f)
 
+        mlflow.log_artifacts(self.run_dir) if mlflow.active_run() else None
+
     def load(self, path):
-        with open(path, 'rb') as f:
+
+        if not isinstance(path, Path):
+            path = Path(path)
+
+        with open(path.as_posix(), 'rb') as f:
             self.voc = pickle.load(f)
             self.descriptor_extractor.setVocabulary(self.voc)
 
-    def ratio_test(self, matches):
+    @staticmethod
+    def ratio_test(matches):
         'David G. Lowe. Distinctive image features from scale-invariant keypoints. Int. J. Comput. Vision, 60(2):91–110'
         'November 2004.'
-        ratio_treshold = 0.7
+        ratio_threshold = 0.7
         good_matches = list()
         for match in matches:
-            if match[0].distance < ratio_treshold * match[1].distance:
+            if match[0].distance < ratio_threshold * match[1].distance:
                 good_matches.append(match)
         return good_matches
 
     def keypoints_overlap_test(self, match, des1):
 
-        matches_treshold = 10
+        matches_threshold = 10
 
         good_matches = list()
         for k in range(len(match[0])):
             ind = match[0][k].trainIdx
 
-            img = self.key_frames[ind]
+            image = np.uint8(self.images[ind])
 
-            kp2, des2 = self.extractor.detectAndCompute(np.uint8(img), None)
+            kp2, des2 = self.extractor.detectAndCompute(image, None)
 
             descriptors_match = self.knn_matcher.knnMatch(des2, des1, 2)
             good_descriptors_match = self.ratio_test(descriptors_match)
 
-            if len(good_descriptors_match) > matches_treshold:
+            if len(good_descriptors_match) > matches_threshold:
                 good_matches.append((match[0][k], len(good_descriptors_match)))
 
         good_matches.sort(key=lambda tup: tup[1], reverse=True)
@@ -76,9 +107,10 @@ class BoVW():
 
     def predict(self, image: np.ndarray, robust=True):
 
-        self.key_frames.append(image)
-        kp, des = self.extractor.detectAndCompute(np.uint8(image), None)
-        hist = self.descriptor_extractor.compute(image=np.uint8(image), keypoints=kp)
+        self.images.append(image)
+        image = np.uint8(image)
+        kp, des = self.extractor.detectAndCompute(image, None)
+        hist = self.descriptor_extractor.compute(image=image, keypoints=kp)
 
         if self.counter > 0:
             match = self.knn_matcher.knnMatch(hist, np.vstack(self.histograms), min(self.counter, self.knn))
@@ -94,6 +126,6 @@ class BoVW():
 
     def clear(self):
         self.histograms = list()
-        self.key_frames = list()
+        self.images = list()
         self.matches = list()
         self.counter = 0

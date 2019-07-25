@@ -1,4 +1,8 @@
+import os
 import mlflow
+
+import __init_path__
+import env
 
 from slam.base_trainer import BaseTrainer
 from slam.models.relocalization import BoVW
@@ -6,6 +10,10 @@ from slam.data_manager.generator_factory import GeneratorFactory
 
 
 class BoVWTrainer(BaseTrainer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.voc_size = kwargs['voc_size']
 
     def get_dataset(self,
                     train_trajectories=None,
@@ -18,6 +26,8 @@ class BoVWTrainer(BaseTrainer):
         self.image_col = ['path_to_rgb']
         self.load_mode = 'rgb'
         self.preprocess_mode = 'rgb'
+
+        self.run_dir = os.path.join(self.project_path, 'experiments', self.config['exp_name'], self.run_name)
 
         return GeneratorFactory(dataset_root=self.dataset_root,
                                 train_trajectories=train_trajectories,
@@ -32,15 +42,12 @@ class BoVWTrainer(BaseTrainer):
                                 cached_images={})
 
     def get_model(self):
-        self.voc_size = 512
-        model = BoVW(self.voc_size)
+        model = BoVW(self.voc_size, run_dir=self.run_dir)
         return model
 
     def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
         train_generator = dataset.get_train_generator()
-
         model.fit(train_generator)
-        model.save(f'/home/d-zhukov/Projects/odometry/vocabulary_{self.voc_size}.pkl')
 
     def train(self):
 
@@ -54,6 +61,12 @@ class BoVWTrainer(BaseTrainer):
 
         mlflow.log_param('successfully_finished', 1)
         mlflow.end_run()
+
+    @staticmethod
+    def get_parser():
+        parser = BaseTrainer.get_parser()
+        parser.add_argument('--voc_size', type=int, help='number of clusters to form vocabulary')
+        return parser
 
 
 if __name__ == '__main__':

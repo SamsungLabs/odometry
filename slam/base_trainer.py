@@ -23,7 +23,8 @@ class BaseTrainer:
                  period=10,
                  save_best_only=False,
                  min_lr=1e-5,
-                 reduce_factor=0.5):
+                 reduce_factor=0.5,
+                 **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
         self.artifact_path = env.ARTIFACT_PATH
