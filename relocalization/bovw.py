@@ -1,6 +1,7 @@
-import os
 import cv2
+import mlflow
 import pickle
+from pathlib import Path
 from tqdm import trange
 import numpy as np
 
@@ -9,15 +10,20 @@ from odometry.utils import mlflow_logging
 
 class BoVW:
 
-    @mlflow_logging(name='BoW', prefix='model.')
-    def __init__(self, clusters_num=64, knn=20, feature='SIFT'):
+    @mlflow_logging(ignore=('run_dir',), name='BoW', prefix='model.')
+    def __init__(self, clusters_num=64, knn=20, feature='SIFT', matcher='BruteForce', run_dir=None):
 
         if feature == 'SIFT':
             self.extractor = cv2.xfeatures2d.SIFT_create()
         else:
             raise RuntimeError('No other type of features except SIFT is implemented')
 
-        self.knn_matcher = cv2.BFMatcher()
+        if matcher == 'BruteForce':
+            self.knn_matcher = cv2.BFMatcher()
+        else:
+            flann_params = dict(algorithm=1, trees=5)
+            self.knn_matcher = cv2.FlannBasedMatcher(flann_params, {})
+
         self.clusters_num = clusters_num
         self.BoVW = cv2.BOWKMeansTrainer(clusters_num)
         self.voc = None
@@ -28,6 +34,8 @@ class BoVW:
         self.images = list()
         self.matches = list()
         self.counter = 0
+       
+        self.run_dir = run_dir
 
     def fit(self, generator):
 
@@ -37,17 +45,30 @@ class BoVW:
             for i in range(images.shape[0]):
                 image = np.uint8(images[i])
                 kp, des = self.extractor.detectAndCompute(image, None)
-                self.BoVW.add(des) if des else None
+                self.BoVW.add(des) if des is not None else None
 
         self.voc = self.BoVW.cluster()
         self.descriptor_extractor.setVocabulary(self.voc)
-
+        
+        self.save(Path(self.run_dir)/f'vocabulary.pkl') if self.run_dir else None
+        
     def save(self, path):
-        with open(path, 'wb') as f:
+
+        if not isinstance(path, Path):
+            path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(path.as_posix(), 'wb') as f:
             pickle.dump(self.voc, f)
+        
+        mlflow.log_artifacts(self.run_dir) if mlflow.active_run() else None
 
     def load(self, path):
-        with open(path, 'rb') as f:
+
+        if not isinstance(path, Path):
+            path = Path(path)
+
+        with open(path.as_posix(), 'rb') as f:
             self.voc = pickle.load(f)
             self.descriptor_extractor.setVocabulary(self.voc)
 
