@@ -17,9 +17,6 @@ from odometry.utils import visualize_trajectory_with_gt, visualize_trajectory
 
 def _process_single_task(args):
     predicted_trajectory, gt_trajectory, trajectory_id, rpe_indices = args
-
-    print(trajectory_id)
-
     trajectory_metrics = calculate_metrics(gt_trajectory,
                                            predicted_trajectory,
                                            rpe_indices=rpe_indices)
