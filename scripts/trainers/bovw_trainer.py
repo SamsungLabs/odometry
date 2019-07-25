@@ -11,6 +11,10 @@ from odometry.data_manager.generator_factory import GeneratorFactory
 
 class BoVWTrainer(BaseTrainer):
 
+    def __init__(self, *args, **kwargs):
+        super(BoVWTrainer).__init__(*args, **kwargs)
+        self.voc_size = kwargs['voc_size']
+
     def get_dataset(self,
                     train_trajectories=None,
                     val_trajectories=None):
@@ -38,7 +42,6 @@ class BoVWTrainer(BaseTrainer):
                                 cached_images={})
 
     def get_model(self):
-        self.voc_size = 512
         model = BoVW(self.voc_size)
         return model
 
@@ -63,6 +66,12 @@ class BoVWTrainer(BaseTrainer):
 
         mlflow.log_param('successfully_finished', 1)
         mlflow.end_run()
+
+    @staticmethod
+    def get_parser():
+        parser = super(BoVWTrainer).get_parser()
+        parser.add_argument('--voc_size', type=int, help='number of clusters to form vocabulary')
+        return parser
 
 
 if __name__ == '__main__':
