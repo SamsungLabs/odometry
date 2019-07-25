@@ -13,5 +13,5 @@ class MlflowLogger(keras.callbacks.Callback):
         train_loss = logs['loss']
         val_loss = logs.get('val_loss', np.inf)
         if mlflow.active_run():
-            mlflow.log_metric(f'{self.prefix}_train_loss' if self.prefix else 'train_loss', train_loss, step=epoch)
-            mlflow.log_metric(f'{self.prefix}_val_loss' if self.prefix else 'val_loss', val_loss, step=epoch)
+            mlflow.log_metric(f'{self.prefix + "_" if self.prefix else ""}_train_loss', float(train_loss), step=epoch)
+            mlflow.log_metric(f'{self.prefix + "_" if self.prefix else ""}_val_loss', float(val_loss), step=epoch)
