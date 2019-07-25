@@ -1,9 +1,10 @@
 import cv2
 import mlflow
 import pickle
+import numpy as np
+import pandas as pd
 from pathlib import Path
 from tqdm import trange
-import numpy as np
 
 from slam.utils import mlflow_logging
 
@@ -32,8 +33,12 @@ class BoVW:
 
         self.histograms = list()
         self.images = list()
-        self.matches = list()
+        self.matches = pd.DataFrame({'db_ind_to': [],
+                                     'db_ind_from': [],
+                                     'global_ind_to': [],
+                                     'global_ind_from': []})
         self.counter = 0
+        self.index_mapping = dict()
 
         self.run_dir = run_dir
 
@@ -105,9 +110,11 @@ class BoVW:
 
         return good_matches
 
-    def predict(self, image: np.ndarray, robust=True):
+    def predict(self, image: np.ndarray, ind: int, robust: bool = True):
 
+        self.index_mapping[self.counter] = ind
         self.images.append(image)
+
         image = np.uint8(image)
         kp, des = self.extractor.detectAndCompute(image, None)
         hist = self.descriptor_extractor.compute(image=image, keypoints=kp)
@@ -118,14 +125,22 @@ class BoVW:
         else:
             match = list()
 
+        df = pd.DataFrame({'db_ind_to': [self.counter] * len(match),
+                           'db_ind_from': [m[0].trainIdx for m in match],
+                           'global_ind_to': [ind] * len(match),
+                           'global_ind_from': [self.index_mapping[m[0].trainIdx] for m in match]})
+
+        self.matches.append(df)
         self.histograms.append(hist)
-        self.matches.append(match)
         self.counter += 1
 
-        return match
+        return df
 
     def clear(self):
         self.histograms = list()
         self.images = list()
-        self.matches = list()
+        self.matches = pd.DataFrame({'db_ind_to': [],
+                                     'db_ind_from': [],
+                                     'global_ind_to': [],
+                                     'global_ind_from': []})
         self.counter = 0
