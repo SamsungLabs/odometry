@@ -112,6 +112,7 @@ class BaseTrainer:
                                 image_col=self.image_col,
                                 load_mode=self.load_mode,
                                 preprocess_mode=self.preprocess_mode,
+                                depth_multiplicator=self.config['depth_multiplicator'],
                                 cached_images={})
 
     def get_model_factory(self, input_shapes):
