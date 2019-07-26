@@ -31,13 +31,13 @@ class BoVW:
         self.descriptor_extractor = cv2.BOWImgDescriptorExtractor(self.extractor, self.knn_matcher)
         self.knn = knn
 
-        self.histograms = list()
-        self.images = list()
-        self.matches = pd.DataFrame({'db_ind_to': [],
-                                     'db_ind_from': [],
-                                     'global_ind_to': [],
-                                     'global_ind_from': []})
-        self.counter = 0
+        self.histograms = None
+        self.images = None
+        self.matches = None
+        self.counter = None
+
+        self.clear()
+
         self.index_mapping = dict()
        
         self.run_dir = run_dir
@@ -125,10 +125,10 @@ class BoVW:
         else:
             match = list()
 
-        df = pd.DataFrame({'db_ind_to': [self.counter] * len(match),
-                           'db_ind_from': [m[0].trainIdx for m in match],
-                           'global_ind_to': [ind] * len(match),
-                           'global_ind_from': [self.index_mapping[m[0].trainIdx] for m in match]})
+        df = pd.DataFrame({'to_db_index': [self.counter] * len(match),
+                           'from_db_index': [m[0].trainIdx for m in match],
+                           'to_index': [ind] * len(match),
+                           'from_index': [self.index_mapping[m[0].trainIdx] for m in match]})
 
         self.matches.append(df)
         self.histograms.append(hist)
@@ -139,8 +139,5 @@ class BoVW:
     def clear(self):
         self.histograms = list()
         self.images = list()
-        self.matches = pd.DataFrame({'db_ind_to': [],
-                                     'db_ind_from': [],
-                                     'global_ind_to': [],
-                                     'global_ind_from': []})
+        self.matches = pd.DataFrame(columns=['to_db_index', 'from_db_index', 'to_index', 'from_index'])
         self.counter = 0
