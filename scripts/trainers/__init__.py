@@ -14,7 +14,7 @@ from .flexible_with_confidence_trainer import FlexibleWithConfidenceTrainer
 
 from .multiscale_trainer import MultiscaleTrainer
 
-from .multiscale_with_confidence import MultiscaleWithConfidence
+from .multiscale_with_confidence_trainer import MultiscaleWithConfidenceTrainer
 
 
 __all__ = [
