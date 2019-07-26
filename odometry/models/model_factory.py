@@ -77,11 +77,14 @@ class ModelFactory:
         self.model = None
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
-        self.optimizer = Adam(lr=lr, amsgrad=True)
+        self.lr = lr
         self.loss_fn = self._get_loss_function(loss)
         self.loss = [self.loss_fn] * 6
         self.loss_weights = [scale_rotation] * 3 + [scale_translation] * 3
         self.metrics = dict(zip(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z'), [rmse] * 6))
+
+    def _get_optimizer(self):
+        return Adam(lr=self.lr, amsgrad=True)
 
     @staticmethod
     def _get_loss_function(loss):
@@ -107,6 +110,7 @@ class ModelFactory:
             raise ValueError
 
     def _compile(self):
+        self.optimizer = self._get_optimizer()
         self.model.compile(loss=self.loss,
                            loss_weights=self.loss_weights,
                            optimizer=self.optimizer,
