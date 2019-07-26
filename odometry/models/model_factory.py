@@ -21,7 +21,7 @@ from odometry.models.layers import (activ,
                                     construct_fc,
                                     construct_double_fc,
                                     construct_outputs,
-                                    AssociationLayer,
+                                    DepthFlowLayer,
                                     AddGridLayer)
 from odometry.utils import mlflow_logging
 
@@ -57,7 +57,7 @@ class PretrainedModelFactory(BaseModelFactory):
                             'construct_fc': construct_fc,
                             'construct_double_fc': construct_double_fc,
                             'construct_outputs': construct_outputs,
-                            'AssociationLayer': AssociationLayer,
+                            'DepthFlowLayer': DepthFlowLayer,
                             'AddGridLayer': AddGridLayer,
                             })
         return self.model
