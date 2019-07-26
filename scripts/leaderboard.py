@@ -24,7 +24,8 @@ class Leaderboard:
                  bundle_size=1,
                  verbose=False,
                  debug=False,
-                 shared=False):
+                 shared=False,
+                 cache=False):
 
         if not os.path.exists(trainer_path):
             raise RuntimeError(f'Could not find trainer script {trainer_path}')
@@ -49,6 +50,7 @@ class Leaderboard:
         self.verbose = verbose
         self.machines = machines.split(' ')
         self.shared = shared
+        self.cache = cache
 
     def submit(self):
 
@@ -84,7 +86,7 @@ class Leaderboard:
         try:
             average_metrics(self.run_name, dataset_type)
         except Exception as e:
-            logger.info(e)
+            self.log(e)
 
     def submit_job(self, dataset_type, bundle_id):
 
@@ -137,6 +139,8 @@ class Leaderboard:
                    f'--dataset_type {dataset_type}',
                    f'--run_name {run_name}',
                    f'--seed {seed}']
+        if self.cache:
+            command.append('--cache')
         return ' '.join(command)
 
     def wait_jobs(self, dataset_type, started_jobs_id):
@@ -205,6 +209,7 @@ if __name__ == '__main__':
                         default='airugpua01 airugpua02 airugpua03 airugpua04 airugpua05 airugpua06 '
                                 'airugpua07 airugpua08 airugpua09 airugpua10 airugpub01 airugpub02')
     parser.add_argument('--shared', action='store_true')
+    parser.add_argument('--cache', action='store_true')
 
     args = parser.parse_args()
 
@@ -215,6 +220,7 @@ if __name__ == '__main__':
                               verbose=args.verbose,
                               machines=args.machines,
                               debug=args.debug,
-                              shared=args.shared)
+                              shared=args.shared,
+                              cache=args.cache)
 
     leaderboard.submit()
