@@ -123,7 +123,7 @@ def get_discoman_v10_config(dataset_root):
               'test_trajectories': list(),
               'exp_name': 'discoman_v10',
               'target_size': (90, 160),
-              'depth_multiplicator': 1.0,
+              'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
              }
 
@@ -143,7 +143,7 @@ def get_discoman_debug_config(dataset_root):
               'test_trajectories': ['test/000200'],
               'exp_name': 'discoman_debug',
               'target_size': (90, 160),
-              'depth_multiplicator': 1.0,
+              'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
               }
     return config
