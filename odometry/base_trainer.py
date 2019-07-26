@@ -125,11 +125,11 @@ class BaseTrainer:
                             loss=self.loss,
                             scale_rotation=self.scale_rotation)
 
-    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None):
+    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
         terminate_on_nan_callback = TerminateOnNaN()
         reduce_lr_callback = ReduceLROnPlateau(factor=self.reduce_factor)
-        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr)
-        mlflow_callback = MlflowLogger()
+        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
+        mlflow_callback = MlflowLogger(prefix=prefix)
         callbacks = [terminate_on_nan_callback,
                      reduce_lr_callback,
                      terminate_on_lr_callback,
@@ -147,27 +147,29 @@ class BaseTrainer:
                                                   period=self.period)
             callbacks.append(checkpoint_callback)
 
-            predict_callback = Predict(model=model,
-                                       dataset=dataset,
-                                       run_dir=self.run_dir,
-                                       save_dir=save_dir,
-                                       artifact_dir=self.run_name,
-                                       period=self.period,
-                                       save_best_only=self.save_best_only,
-                                       evaluate=evaluate,
-                                       rpe_indices=self.config['rpe_indices'],
-                                       max_to_visualize=self.max_to_visualize)
-            callbacks.append(predict_callback)
+        predict_callback = Predict(model=model,
+                                   dataset=dataset,
+                                   run_dir=self.run_dir,
+                                   save_dir=save_dir,
+                                   artifact_dir=self.run_name,
+                                   prefix=prefix,
+                                   period=self.period,
+                                   save_best_only=self.save_best_only,
+                                   evaluate=evaluate,
+                                   rpe_indices=self.config['rpe_indices'],
+                                   max_to_visualize=self.max_to_visualize)
+        callbacks.append(predict_callback)
 
         return callbacks
 
-    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
+    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
         train_generator = dataset.get_train_generator()
         val_generator = dataset.get_val_generator()
         callbacks = self.get_callbacks(model,
                                        dataset,
                                        evaluate=evaluate,
-                                       save_dir=save_dir)
+                                       save_dir=save_dir,
+                                       prefix=prefix)
 
         model.fit_generator(train_generator,
                             steps_per_epoch=len(train_generator),

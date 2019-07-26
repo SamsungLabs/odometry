@@ -26,18 +26,20 @@ class DepthFlowTrainer(BaseTrainer):
         self.scale_rotation = 50
         return super().get_model_factory(input_shapes)
 
-    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None):
+    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
         return super().get_callbacks(model=model,
                                      dataset=dataset,
                                      evaluate=evaluate,
-                                     save_dir=save_dir)
+                                     save_dir=save_dir,
+                                     prefix=prefix)
 
-    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
+    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
         return super().fit_generator(model=model,
                                      dataset=dataset,
                                      epochs=epochs,
                                      evaluate=evaluate,
-                                     save_dir=save_dir)
+                                     save_dir=save_dir,
+                                     prefix=prefix)
 
     def train(self):
         return super().train()
