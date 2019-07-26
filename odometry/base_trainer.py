@@ -54,6 +54,7 @@ class BaseTrainer:
         self.save_best_only = save_best_only
         self.min_lr = min_lr
         self.reduce_factor = reduce_factor
+        self.max_to_visualize = 5
 
         self.set_model_args()
 
@@ -154,7 +155,8 @@ class BaseTrainer:
                                        period=self.period,
                                        save_best_only=self.save_best_only,
                                        evaluate=evaluate,
-                                       rpe_indices=self.config['rpe_indices'])
+                                       rpe_indices=self.config['rpe_indices'],
+                                       max_to_visualize=self.max_to_visualize)
             callbacks.append(predict_callback)
 
         return callbacks
