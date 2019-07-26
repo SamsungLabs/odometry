@@ -198,7 +198,7 @@ class Predict(keras.callbacks.Callback):
             counter += 1
 
         if self.evaluate:
-            total_metrics = {f'{self.prefix + "_" if self.prefix else ""}{subset}_{key}': float(value)
+            total_metrics = {f'{(self.prefix + "_") if self.prefix else ""}{subset}_{key}': float(value)
                              for key, value in average_metrics(records).items()}
             return total_metrics
 
