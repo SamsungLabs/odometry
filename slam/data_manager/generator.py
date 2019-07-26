@@ -123,7 +123,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  subset=None,
                  interpolation='nearest',
                  dtype='float32',
-                 flow_multiplicator=(1,1),
                  flow_fill_method='random',
                  depth_multiplicator=1./5000., 
                  cached_images=None,
@@ -192,7 +191,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             else:
                 self.input_shapes.append((1,))
 
-        self.flow_multiplicator = flow_multiplicator
         self._fill_flow = _get_fill_flow_function(flow_fill_method)
 
         self.depth_multiplicator = depth_multiplicator
@@ -272,10 +270,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         if load_mode == 'disparity':
             image_arr /= self.depth_multiplicator
-
-        if load_mode in ('flow_xy', 'flow_xy_nan'):
-            image_arr[:, :, 0] *= self.flow_multiplicator[0]
-            image_arr[:, :, 1] *= self.flow_multiplicator[1]
 
         if load_mode in ('depth', 'disparity'):
             if (image_arr == 0).all():

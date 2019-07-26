@@ -7,7 +7,7 @@ from slam.models.layers import (concat,
                                 conv2d,
                                 construct_fc,
                                 construct_outputs,
-                                AssociationLayer,
+                                DepthFlowLayer,
                                 AddGridLayer)
 from slam.utils import mlflow_logging
 
@@ -43,7 +43,7 @@ def construct_encoder(inputs,
     # depth convolutional branch
     if use_depth:
         if use_association_layer: # pass flow_z as input
-            depth = AssociationLayer()(concat(inputs))
+            depth = DepthFlowLayer()(concat(inputs))
         else:
             depth = concat(inputs[2:])
 

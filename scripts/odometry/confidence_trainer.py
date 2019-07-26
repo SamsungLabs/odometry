@@ -15,6 +15,7 @@ class ConfidenceTrainer(BaseTrainer):
                  dataset_root,
                  dataset_type,
                  run_name,
+                 seed=42,
                  lsf=False,
                  batch=1,
                  epochs=100,
@@ -28,6 +29,7 @@ class ConfidenceTrainer(BaseTrainer):
         super().__init__(dataset_root=dataset_root,
                          dataset_type=dataset_type,
                          run_name=run_name,
+                         seed=seed,
                          lsf=lsf,
                          batch=batch,
                          epochs=epochs,
@@ -84,7 +86,6 @@ class ConfidenceTrainer(BaseTrainer):
         dataset_confidence = self.get_dataset(train_trajectories=confidence_trajectories)
 
         model = model_factory.freeze()
-
         self.fit_generator(model=model,
                            dataset=dataset_confidence,
                            epochs=self.epochs_confidence,
