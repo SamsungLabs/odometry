@@ -74,7 +74,7 @@ def prepare_trajectory(root,
     for estimator in single_frame_estimators:
         single_frame_df = work_with_estimator(root.as_posix(), single_frame_df, estimator)
 
-    assert (stride is None) ^ (pair_indices is None)
+    assert (stride is None) != (pair_indices is None)
     if stride:
         assert stride >= 1
         pair_indices = create_pair_indices(single_frame_df, stride)
