@@ -130,6 +130,7 @@ class Leaderboard:
 
         mode = "shared:gmem=6G:gtile='!'" if self.shared else 'exclusive_process'
         command = ['bsub',
+                   f'-n 1 -R "span[hosts=1] affinity[core(8):distribute=pack]"',
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
                    f'-m "{machines}"',
                    f'-gpu "num=1:mode={mode}"',
