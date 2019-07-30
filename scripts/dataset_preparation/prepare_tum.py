@@ -4,7 +4,7 @@ import os
 import __init_path__
 import env
 
-from odometry.preprocessing import prepare_dataset
+from slam.preprocessing import prepare_dataset
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
