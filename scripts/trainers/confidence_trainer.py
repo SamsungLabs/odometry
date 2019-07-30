@@ -18,6 +18,7 @@ class ConfidenceTrainer(BaseTrainer):
                  run_name,
                  seed=42,
                  lsf=False,
+                 cache=False,
                  batch=1,
                  epochs=100,
                  period=10,
@@ -32,6 +33,7 @@ class ConfidenceTrainer(BaseTrainer):
                          run_name=run_name,
                          seed=seed,
                          lsf=lsf,
+                         cache=cache,
                          batch=batch,
                          epochs=epochs,
                          period=period,
@@ -59,7 +61,7 @@ class ConfidenceTrainer(BaseTrainer):
                                 load_mode=self.load_mode,
                                 preprocess_mode=self.preprocess_mode,
                                 depth_multiplicator=self.config['depth_multiplicator'],
-                                cached_images={},
+                                cached_images={} if self.cache else None,
                                 return_confidences=True)
 
     def get_model_factory(self, input_shapes):
