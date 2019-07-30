@@ -124,7 +124,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  interpolation='nearest',
                  dtype='float32',
                  flow_fill_method='random',
-                 depth_multiplicator=1./5000., 
+                 depth_multiplicator=1.0,
                  cached_images=None,
                  filter_invalid=True,
                  max_memory_consumption=0.8,
