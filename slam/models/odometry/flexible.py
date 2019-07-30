@@ -1,5 +1,4 @@
-from keras.layers.merge import concatenate
-from keras.layers import Flatten
+from keras.layers import Flatten, concatenate
 
 from slam.models.layers import (concat,
                                 conv2d,
