@@ -54,6 +54,7 @@ class ConfidenceTrainer(BaseTrainer):
                                 test_trajectories=test_trajectories,
                                 target_size=self.config['target_size'],
                                 x_col=self.x_col,
+                                y_col=self.y_col,
                                 image_col=self.image_col,
                                 load_mode=self.load_mode,
                                 preprocess_mode=self.preprocess_mode,

@@ -70,6 +70,7 @@ class BaseTrainer:
 
     def set_dataset_args(self):
         self.x_col = None
+        self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         self.image_col = None
         self.load_mode = None
         self.preprocess_mode = None
@@ -112,6 +113,7 @@ class BaseTrainer:
                                 test_trajectories=test_trajectories,
                                 target_size=self.config['target_size'],
                                 x_col=self.x_col,
+                                y_col=self.y_col,
                                 image_col=self.image_col,
                                 load_mode=self.load_mode,
                                 preprocess_mode=self.preprocess_mode,
