@@ -1,12 +1,11 @@
 from keras.layers import Flatten
 
-from slam.models.layers import (concat,
-                                conv2d,
-                                gated_conv2d,
-                                construct_double_fc,
-                                construct_outputs,
-                                construct_outputs_with_confidences)
-from slam.utils import mlflow_logging
+from odometry.models.layers import (concat,
+                                    conv2d,
+                                    gated_conv2d,
+                                    construct_double_fc,
+                                    construct_outputs)
+from odometry.utils import mlflow_logging
 
 
 def construct_encoder(inputs,
@@ -115,10 +114,8 @@ def construct_multiscale_model(inputs,
                                           activation=activation,
                                           kernel_initializer=kernel_initializer,
                                           name='translation')
-    outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization)
-    if not return_confidence:
-        return outputs
-
-    outputs_with_confidences = construct_outputs_with_confidences(outputs, fc2_rotation, fc2_translation,
-                                                                  regularization=regularization)
-    return outputs_with_confidences
+    outputs = construct_outputs(fc2_rotation,
+                                fc2_translation,
+                                regularization=regularization,
+                                return_confidence=return_confidence)
+    return outputs
