@@ -26,6 +26,7 @@ class Leaderboard:
                  verbose=False,
                  debug=False,
                  shared=False,
+                 gmem=None,
                  cache=False):
 
         if not os.path.exists(trainer_path):
@@ -52,6 +53,7 @@ class Leaderboard:
         self.verbose = verbose
         self.machines = machines.split(' ')
         self.shared = shared
+        self.gmem = gmem
         self.cache = cache
 
     def submit(self):
@@ -130,7 +132,11 @@ class Leaderboard:
         else:
             raise RuntimeError('Unknown dataset_type')
 
-        mode = "shared:gmem=6G:gtile='!'" if self.shared else 'exclusive_process'
+        if self.shared:
+            mode = 'shared' + (f':gmem={self.gmem}' if self.gmem else '') + ":gtile='!'"
+        else:
+            mode = 'exclusive_process'
+
         command = ['bsub',
                    f'-n 1 -R "span[hosts=1] affinity[core({self.core}):distribute=pack]"',
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
@@ -213,6 +219,7 @@ if __name__ == '__main__':
                         default='airugpua01 airugpua02 airugpua03 airugpua04 airugpua05 airugpua06 '
                                 'airugpua07 airugpua08 airugpua09 airugpua10 airugpub01 airugpub02')
     parser.add_argument('--shared', action='store_true')
+    parser.add_argument('--gmem', type=str, help='Video memory reserved for training', default=None)
     parser.add_argument('--cache', action='store_true')
 
     args = parser.parse_args()
@@ -226,6 +233,7 @@ if __name__ == '__main__':
                               machines=args.machines,
                               debug=args.debug,
                               shared=args.shared,
+                              gmem=args.gmem,
                               cache=args.cache)
 
     leaderboard.submit()
