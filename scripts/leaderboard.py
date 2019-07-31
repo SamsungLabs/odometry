@@ -22,6 +22,7 @@ class Leaderboard:
                  run_name,
                  machines,
                  bundle_size=1,
+                 cores=8,
                  verbose=False,
                  debug=False,
                  shared=False,
@@ -34,6 +35,7 @@ class Leaderboard:
         self.dataset_type = dataset_type
         self.run_name = run_name
         self.bundle_size = bundle_size
+        self.cores = cores
 
         if debug:
             self.leader_boards = ['tum_debug', 'discoman_debug']
@@ -130,7 +132,7 @@ class Leaderboard:
 
         mode = "shared:gmem=6G:gtile='!'" if self.shared else 'exclusive_process'
         command = ['bsub',
-                   f'-n 1 -R "span[hosts=1] affinity[core(8):distribute=pack]"',
+                   f'-n 1 -R "span[hosts=1] affinity[core({self.cores}):distribute=pack]"',
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
                    f'-m "{machines}"',
                    f'-gpu "num=1:mode={mode}"',
@@ -203,6 +205,7 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
                         required=True)
     parser.add_argument('--bundle_size', '-b', type=int, help='Number runs in evaluate', required=True)
+    parser.add_argument('--cores' , '-c', type=int, help='Number of cpu cores', defualt=8)
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console')
     parser.add_argument('--debug', action='store_true')
@@ -218,6 +221,7 @@ if __name__ == '__main__':
                               dataset_type=args.dataset_type,
                               run_name=args.run_name,
                               bundle_size=args.bundle_size,
+                              cores=args.cores,
                               verbose=args.verbose,
                               machines=args.machines,
                               debug=args.debug,
