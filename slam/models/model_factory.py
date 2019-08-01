@@ -33,7 +33,7 @@ class BaseModelFactory:
 
 class PretrainedModelFactory(BaseModelFactory):
 
-    @mlflow_logging
+    @mlflow_logging(ignore=(), prefix='model_factory.')
     def __init__(self, pretrained_path):
         self.pretrained_path = pretrained_path
         self.model = None

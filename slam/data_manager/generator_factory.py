@@ -36,6 +36,7 @@ class GeneratorFactory:
                  test_sampling_step=1,
                  batch_size=128,
                  cached_images=None,
+                 list_of_trajectory_generators=False,
                  *args, **kwargs):
 
         self.dataset_root = dataset_root
@@ -92,8 +93,10 @@ class GeneratorFactory:
         if type(self.cached_images) == str:
             self.load_cache(self.cached_images)
 
-        self.input_shapes = self.get_train_generator().input_shapes \
-            if self.train_trajectories else self.get_val_generator().input_shapes
+        self.list_of_trajectory_generators = list_of_trajectory_generators
+
+        generator = self.get_train_generator() if self.train_trajectories else self.get_val_generator()
+        self.input_shapes = generator[0].input_shapes if self.list_of_trajectory_generators else generator.input_shapes
 
     def _log_dataset_params(self,):
         if mlflow.active_run():
@@ -166,12 +169,49 @@ class GeneratorFactory:
             filter_invalid=filter_invalid,
             *self.args, **self.kwargs)
 
+    def _get_generators_list(self, dataframe, generator_args, trajectories):
+
+        if dataframe is None:
+            return None
+
+        generators = list()
+        for trajectory in trajectories:
+
+            trajectory_dataframe = dataframe[dataframe['trajectory_id'] == trajectory]
+            generator = ExtendedDataFrameIterator(trajectory_dataframe,
+                                                  self.dataset_root,
+                                                  ImageDataGenerator(**generator_args),
+                                                  x_col=self.x_col,
+                                                  y_col=self.y_col,
+                                                  image_col=self.image_col,
+                                                  batch_size=self.batch_size,
+                                                  shuffle=False,
+                                                  seed=42,
+                                                  interpolation='nearest',
+                                                  cached_images=self.cached_images,
+                                                  filter_invalid=False,
+                                                  *self.args, **self.kwargs)
+            generators.append(generator)
+
+        return generators
+
     def get_train_generator(self, trajectory=False):
         df_train = self.df_train_trajectory if trajectory else self.df_train
-        return self._get_generator(df_train, self.train_generator_args, trajectory=trajectory)
+
+        if self.list_of_trajectory_generators:
+            return self._get_generators_list(df_train, self.train_generator_args, self.train_trajectories)
+        else:
+            return self._get_generator(df_train, self.train_generator_args, trajectory=trajectory)
 
     def get_val_generator(self):
-        return self._get_generator(self.df_val, self.val_generator_args, trajectory=True)
+
+        if self.list_of_trajectory_generators:
+            return self._get_generators_list(self.df_val, self.val_generator_args, self.val_trajectories)
+        else:
+            return self._get_generator(self.df_val, self.val_generator_args, trajectory=True)
 
     def get_test_generator(self):
-        return self._get_generator(self.df_test, self.test_generator_args, trajectory=True)
+        if self.list_of_trajectory_generators:
+            return self._get_generators_list(self.df_test, self.test_generator_args, self.test_trajectories)
+        else:
+            return self._get_generator(self.df_test, self.test_generator_args, trajectory=True)
