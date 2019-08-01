@@ -8,7 +8,10 @@ def mlflow_logging(ignore: Tuple[str] = (), prefix: str = '', **kwargs):
 
     def decorator(func):
         def log_default(arg_spec):
-            return dict(zip(arg_spec.args[::-1], arg_spec.defaults[::-1]))
+            if arg_spec.defaults is None:
+                return dict()
+            else:
+                return dict(zip(arg_spec.args[::-1], arg_spec.defaults[::-1]))
 
         def log_input(default_params, arg_spec, input_args, input_kwargs):
             assert not set(input_kwargs.keys()) & set(kwargs.keys())
