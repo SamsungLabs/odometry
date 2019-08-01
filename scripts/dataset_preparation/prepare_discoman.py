@@ -24,5 +24,5 @@ if __name__ == '__main__':
                     output_root=args.output_dir,
                     target_size=(90, 160),
                     optical_flow_checkpoint=args.of_checkpoint,
-                    depth_checkpoint=args.depth_checkpoint,
-                    stride=args.stride if args.depth else None)
+                    stride=args.stride,
+                    depth_checkpoint=args.depth_checkpoint if args.depth else None)
