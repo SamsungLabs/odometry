@@ -137,7 +137,7 @@ def grid_sample(x, shifted_grid):
 
     # Find interpolation sides
     i, j = shifted_grid[..., 0], shifted_grid[..., 1]
-    
+
     i = tf.cast(height - 1, shifted_grid.dtype) * (i + 1) / 2
     j = tf.cast(width - 1, shifted_grid.dtype) * (j + 1) / 2
 
@@ -149,12 +149,12 @@ def grid_sample(x, shifted_grid):
 
     j_ceil = tf.clip_by_value(j_floor + 1, 0, width - 1)
     j_floor = tf.clip_by_value(j_floor, 0, width - 1)
-    
+
     # Gather pixel values
     num_repeats = tf.range(batch_size)[:, tf.newaxis, tf.newaxis]
     shape = tf.concat([[1], tf.shape(i)[1:]], axis=0)
     n_idx = tf.tile(num_repeats, shape)
-    
+
     q_11 = tf.gather_nd(x, tf.stack([n_idx, i_floor, j_floor, n_idx], axis=-1))
     q_12 = tf.gather_nd(x, tf.stack([n_idx, i_floor, j_ceil, n_idx], axis=-1))
     q_21 = tf.gather_nd(x, tf.stack([n_idx, i_ceil, j_floor, n_idx], axis=-1))
@@ -166,7 +166,7 @@ def grid_sample(x, shifted_grid):
     weight_i_floor = 1 - distance_i_floor
     distance_j_floor = tf.cast(j, dtype) - tf.cast(j_floor, dtype)
     weight_j_floor = 1 - distance_j_floor
-    
+
     # Compute interpolations
     q_i1 = q_11 * weight_i_floor + q_21 * (1 - weight_i_floor)
     q_i2 = q_12 * weight_i_floor + q_22 * (1 - weight_i_floor)
@@ -175,33 +175,35 @@ def grid_sample(x, shifted_grid):
     return q_ij
 
 
-class AssociationLayer(Layer):
+class DepthFlowLayer(Layer):
+
     def __init__(self, **kwargs):
-        super(AssociationLayer, self).__init__(**kwargs)
+        super(DepthFlowLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
         height, width = input_shape[1], input_shape[2]
         xx = tf.expand_dims(tf.linspace(-1., 1., width), 1)
         yy = tf.expand_dims(tf.linspace(-1., 1., height), 1)
         grid_x, grid_y = tf.meshgrid(xx, yy)
-        self.batched_grid_x = tf.expand_dims(grid_x, axis=0)
-        self.batched_grid_y = tf.expand_dims(grid_y, axis=0)
-        
-        super(AssociationLayer, self).build(input_shape)
+        self.batch_grid_x = tf.expand_dims(grid_x, axis=0)
+        self.batch_grid_y = tf.expand_dims(grid_y, axis=0)
+
+        super(DepthFlowLayer, self).build(input_shape)
 
     def call(self, x):
         flow_x, flow_y = x[..., 0], x[..., 1]
         depth_first, depth_second = x[..., -2:-1], x[..., -1:]
-        
-        shifted_grid_x = self.batched_grid_x + flow_x
-        shifted_grid_y = self.batched_grid_y + flow_y
+
+        shifted_grid_x = self.batch_grid_x + flow_x
+        shifted_grid_y = self.batch_grid_y + flow_y
         shifted_grid = tf.stack([shifted_grid_y, shifted_grid_x], axis=3)
         shifted_depth_second = grid_sample(depth_second, shifted_grid)
 
-        flow_depth = shifted_depth_second - depth_first
-        return flow_depth
+        depth_flow = shifted_depth_second - depth_first
+        return depth_flow
 
     def compute_output_shape(self, input_shape):
+        assert input_shape[-1] >= 4
         return (input_shape[0], input_shape[1], input_shape[2], 1)
 
 

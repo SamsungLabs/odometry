@@ -10,6 +10,7 @@ from slam.data_manager import GeneratorFactory
 from slam.models import ModelFactory
 from slam.evaluation import MlflowLogger, Predict, TerminateOnLR
 from slam.preprocessing import get_config, DATASET_TYPES
+from slam.utils import set_computation
 
 
 class BaseTrainer:
@@ -17,7 +18,9 @@ class BaseTrainer:
                  dataset_root,
                  dataset_type,
                  run_name,
+                 seed=42,
                  lsf=False,
+                 cache=False,
                  batch=1,
                  epochs=100,
                  period=10,
@@ -37,21 +40,27 @@ class BaseTrainer:
         mlflow.log_param('run_name', run_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
         mlflow.log_param('epochs', epochs)
+        mlflow.log_param('seed', seed)
 
         self.dataset_root = dataset_root
         self.dataset_type = dataset_type
         self.run_name = run_name
+        self.seed = seed
         self.lsf = lsf
+        self.cache = cache
         self.batch = batch
         self.epochs = epochs
         self.period = period
         self.save_best_only = save_best_only
         self.min_lr = min_lr
         self.reduce_factor = reduce_factor
+        self.max_to_visualize = 5
 
         self.set_model_args()
 
         self.set_dataset_args()
+
+        set_computation(self.seed)
 
     def set_model_args(self):
         self.construct_model_fn = None
@@ -61,6 +70,7 @@ class BaseTrainer:
 
     def set_dataset_args(self):
         self.x_col = None
+        self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         self.image_col = None
         self.load_mode = None
         self.preprocess_mode = None
@@ -103,10 +113,12 @@ class BaseTrainer:
                                 test_trajectories=test_trajectories,
                                 target_size=self.config['target_size'],
                                 x_col=self.x_col,
+                                y_col=self.y_col,
                                 image_col=self.image_col,
                                 load_mode=self.load_mode,
                                 preprocess_mode=self.preprocess_mode,
-                                cached_images={})
+                                depth_multiplicator=self.config['depth_multiplicator'],
+                                cached_images={} if self.cache else None)
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
@@ -115,11 +127,11 @@ class BaseTrainer:
                             loss=self.loss,
                             scale_rotation=self.scale_rotation)
 
-    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None):
+    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
         terminate_on_nan_callback = TerminateOnNaN()
         reduce_lr_callback = ReduceLROnPlateau(factor=self.reduce_factor)
-        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr)
-        mlflow_callback = MlflowLogger()
+        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
+        mlflow_callback = MlflowLogger(prefix=prefix)
         callbacks = [terminate_on_nan_callback,
                      reduce_lr_callback,
                      terminate_on_lr_callback,
@@ -129,33 +141,37 @@ class BaseTrainer:
             save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
             weights_dir = os.path.join(save_dir, 'weights')
             os.makedirs(weights_dir, exist_ok=True)
-            weights_path = os.path.join(weights_dir, '{epoch:03d}-{val_loss:.6f}.hdf5')
+            weights_filename = '{epoch:03d}_train:{loss:.6f}_val:{val_loss:.6f}.hdf5'
+            weights_path = os.path.join(weights_dir, weights_filename)
             checkpoint_callback = ModelCheckpoint(filepath=weights_path,
                                                   save_best_only=self.save_best_only,
                                                   mode='min',
                                                   period=self.period)
             callbacks.append(checkpoint_callback)
 
-            predict_callback = Predict(model=model,
-                                       dataset=dataset,
-                                       run_dir=self.run_dir,
-                                       save_dir=save_dir,
-                                       artifact_dir=self.run_name,
-                                       period=self.period,
-                                       save_best_only=self.save_best_only,
-                                       evaluate=evaluate,
-                                       rpe_indices=self.config['rpe_indices'])
-            callbacks.append(predict_callback)
+        predict_callback = Predict(model=model,
+                                   dataset=dataset,
+                                   run_dir=self.run_dir,
+                                   save_dir=save_dir,
+                                   artifact_dir=self.run_name,
+                                   prefix=prefix,
+                                   period=self.period,
+                                   save_best_only=self.save_best_only,
+                                   evaluate=evaluate,
+                                   rpe_indices=self.config['rpe_indices'],
+                                   max_to_visualize=self.max_to_visualize)
+        callbacks.append(predict_callback)
 
         return callbacks
 
-    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None):
+    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
         train_generator = dataset.get_train_generator()
         val_generator = dataset.get_val_generator()
         callbacks = self.get_callbacks(model,
                                        dataset,
                                        evaluate=evaluate,
-                                       save_dir=save_dir)
+                                       save_dir=save_dir,
+                                       prefix=prefix)
 
         model.fit_generator(train_generator,
                             steps_per_epoch=len(train_generator),
@@ -173,7 +189,9 @@ class BaseTrainer:
 
         self.fit_generator(model=model,
                            dataset=dataset,
-                           epochs=self.epochs)
+                           epochs=self.epochs,
+                           evaluate=True,
+                           save_dir='.')
 
         mlflow.log_metric('successfully_finished', 1)
         mlflow.end_run()
@@ -188,6 +206,10 @@ class BaseTrainer:
                             choices=DATASET_TYPES, required=True)
         parser.add_argument('--run_name', '-n', type=str, required=True,
                             help='Name of the run. Must be unique and specific')
+        parser.add_argument('--cache', action='store_true',
+                            help='Cache inputs in RAM')
+        parser.add_argument('--seed', type=int, default=42,
+                            help='Random seed')
         parser.add_argument('--epochs', '-ep', type=int, default=100,
                             help='Number of epochs')
         parser.add_argument('--period', type=int, default=10,

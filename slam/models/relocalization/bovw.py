@@ -31,13 +31,8 @@ class BoVW:
         self.descriptor_extractor = cv2.BOWImgDescriptorExtractor(self.extractor, self.knn_matcher)
         self.knn = knn
 
-        self.histograms = list()
-        self.images = list()
-        self.matches = pd.DataFrame({'db_ind_to': [],
-                                     'db_ind_from': [],
-                                     'global_ind_to': [],
-                                     'global_ind_from': []})
-        self.counter = 0
+        self.clear()
+
         self.index_mapping = dict()
 
         self.run_dir = run_dir
@@ -121,15 +116,15 @@ class BoVW:
 
         # SUPER FIX
         if len(match) > 0:
-            df = pd.DataFrame({'db_ind_to': [self.counter - 1] * len(match),
-                               'db_ind_from': [m[0].trainIdx for m in match],
-                               'global_ind_to': [ind] * len(match),
-                               'global_ind_from': [self.index_mapping[m[0].trainIdx] for m in match]})
+            df = pd.DataFrame({'to_db_index': [self.counter - 1] * len(match),
+                               'from_db_index': [m[0].trainIdx for m in match],
+                               'to_index': [ind] * len(match),
+                               'from_index': [self.index_mapping[m[0].trainIdx] for m in match]})
         else:
-            df = pd.DataFrame({'db_ind_to': [self.counter - 1],
-                               'db_ind_from': [self.counter - 2],
-                               'global_ind_to': [ind],
-                               'global_ind_from': [self.index_mapping[self.counter - 2]]})
+            df = pd.DataFrame({'to_db_index': [self.counter - 1],
+                               'from_db_index': [self.counter - 2],
+                               'to_index': [ind],
+                               'from_index': [self.index_mapping[self.counter - 2]]})
 
         self.matches = self.matches.append(df)
 
@@ -149,10 +144,7 @@ class BoVW:
     def clear(self):
         self.histograms = list()
         self.images = list()
-        self.matches = pd.DataFrame({'db_ind_to': [],
-                                     'db_ind_from': [],
-                                     'global_ind_to': [],
-                                     'global_ind_from': []})
+        self.matches = pd.DataFrame(columns=['to_db_index', 'from_db_index', 'to_index', 'from_index'])
         self.counter = 0
 
     def get_image(self, global_ind):

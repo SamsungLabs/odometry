@@ -75,8 +75,8 @@ class BaseSlam:
         batch = np.zeros((self.knn, 2, *self.input_shapes, 3))
 
         for index, row in df.iterrows():
-            batch[index, 0] = self.reloc_model.images[row['db_ind_to']]
-            batch[index, 1] = self.reloc_model.images[row['db_ind_from']]
+            batch[index, 0] = self.reloc_model.images[row['to_index']]
+            batch[index, 1] = self.reloc_model.images[row['from_index']]
 
         return batch
 
@@ -129,8 +129,8 @@ class BaseSlam:
 
         else:
 
-            matches = pd.DataFrame({'global_ind_to': [self.frame_index],
-                                    'global_ind_from': [self.frame_index - 1]})
+            matches = pd.DataFrame({'to_index': [self.frame_index],
+                                    'from_index': [self.frame_index - 1]})
 
             batch = np.zeros((self.knn, 2, *self.input_shapes, 3))
             batch[0, 0] = self.last_frame

@@ -18,7 +18,7 @@ if __name__ == '__main__':
                         default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/model-199160'))
     args = parser.parse_args()
 
-    prepare_dataset(dataset_type='discoman',
+    prepare_dataset(dataset_type='DISCOMAN',
                     dataset_root=args.dataset_root,
                     output_root=args.output_dir,
                     target_size=(90, 160),

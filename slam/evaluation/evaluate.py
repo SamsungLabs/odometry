@@ -107,20 +107,20 @@ def calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
             continue
 
         R_first_gt = gt_rotation_matrices[first_indices]
-        R_second_gt = gt_rotation_matrices[second_indices]
-        R_second_inv_gt = R_second_gt.transpose((0, 2, 1))
+        R_second_inv_gt = gt_rotation_matrices[second_indices].transpose((0, 2, 1))
 
-        R_first_predicted = predicted_rotation_matrices[first_indices]
         R_second_predicted = predicted_rotation_matrices[second_indices]
-        R_first_inv_predicted = R_first_predicted.transpose((0, 2, 1))
+        R_first_inv_predicted = predicted_rotation_matrices[first_indices].transpose((0, 2, 1))
 
         delta_predicted = (predicted_points[second_indices] - predicted_points[first_indices]).reshape((-1, 3, 1))
         delta_gt = (gt_points[second_indices] - gt_points[first_indices]).reshape((-1, 3, 1))
 
-        E_translation = R_second_inv_gt @ (R_first_gt @ R_first_inv_predicted @ delta_predicted - delta_gt)
+        R = R_second_inv_gt @ R_first_gt @ R_first_inv_predicted
+
+        E_translation = R @ delta_predicted - R_second_inv_gt @ delta_gt
         l2_norms = np.sum(E_translation ** 2, axis=(1, 2))
 
-        E_rotation = R_second_inv_gt @ R_first_gt @ R_first_inv_predicted @ R_second_predicted
+        E_rotation = R @ R_second_predicted
         thetas = np.arccos(np.clip((np.trace(E_rotation, axis1=1, axis2=2) - 1) / 2, -1, 1))
 
         if rpe_mode == 'rmse':
