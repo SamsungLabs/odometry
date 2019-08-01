@@ -128,7 +128,9 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  cached_images=None,
                  filter_invalid=True,
                  max_memory_consumption=0.8,
-                 return_confidences=False):
+                 return_confidences=False,
+                 trajectory_id='',
+                 append_last=False):
         super().set_processing_attrs(image_data_generator,
                                      target_size,
                                      'rgb',
@@ -147,8 +149,15 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.df[image_col] = self.df[image_col].astype(str)
         self.directory = directory
         self.dtype = dtype
-        self.samples = len(self.df)
+        self.samples = len(self.df) if 'flow' in load_mode else len(self.df) + 1
         self.df_images = self.df[image_col]
+
+        if append_last:
+            image_col_next = [col + '_next' for col in image_col if 'flow' not in col]
+            for i, col in enumerate(image_col_next):
+                last_images = self.df[col].iloc[-1]
+                self.df_images.at[self.samples - 1, image_col[i]] = last_images
+                self.df.at[self.samples - 1, image_col[i]] = last_images
 
         if isinstance(x_col, str):
             self.x_cols = [x_col]
@@ -203,6 +212,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.filter_invalid = filter_invalid
 
         self.return_confidences = return_confidences
+
+        self.trajectory_id = trajectory_id
 
         super(ExtendedDataFrameIterator, self).__init__(
             self.samples,
