@@ -112,29 +112,39 @@ class BoVW:
 
     def predict(self, image: np.ndarray, ind: int, robust: bool = True):
 
+        assert self.counter > 0
+
+        hist, des = self.add(image, ind)
+
+        match = self.knn_matcher.knnMatch(hist, np.vstack(self.histograms[:-1]), min(self.counter - 1, self.knn))
+        match = self.keypoints_overlap_test(match, des) if robust else None
+
+        # SUPER FIX
+        if len(match) > 0:
+            df = pd.DataFrame({'db_ind_to': [self.counter - 1] * len(match),
+                               'db_ind_from': [m[0].trainIdx for m in match],
+                               'global_ind_to': [ind] * len(match),
+                               'global_ind_from': [self.index_mapping[m[0].trainIdx] for m in match]})
+        else:
+            df = pd.DataFrame({'db_ind_to': [self.counter - 1],
+                               'db_ind_from': [self.counter - 2],
+                               'global_ind_to': [ind],
+                               'global_ind_from': [self.index_mapping[self.counter - 2]]})
+
+        self.matches = self.matches.append(df)
+
+        return df
+
+    def add(self, image, ind):
         self.index_mapping[self.counter] = ind
         self.images.append(image)
-
         image = np.uint8(image)
         kp, des = self.extractor.detectAndCompute(image, None)
         hist = self.descriptor_extractor.compute(image=image, keypoints=kp)
-
-        if self.counter > 0:
-            match = self.knn_matcher.knnMatch(hist, np.vstack(self.histograms), min(self.counter, self.knn))
-            match = self.keypoints_overlap_test(match, des) if robust else None
-        else:
-            match = list()
-
-        df = pd.DataFrame({'db_ind_to': [self.counter] * len(match),
-                           'db_ind_from': [m[0].trainIdx for m in match],
-                           'global_ind_to': [ind] * len(match),
-                           'global_ind_from': [self.index_mapping[m[0].trainIdx] for m in match]})
-
-        self.matches.append(df)
         self.histograms.append(hist)
         self.counter += 1
 
-        return df
+        return hist, des
 
     def clear(self):
         self.histograms = list()
@@ -144,3 +154,6 @@ class BoVW:
                                      'global_ind_to': [],
                                      'global_ind_from': []})
         self.counter = 0
+
+    def get_image(self, global_ind):
+        return self.images[self.index_mapping]
