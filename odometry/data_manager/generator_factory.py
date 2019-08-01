@@ -14,7 +14,7 @@ from odometry.utils import mlflow_logging
 
 class GeneratorFactory:
 
-    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.')
+    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.', stride=1)
     def __init__(self,
                  dataset_root,
                  csv_name='df.csv',
@@ -24,7 +24,6 @@ class GeneratorFactory:
                  x_col=('path_to_rgb', 'path_to_rgb_next'),
                  y_col=('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z'),
                  image_col=('path_to_rgb', 'path_to_rgb_next'),
-                 stride=1,
                  train_generator_args=None,
                  val_generator_args=None,
                  test_generator_args=None,
