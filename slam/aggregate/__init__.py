@@ -1,5 +1,5 @@
-from .dummy_aggregate import mean_trajectory
+from .dummy_aggregate import AggregateTrajectory
 
 __all__ = [
-    'mean_trajectory'
+    'AggregateTrajectory'
 ]
