@@ -106,7 +106,7 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                                     parser=trajectory_parser,
                                     single_frame_estimators=sf_estimators,
                                     pair_frames_estimators=pf_estimators,
-                                    stride=1)
+                                    stride=stride)
             df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
 
             counter += 1
