@@ -1,6 +1,6 @@
 from slam.models.slam.base_slam import BaseSlam
 from slam.models.relocalization import BoVW
-
+from slam.aggregate import AggregateTrajectory
 from slam.utils import mlflow_logging
 
 
@@ -16,4 +16,4 @@ class DummySlam(BaseSlam):
         return reloc_model
 
     def get_aggregator(self):
-        pass
+        return AggregateTrajectory()

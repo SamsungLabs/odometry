@@ -1,5 +1,14 @@
+import os
+import mlflow
+
 from slam.base_trainer import BaseTrainer
-from slam.data_manager.generator_factory import GeneratorFactory
+
+from slam.evaluation.evaluate import (calculate_metrics,
+                                      average_metrics,
+                                      normalize_metrics)
+
+from slam.linalg import RelativeTrajectory
+from slam.utils import visualize_trajectory_with_gt
 
 
 class BaseSlamRunner(BaseTrainer):
@@ -14,31 +23,52 @@ class BaseSlamRunner(BaseTrainer):
     def get_slam(self):
         raise RuntimeError('Not implemented')
 
-    def get_dataset(self,
-                    train_trajectories=None,
-                    val_trajectories=None):
-
-        train_trajectories = train_trajectories or self.config['train_trajectories']
-        val_trajectories = val_trajectories or self.config['val_trajectories']
-        test_trajectories = self.config['test_trajectories']
+    def set_dataset_args(self):
         self.x_col = ['path_to_rgb']
+        self.y_col = []
         self.image_col = ['path_to_rgb']
         self.load_mode = 'rgb'
         self.preprocess_mode = 'rgb'
+        self.batch_size = 1
 
-        return GeneratorFactory(dataset_root=self.dataset_root,
-                                train_trajectories=train_trajectories,
-                                val_trajectories=val_trajectories,
-                                test_trajectories=test_trajectories,
-                                target_size=self.config['target_size'],
-                                x_col=self.x_col,
-                                image_col=self.image_col,
-                                load_mode=self.load_mode,
-                                preprocess_mode=self.preprocess_mode,
-                                train_sampling_step=1,
-                                batch_size=1,
-                                cached_images={},
-                                list_of_trajectory_generators=True)
+    def create_file_path(self, trajectory_id, subset):
+        trajectory_name = trajectory_id.replace('/', '_')
+        file_path = os.path.join(self.run_dir,
+                                 subset,
+                                 f'{trajectory_name}.html')
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        return file_path
+
+    def evaluate(self, predicted_trajectories, gt, subset):
+
+        records = list()
+
+        for trajectory_id, predicted_trajectory in predicted_trajectories.items():
+
+            file_path = self.create_file_path(trajectory_id, subset)
+
+            gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
+            record = calculate_metrics(gt_trajectory,
+                                       predicted_trajectory,
+                                       rpe_indices=self.config['rpe_indices'])
+
+            records.append(record)
+
+            record = normalize_metrics(record)
+            trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}'
+                                                   for key, value in record.items()])
+            title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
+            visualize_trajectory_with_gt(gt_trajectory,
+                                         predicted_trajectory,
+                                         title=title,
+                                         file_path=file_path)
+
+        total_metrics = {f'{(subset + "_")}{subset}_{key}': float(value)
+                         for key, value in average_metrics(records).items()}
+
+        if mlflow.active_run():
+            mlflow.log_metrics(total_metrics)
+            mlflow.log_artifacts(self.run_dir, subset)
 
     def run(self):
 
@@ -47,9 +77,14 @@ class BaseSlamRunner(BaseTrainer):
         slam = self.get_slam()
         slam.construct()
 
-        slam.predict_generators(dataset.get_train_generator())
-        slam.predict_generators(dataset.get_val_generator())
-        slam.predict_generators(dataset.get_test_generator())
+        predicted_trajectories = slam.predict_generators(dataset.get_train_generator(as_list=True, append_last=True))
+        self.evaluate(predicted_trajectories, dataset.df_train, 'train')
+
+        predicted_trajectories = slam.predict_generators(dataset.get_val_generator(as_list=True, append_last=True))
+        self.evaluate(predicted_trajectories, dataset.df_val, 'val')
+
+        predicted_trajectories = slam.predict_generators(dataset.get_test_generator(as_list=True, append_last=True))
+        self.evaluate(predicted_trajectories, dataset.df_test, 'test')
 
     @staticmethod
     def get_parser():

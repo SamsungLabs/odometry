@@ -74,6 +74,7 @@ class BaseTrainer:
         self.image_col = None
         self.load_mode = None
         self.preprocess_mode = None
+        self.batch_size = 128
 
     def start_run(self, exp_name, run_name):
         client = mlflow.tracking.MlflowClient(self.tracking_uri)
@@ -116,6 +117,7 @@ class BaseTrainer:
                                 y_col=self.y_col,
                                 image_col=self.image_col,
                                 load_mode=self.load_mode,
+                                batch_size=self.batch_size,
                                 preprocess_mode=self.preprocess_mode,
                                 depth_multiplicator=self.config['depth_multiplicator'],
                                 cached_images={} if self.cache else None)

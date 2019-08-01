@@ -19,17 +19,25 @@ from slam.utils import mlflow_logging
 class BaseSlam:
 
     @mlflow_logging(prefix='slam.')
-    def __init__(self, reloc_weights_path, optflow_weights_path, odometry_model_path, input_shapes, knn=20):
+    def __init__(self, reloc_weights_path,
+                 optflow_weights_path,
+                 odometry_model_path,
+                 input_shapes,
+                 knn=20,
+                 rpe_indices='full'):
+
         self.reloc_weights_path = reloc_weights_path
         self.optflow_weights_path = optflow_weights_path
         self.odometry_model_path = odometry_model_path
         self.knn = knn
+        self.rpe_indices = rpe_indices
 
         self.input_shapes = input_shapes
 
         self.reloc_model = None
         self.odometry_model = None
         self.optflow_model = None
+        self.aggregator = None
 
         self.keyframe_history = None
         self.frame_history = None
@@ -75,8 +83,8 @@ class BaseSlam:
         batch = np.zeros((self.knn, 2, *self.input_shapes, 3))
 
         for index, row in df.iterrows():
-            batch[index, 0] = self.reloc_model.images[row['to_index']]
-            batch[index, 1] = self.reloc_model.images[row['from_index']]
+            batch[index, 0] = self.reloc_model.images[row['to_db_index']]
+            batch[index, 1] = self.reloc_model.images[row['from_db_index']]
 
         return batch
 
@@ -94,10 +102,16 @@ class BaseSlam:
 
         self.odometry_model = self.get_odometry_model()
 
+        self.aggregator = self.get_aggregator()
+
     def predict_generators(self, generators):
 
+        predicted_trajectories = dict()
         for generator in generators:
             predicted_trajectory = self.predict_generator(generator)
+            predicted_trajectories[generator.trajectory_id] = predicted_trajectory
+
+        return predicted_trajectories
 
     def predict_generator(self, generator):
 
@@ -108,6 +122,8 @@ class BaseSlam:
             image = x[0][0]
 
             self.predict(image)
+
+        return self.aggregator.get_trajectory()
 
     def predict(self, image):
 
@@ -145,6 +161,8 @@ class BaseSlam:
             self.frame_history = self.frame_history.append(matches)
 
             self.last_frame = image
+
+        self.aggregator.append(matches)
 
         self.frame_index += 1
 

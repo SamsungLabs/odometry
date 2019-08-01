@@ -5,6 +5,7 @@ from collections import OrderedDict
 from slam.linalg.linalg_utils import convert_euler_angles_to_rotation_matrix, form_se3, split_se3
 from slam.linalg.trajectory import GlobalTrajectory
 
+
 class AggregateTrajectory:
     def __init__(self):
         self.clear()
@@ -38,8 +39,8 @@ class AggregateTrajectory:
         
     def append(self, df):
         for index, row in df.iterrows():
-            from_index = row['from']
-            to_index = row['to']
+            from_index = row['from_index']
+            to_index = row['to_index']
             euler_angles = row[['euler_x', 'euler_y', 'euler_z']].values
             translation = row[['t_x', 't_y', 't_z']].values
             
