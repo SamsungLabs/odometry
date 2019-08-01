@@ -178,7 +178,7 @@ class GeneratorFactory:
         generators = list()
         for trajectory in trajectories:
 
-            trajectory_dataframe = dataframe[dataframe['trajectory_id'] == trajectory]
+            trajectory_dataframe = dataframe[dataframe['trajectory_id'] == trajectory].reset_index(drop=True)
             generator = self._get_generator(trajectory_dataframe,
                                             generator_args,
                                             trajectory=True,
