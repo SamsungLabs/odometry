@@ -39,31 +39,38 @@ class BaseSlamRunner(BaseTrainer):
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         return file_path
 
-    def evaluate(self, predicted_trajectories, gt, subset):
+    def evaluate_trajectory(self, prediction, gt, subset):
+
+        trajectory_id = prediction['id']
+        predicted_trajectory = prediction['trajectory']
+
+        file_path = self.create_file_path(trajectory_id, subset)
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
+        record = calculate_metrics(gt_trajectory,
+                                   predicted_trajectory,
+                                   rpe_indices=self.config['rpe_indices'])
+
+        record = normalize_metrics(record)
+        trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}'
+                                               for key, value in record.items()])
+        title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
+        visualize_trajectory_with_gt(gt_trajectory,
+                                     predicted_trajectory,
+                                     title=title,
+                                     file_path=file_path)
+
+        mlflow.log_artifacts(self.run_dir, subset) if mlflow.active_run() else None
+
+        return record
+
+    def evaluate_subset(self, slam, generators, df, subset):
 
         records = list()
-
-        for trajectory_id, predicted_trajectory in predicted_trajectories.items():
-
-            file_path = self.create_file_path(trajectory_id, subset)
-
-            gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
-            record = calculate_metrics(gt_trajectory,
-                                       predicted_trajectory,
-                                       rpe_indices=self.config['rpe_indices'])
-
+        for generator in generators:
+            prediction = slam.predict_generator(generator)
+            record = self.evaluate_trajectory(prediction, df, subset)
             records.append(record)
-
-            record = normalize_metrics(record)
-            trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}'
-                                                   for key, value in record.items()])
-            title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
-            visualize_trajectory_with_gt(gt_trajectory,
-                                         predicted_trajectory,
-                                         title=title,
-                                         file_path=file_path)
-
-            mlflow.log_artifacts(self.run_dir, subset) if mlflow.active_run() else None
 
         total_metrics = {f'{(subset + "_")}{subset}_{key}': float(value)
                          for key, value in average_metrics(records).items()}
@@ -79,14 +86,12 @@ class BaseSlamRunner(BaseTrainer):
         slam = self.get_slam()
         slam.construct()
 
-        predicted_trajectories = slam.predict_generators(dataset.get_train_generator(as_list=True, append_last=True))
-        self.evaluate(predicted_trajectories, dataset.df_train, 'train')
-
-        predicted_trajectories = slam.predict_generators(dataset.get_val_generator(as_list=True, append_last=True))
-        self.evaluate(predicted_trajectories, dataset.df_val, 'val')
-
-        predicted_trajectories = slam.predict_generators(dataset.get_test_generator(as_list=True, append_last=True))
-        self.evaluate(predicted_trajectories, dataset.df_test, 'test')
+        subsets = ['train', 'val', 'test']
+        for subset in subsets:
+            get_generator = getattr(dataset, 'get_' + subset + '_generator')
+            df = getattr(dataset, 'df_' + subset)
+            generators = get_generator(as_list=True, append_last=True)
+            self.evaluate_subset(slam, generators, df, subset)
 
     @staticmethod
     def get_parser():

@@ -79,6 +79,8 @@ class BoVW:
         ratio_threshold = 0.7
         good_matches = list()
         for match in matches:
+            if len(match) < 2:
+                continue
             if match[0].distance < ratio_threshold * match[1].distance:
                 good_matches.append(match)
         return good_matches

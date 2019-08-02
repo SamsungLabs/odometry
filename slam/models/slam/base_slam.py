@@ -104,16 +104,6 @@ class BaseSlam:
 
         self.aggregator = self.get_aggregator()
 
-    def predict_generators(self, generators):
-
-        predicted_trajectories = dict()
-        for generator in generators:
-            print(f'Processing {generator.trajectory_id}')
-            predicted_trajectory = self.predict_generator(generator)
-            predicted_trajectories[generator.trajectory_id] = predicted_trajectory
-
-        return predicted_trajectories
-
     def predict_generator(self, generator):
 
         self.init(generator[0][0][0][0])
@@ -124,7 +114,7 @@ class BaseSlam:
 
             self.predict(image)
 
-        return self.aggregator.get_trajectory()
+        return {'id': generator.trajectory_id, 'trajectory': self.aggregator.get_trajectory()}
 
     def predict(self, image):
 
