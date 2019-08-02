@@ -153,8 +153,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.df_images = self.df[image_col]
 
         if include_last:
-            self.df_images = self._include_last(self.df_images, image_col)
-            self.df = self._include_last(self.df, x_col)
+            self.df_images = self._include_last(self.df_images)
+            self.df = self._include_last(self.df)
 
         if isinstance(x_col, str):
             self.x_cols = [x_col]
@@ -218,15 +218,15 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             shuffle,
             seed)
 
-    @staticmethod
-    def _get_chained_columns(dataframe, columns):
-        return [col + '_next' for col in columns if col + '_next' in dataframe.columns()]
+    def _get_chained_columns(self, columns):
+        return [(col, col + '_next') for col in columns if col + '_next' in self.df.columns]
 
-    def _include_last(self, dataframe, columns):
-        next_columns = self._get_chained_columns(dataframe, columns)
-        for i, col in enumerate(next_columns):
-            last_images = self.df[col].iloc[-1]
-            dataframe.at[len(dataframe), columns[i]] = last_images
+    def _include_last(self, dataframe):
+        chained_columns = self._get_chained_columns(dataframe.columns)
+        index = len(dataframe)
+        for col, col_next in chained_columns:
+            last = self.df[col_next].iloc[index - 1]
+            dataframe.at[index, col] = last
         return dataframe
 
     def _check_stop_caching(self):
