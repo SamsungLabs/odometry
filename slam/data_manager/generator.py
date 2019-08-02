@@ -130,7 +130,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  max_memory_consumption=0.8,
                  return_confidences=False,
                  trajectory_id='',
-                 append_last=False):
+                 include_last=False):
         super().set_processing_attrs(image_data_generator,
                                      target_size,
                                      'rgb',
@@ -152,12 +152,9 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.samples = len(self.df) if 'flow' in load_mode else len(self.df) + 1
         self.df_images = self.df[image_col]
 
-        if append_last:
-            image_col_next = [col + '_next' for col in image_col if 'flow' not in col]
-            for i, col in enumerate(image_col_next):
-                last_images = self.df[col].iloc[-1]
-                self.df_images.at[self.samples - 1, image_col[i]] = last_images
-                self.df.at[self.samples - 1, image_col[i]] = last_images
+        if include_last:
+            self.df_images = self._include_last(self.df_images, image_col)
+            self.df = self._include_last(self.df, x_col)
 
         if isinstance(x_col, str):
             self.x_cols = [x_col]
@@ -220,6 +217,17 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             batch_size,
             shuffle,
             seed)
+
+    @staticmethod
+    def _get_chained_columns(dataframe, columns):
+        return [col + '_next' for col in columns if col + '_next' in dataframe.columns()]
+
+    def _include_last(self, dataframe, columns):
+        next_columns = self._get_chained_columns(dataframe, columns)
+        for i, col in enumerate(next_columns):
+            last_images = self.df[col].iloc[-1]
+            dataframe.at[len(dataframe), columns[i]] = last_images
+        return dataframe
 
     def _check_stop_caching(self):
         self.stop_caching = False

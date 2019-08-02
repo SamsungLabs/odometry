@@ -141,7 +141,12 @@ class GeneratorFactory:
             pickle.dump(self.cached_images, cache_fp)
         print(f'Saved cached images to {cache_file}')
 
-    def _get_generator(self, dataframe, generator_args, trajectory=False, append_last=False, trajectory_id=''):
+    def _get_generator_from_dataframe(self,
+                                      dataframe,
+                                      generator_args,
+                                      trajectory=False,
+                                      include_last=False,
+                                      trajectory_id=''):
 
         if dataframe is None:
             return None
@@ -166,11 +171,11 @@ class GeneratorFactory:
             interpolation='nearest',
             cached_images=self.cached_images,
             filter_invalid=filter_invalid,
-            append_last=append_last,
+            include_last=include_last,
             trajectory_id=trajectory_id,
             *self.args, **self.kwargs)
 
-    def _get_generators_list(self, dataframe, generator_args, trajectories, append_last=False):
+    def _get_generators_list(self, dataframe, generator_args, trajectories, include_last=False):
 
         if dataframe is None:
             return None
@@ -179,50 +184,57 @@ class GeneratorFactory:
         for trajectory in trajectories:
 
             trajectory_dataframe = dataframe[dataframe['trajectory_id'] == trajectory].reset_index(drop=True)
-            generator = self._get_generator(trajectory_dataframe,
-                                            generator_args,
-                                            trajectory=True,
-                                            append_last=append_last,
-                                            trajectory_id=trajectory)
+            generator = self._get_generator_from_dataframe(trajectory_dataframe,
+                                                           generator_args,
+                                                           trajectory=True,
+                                                           include_last=include_last,
+                                                           trajectory_id=trajectory)
             generators.append(generator)
 
         return generators
 
-    def get_train_generator(self, trajectory=False, as_list=False, append_last=False):
-        df_train = self.df_train_trajectory if trajectory else self.df_train
-
+    def _get_generator(self,
+                       dataframe,
+                       generator_args,
+                       trajectories,
+                       as_is=False,
+                       as_list=False,
+                       include_last=False):
         if as_list:
-            return self._get_generators_list(df_train,
-                                             self.train_generator_args,
-                                             self.train_trajectories,
-                                             append_last=append_last)
+            return self._get_generators_list(dataframe,
+                                             generator_args,
+                                             trajectories,
+                                             include_last=include_last)
         else:
-            return self._get_generator(df_train,
-                                       self.train_generator_args,
-                                       trajectory=trajectory,
-                                       append_last=append_last)
+            return self._get_generator_from_dataframe(dataframe,
+                                                      self.train_generator_args,
+                                                      trajectory=as_is,
+                                                      include_last=include_last)
 
-    def get_val_generator(self, as_list=False, append_last=False):
+    def get_train_generator(self, as_is=False, as_list=False, include_last=False):
+        df_train = self.df_train_trajectory if as_is else self.df_train
 
-        if as_list:
-            return self._get_generators_list(self.df_val,
-                                             self.val_generator_args,
-                                             self.val_trajectories,
-                                             append_last=append_last)
-        else:
-            return self._get_generator(self.df_val,
-                                       self.val_generator_args,
-                                       trajectory=True,
-                                       append_last=append_last)
+        return self._get_generator(df_train,
+                                   self.train_generator_args,
+                                   self.train_trajectories,
+                                   as_is=as_is,
+                                   as_list=as_list,
+                                   include_last=include_last)
 
-    def get_test_generator(self, as_list=False, append_last=False):
-        if as_list:
-            return self._get_generators_list(self.df_test,
-                                             self.test_generator_args,
-                                             self.test_trajectories,
-                                             append_last=append_last)
-        else:
-            return self._get_generator(self.df_test,
-                                       self.test_generator_args,
-                                       trajectory=True,
-                                       append_last=append_last)
+    def get_val_generator(self, as_list=False, include_last=False):
+
+        return self._get_generator(self.df_val,
+                                   self.val_generator_args,
+                                   self.val_trajectories,
+                                   as_is=True,
+                                   as_list=as_list,
+                                   include_last=include_last)
+
+    def get_test_generator(self, as_list=False, include_last=False):
+
+        return self._get_generator(self.df_test,
+                                   self.test_generator_args,
+                                   self.test_trajectories,
+                                   as_is=True,
+                                   as_list=as_list,
+                                   include_last=include_last)
