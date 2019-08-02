@@ -108,6 +108,7 @@ class BaseSlam:
 
         predicted_trajectories = dict()
         for generator in generators:
+            print(f'Processing {generator.trajectory_id}')
             predicted_trajectory = self.predict_generator(generator)
             predicted_trajectories[generator.trajectory_id] = predicted_trajectory
 
