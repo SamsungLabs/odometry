@@ -44,6 +44,8 @@ class BaseSlamRunner(BaseTrainer):
         trajectory_id = prediction['id']
         predicted_trajectory = prediction['trajectory']
 
+        print(f'Processing {trajectory_id}')
+
         file_path = self.create_file_path(trajectory_id, subset)
 
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
