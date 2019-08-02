@@ -13,11 +13,11 @@ from slam.utils import visualize_trajectory_with_gt
 
 class BaseSlamRunner(BaseTrainer):
 
-    def __init__(self, knn=20, *args, **kwargs):
+    def __init__(self, reloc_weights, optflow_weights, odometry_model, knn=20, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.reloc_weights = kwargs['reloc_weights']
-        self.optflow_weights = kwargs['optflow_weights']
-        self.odometry_model = kwargs['odometry_model']
+        self.reloc_weights = reloc_weights
+        self.optflow_weights = optflow_weights
+        self.odometry_model = odometry_model
         self.knn = knn
 
     def get_slam(self):
@@ -70,7 +70,6 @@ class BaseSlamRunner(BaseTrainer):
 
         records = list()
         for generator in generators:
-
             prediction = slam.predict_generator(generator)
             record = self.evaluate_trajectory(prediction, df, subset)
             records.append(record)

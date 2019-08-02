@@ -162,6 +162,8 @@ class BaseSlam:
         self.frame_history = pd.DataFrame()
 
         self.reloc_model.clear()
+        self.aggregator.clear()
+
         self.last_frame = image
         self.last_keyframe = image
 
