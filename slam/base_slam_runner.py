@@ -70,6 +70,7 @@ class BaseSlamRunner(BaseTrainer):
 
         records = list()
         for generator in generators:
+
             prediction = slam.predict_generator(generator)
             record = self.evaluate_trajectory(prediction, df, subset)
             records.append(record)
@@ -88,12 +89,14 @@ class BaseSlamRunner(BaseTrainer):
         slam = self.get_slam()
         slam.construct()
 
-        subsets = ['train', 'val', 'test']
-        for subset in subsets:
-            get_generator = getattr(dataset, 'get_' + subset + '_generator')
-            df = getattr(dataset, 'df_' + subset)
-            generators = get_generator(as_list=True, append_last=True)
-            self.evaluate_subset(slam, generators, df, subset)
+        generators = dataset.get_train_generator(as_is=True, as_list=True, include_last=True)
+        self.evaluate_subset(slam, generators, dataset.df_train, 'train')
+
+        generators = dataset.get_val_generator(as_list=True, include_last=True)
+        self.evaluate_subset(slam, generators, dataset.df_val, 'val')
+
+        generators = dataset.get_test_generator(as_list=True, include_last=True)
+        self.evaluate_subset(slam, generators, dataset.df_test, 'test')
 
     @staticmethod
     def get_parser():
