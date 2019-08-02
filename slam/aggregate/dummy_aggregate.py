@@ -2,9 +2,10 @@ import numpy as np
 from pyquaternion import Quaternion
 from collections import OrderedDict
 
-from slam.linalg.linalg_utils import convert_euler_angles_to_rotation_matrix, form_se3, split_se3
-from slam.linalg.trajectory import GlobalTrajectory
-
+from slam.linalg import (convert_euler_angles_to_rotation_matrix, 
+                         form_se3, 
+                         split_se3,
+                         GlobalTrajectory)
 
 class AggregateTrajectory:
     def __init__(self):
