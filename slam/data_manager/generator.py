@@ -218,10 +218,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
     def _include_last(self, dataframe):
         index = len(dataframe)
 
-        for col in dataframe.columns:
-            col_next = col + '_next'
-            if col_next in self.df.columns:
-                dataframe.at[index, col] = self.df[col_next].iloc[index - 1]
+        chained_columns = [(col, col + '_next') for col in dataframe.columns if col + '_next' in self.df.columns]
+
+        for (col, col_next) in chained_columns:
+            dataframe.at[index, col] = self.df[col_next].iloc[index - 1]
 
         return dataframe
 
