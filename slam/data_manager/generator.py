@@ -201,7 +201,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.depth_multiplicator = depth_multiplicator
         self._fill_depth = _fill_depth_with_random
-
+:q
         self.set_cache(cached_images)
         self.max_memory_consumption = max_memory_consumption
         self._check_stop_caching()
