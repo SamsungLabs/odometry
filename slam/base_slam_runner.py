@@ -63,6 +63,8 @@ class BaseSlamRunner(BaseTrainer):
                                          title=title,
                                          file_path=file_path)
 
+            mlflow.log_artifacts(self.run_dir, subset) if mlflow.active_run() else None
+
         total_metrics = {f'{(subset + "_")}{subset}_{key}': float(value)
                          for key, value in average_metrics(records).items()}
 

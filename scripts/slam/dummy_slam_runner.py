@@ -1,3 +1,6 @@
+import __init_path__
+import env
+
 from slam.base_slam_runner import BaseSlamRunner
 from slam.models import DummySlam
 
