@@ -93,7 +93,7 @@ class GeneratorFactory:
             self.load_cache(self.cached_images)
 
         self.input_shapes = self.get_train_generator().input_shapes \
-            if self.train_trajectories else self.get_val_generator()
+            if self.train_trajectories else self.get_val_generator().input_shapes
 
     def _log_dataset_params(self,):
         if mlflow.active_run():
