@@ -74,7 +74,7 @@ class BaseSlamRunner(BaseTrainer):
             record = self.evaluate_trajectory(prediction, df, subset)
             records.append(record)
 
-        total_metrics = {f'{(subset + "_")}{subset}_{key}': float(value)
+        total_metrics = {f'{subset}_{key}': float(value)
                          for key, value in average_metrics(records).items()}
 
         if mlflow.active_run():
