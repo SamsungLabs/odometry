@@ -118,8 +118,12 @@ class GeneratorFactory:
         for trajectory_name in tqdm.tqdm(trajectories, desc=f'Collect {subset} trajectories'):
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
             current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
-            image_col_next = [col + '_next' for col in self.image_col if 'flow' not in col]
-            current_df[image_col_next] = trajectory_name + '/' + current_df[image_col_next]
+
+            for image_col in self.image_col:
+                image_col_next = image_col + '_next'
+                if image_col_next in current_df.columns:
+                    current_df[image_col_next] = trajectory_name + '/' + current_df[image_col_next]
+
             current_df['trajectory_id'] = trajectory_name
             df = current_df if df is None else df.append(current_df, sort=False)
 

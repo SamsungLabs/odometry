@@ -146,7 +146,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         assert isinstance(image_col, list)
 
         self.df = dataframe
-        self.df = self._include_last(self.df) if include_last else None
+        self._include_last() if include_last else None
         self.df[image_col] = self.df[image_col].astype(str)
         self.directory = directory
         self.dtype = dtype
@@ -215,12 +215,13 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             shuffle,
             seed)
 
-    def _include_last(self, dataframe):
-        index = len(dataframe)
-        chained_columns = [(col, col + '_next') for col in dataframe.columns if col + '_next' in self.df.columns]
-        for col, col_next in chained_columns:
-            dataframe.at[index, col] = self.df[col_next].iloc[index - 1]
-        return dataframe
+    def _include_last(self):
+        index = len(self.df)
+
+        for col in self.df.columns:
+            col_next = col + '_next'
+            if col_next in self.df.columns:
+                self.df.at[index, col] = self.df[col_next].iloc[index - 1]
 
     def _check_stop_caching(self):
         self.stop_caching = False
