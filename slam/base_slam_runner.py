@@ -45,7 +45,6 @@ class BaseSlamRunner(BaseTrainer):
 
         trajectory_dir = self.create_trajectory_dir(trajectory_id, subset)
 
-        prediction['keyframe_history'].to_csv(os.path.join(trajectory_dir, 'keyframe_history.csv'))
         prediction['frame_history'].to_csv(os.path.join(trajectory_dir, 'frame_history.csv'))
         predicted_trajectory = prediction['trajectory']
 
