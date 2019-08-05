@@ -3,9 +3,9 @@ import mlflow
 
 from slam.base_trainer import BaseTrainer
 
-from slam.evaluation.evaluate import (calculate_metrics,
-                                      average_metrics,
-                                      normalize_metrics)
+from slam.evaluation import (calculate_metrics,
+                             average_metrics,
+                             normalize_metrics)
 
 from slam.linalg import RelativeTrajectory
 from slam.utils import visualize_trajectory_with_gt
