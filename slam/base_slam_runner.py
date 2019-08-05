@@ -77,7 +77,6 @@ class BaseSlamRunner(BaseTrainer):
         if mlflow.active_run():
             total_metrics = {f'{subset}_{key}': float(value) for key, value in average_metrics(records).items()}
             mlflow.log_metrics(total_metrics)
-            mlflow.log_artifacts(self.run_dir, subset)
 
     def run(self):
 
