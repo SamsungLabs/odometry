@@ -1,6 +1,5 @@
 import os
 import mlflow
-import pandas as pd
 
 from slam.base_trainer import BaseTrainer
 
