@@ -91,9 +91,9 @@ class BoVW:
 
         good_matches = list()
         for k in range(len(match[0])):
-            ind = match[0][k].trainIdx
+            index = match[0][k].trainIdx
 
-            image = np.uint8(self.images[ind])
+            image = np.uint8(self.images[index)
 
             kp2, des2 = self.extractor.detectAndCompute(image, None)
 
@@ -107,32 +107,33 @@ class BoVW:
 
         return good_matches
 
-    def predict(self, image: np.ndarray, ind: int, robust: bool = True):
+    def predict(self, image: np.ndarray, index: int, robust: bool = True):
 
         assert self.counter > 0
 
-        hist, des = self.add(image, ind)
+        hist, des = self.add(image, index)
 
         match = self.knn_matcher.knnMatch(hist, np.vstack(self.histograms[:-1]), min(self.counter - 1, self.knn))
         match = self.keypoints_overlap_test(match, des) if robust else match
 
+        # SUPER FIX
         if len(match) > 0:
             df = pd.DataFrame({'to_db_index': [self.counter - 1] * len(match),
                                'from_db_index': [m[0].trainIdx for m in match],
-                               'to_index': [ind] * len(match),
+                               'to_index': [index] * len(match),
                                'from_index': [self.index_mapping[m[0].trainIdx] for m in match]})
         else:
             df = pd.DataFrame({'to_db_index': [self.counter - 1],
                                'from_db_index': [self.counter - 2],
-                               'to_index': [ind],
+                               'to_index': [index],
                                'from_index': [self.index_mapping[self.counter - 2]]})
 
         self.matches = self.matches.append(df)
 
         return df
 
-    def add(self, image, ind):
-        self.index_mapping[self.counter] = ind
+    def add(self, image, index):
+        self.index_mapping[self.counter] = index
         self.images.append(image)
         image = np.uint8(image)
         kp, des = self.extractor.detectAndCompute(image, None)
@@ -147,6 +148,3 @@ class BoVW:
         self.images = list()
         self.matches = pd.DataFrame(columns=['to_db_index', 'from_db_index', 'to_index', 'from_index'])
         self.counter = 0
-
-    def get_image(self, global_ind):
-        return self.images[self.index_mapping]
