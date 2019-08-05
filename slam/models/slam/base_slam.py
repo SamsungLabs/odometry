@@ -1,14 +1,11 @@
-import os
 import numpy as np
 import copy
 from tqdm import trange
-import mlflow
 import pandas as pd
 
 from tensorflow.python.client import device_lib
 
 from slam.models.model_factory import PretrainedModelFactory
-from slam.key_frame_selector import is_key_frame
 
 from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
 from submodules.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
@@ -38,8 +35,8 @@ class BaseSlam:
         self.odometry_model = None
         self.optflow_model = None
         self.aggregator = None
+        self.keyframe_selector = None
 
-        self.keyframe_history = None
         self.frame_history = None
 
         self.last_frame = None
@@ -53,11 +50,14 @@ class BaseSlam:
     def get_aggregator(self):
         raise RuntimeError('Not implemented')
 
+    def get_keyframe_selector(self):
+        raise RuntimeError('Not implemented')
+
     def get_optflow_model(self):
         nn_opts = copy.deepcopy(_DEFAULT_PWCNET_TEST_OPTIONS)
         nn_opts['verbose'] = True
         nn_opts['ckpt_path'] = self.optflow_weights_path
-        nn_opts['batch_size'] = self.knn
+        nn_opts['batch_size'] = self.knn + 1
 
         devices = device_lib.list_local_devices()
         gpus = [device for device in devices if device.device_type == 'GPU']
@@ -79,12 +79,16 @@ class BaseSlam:
         model = model_factory.construct()
         return model
 
-    def batchify(self, df):
-        batch = np.zeros((self.knn, 2, *self.input_shapes, 3))
+    def batchify(self, df, current_frame):
+        batch = np.zeros((self.knn + 1, 2, *self.input_shapes, 3))
 
         for index, row in df.iterrows():
-            batch[index, 0] = self.reloc_model.images[row['to_db_index']]
-            batch[index, 1] = self.reloc_model.images[row['from_db_index']]
+            if 'to_db_index' in row.index and not np.isnan(row['to_db_index']):
+                batch[index, 0] = self.reloc_model.images[row['to_db_index']]
+                batch[index, 1] = self.reloc_model.images[row['from_db_index']]
+            else:
+                batch[index, 0] = current_frame
+                batch[index, 1] = self.last_frame
 
         return batch
 
@@ -104,6 +108,8 @@ class BaseSlam:
 
         self.aggregator = self.get_aggregator()
 
+        self.keyframe_selector = self.get_keyframe_selector()
+
     def predict_generator(self, generator):
 
         self.init(generator[0][0][0][0])
@@ -116,49 +122,38 @@ class BaseSlam:
 
         return {'id': generator.trajectory_id, 'trajectory': self.aggregator.get_trajectory()}
 
-    def predict(self, image):
+    def predict(self, frame):
 
-        if is_key_frame(self.last_keyframe, image, self.frame_index):
+        matches = pd.DataFrame({'to_index': [self.frame_index],
+                                'from_index': [self.frame_index - 1]})
 
-            matches = self.reloc_model.predict(image, self.frame_index)
+        new_key_frame, kidnapped = self.keyframe_selector.is_key_frame(self.last_keyframe, frame, self.frame_index)
 
-            batch = self.batchify(matches)
+        if new_key_frame and not kidnapped:
+            matches = matches.append(self.reloc_model.predict(frame, self.frame_index))
+            self.last_keyframe = frame
 
-            optflow = self.optflow_model.predict_from_img_pairs(batch, batch_size=self.knn)
+        elif new_key_frame and kidnapped:
+            matches = self.reloc_model.predict(frame, self.frame_index)
+            self.last_keyframe = frame
 
-            predicts = self.odometry_model.predict(np.stack(optflow), batch_size=self.knn)
+        batch = self.batchify(matches, frame)
 
-            matches = self.append_predict(matches, predicts)
+        optflow = self.optflow_model.predict_from_img_pairs(batch, batch_size=self.knn + 1)
 
-            self.keyframe_history = self.keyframe_history.append(matches)
+        predicts = self.odometry_model.predict(np.stack(optflow), batch_size=self.knn + 1)
 
-            self.last_keyframe = image
+        matches = self.append_predict(matches, predicts)
 
-        else:
+        self.frame_history = self.frame_history.append(matches)
 
-            matches = pd.DataFrame({'to_index': [self.frame_index],
-                                    'from_index': [self.frame_index - 1]})
-
-            batch = np.zeros((self.knn, 2, *self.input_shapes, 3))
-            batch[0, 0] = self.last_frame
-            batch[0, 1] = image
-
-            optflow = self.optflow_model.predict_from_img_pairs(batch, batch_size=1)
-
-            predicts = self.odometry_model.predict(np.expand_dims(optflow[0], axis=0), batch_size=1)
-
-            matches = self.append_predict(matches, predicts)
-
-            self.frame_history = self.frame_history.append(matches)
-
-            self.last_frame = image
+        self.last_frame = frame
 
         self.aggregator.append(matches)
 
         self.frame_index += 1
 
     def init(self, image):
-        self.keyframe_history = pd.DataFrame()
         self.frame_history = pd.DataFrame()
 
         self.reloc_model.clear()
@@ -169,4 +164,3 @@ class BaseSlam:
 
         self.reloc_model.add(self.last_keyframe, 0)
         self.frame_index = 1
-
