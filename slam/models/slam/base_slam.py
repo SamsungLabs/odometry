@@ -127,14 +127,10 @@ class BaseSlam:
         matches = pd.DataFrame({'to_index': [self.frame_index],
                                 'from_index': [self.frame_index - 1]})
 
-        new_key_frame, kidnapped = self.keyframe_selector.is_key_frame(self.last_keyframe, frame, self.frame_index)
+        new_key_frame = self.keyframe_selector.is_key_frame(self.last_keyframe, frame, self.frame_index)
 
-        if new_key_frame and not kidnapped:
+        if new_key_frame:
             matches = matches.append(self.reloc_model.predict(frame, self.frame_index))
-            self.last_keyframe = frame
-
-        elif new_key_frame and kidnapped:
-            matches = self.reloc_model.predict(frame, self.frame_index)
             self.last_keyframe = frame
 
         batch = self.batchify(matches, frame)
