@@ -93,7 +93,7 @@ class BoVW:
         for k in range(len(match[0])):
             index = match[0][k].trainIdx
 
-            image = np.uint8(self.images[index)
+            image = np.uint8(self.images[index])
 
             kp2, des2 = self.extractor.detectAndCompute(image, None)
 
