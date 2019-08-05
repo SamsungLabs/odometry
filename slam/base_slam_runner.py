@@ -33,9 +33,7 @@ class BaseSlamRunner(BaseTrainer):
 
     def create_trajectory_dir(self, trajectory_id, subset):
         trajectory_name = trajectory_id.replace('/', '_')
-        dir_path = os.path.join(self.run_dir,
-                                 subset,
-                                 f'{trajectory_name}.html')
+        dir_path = os.path.join(self.run_dir, subset, f'{trajectory_name}.html')
         os.makedirs(dir_path, exist_ok=True)
         return dir_path
 
@@ -58,11 +56,11 @@ class BaseSlamRunner(BaseTrainer):
                                                for key, value in record.items()])
         title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
 
-        viz_path = os.path.join(trajectory_dir, trajectory_id.replace('/', '_'))
+        visualize_path = os.path.join(trajectory_dir, trajectory_id.replace('/', '_'))
         visualize_trajectory_with_gt(gt_trajectory,
                                      predicted_trajectory,
                                      title=title,
-                                     file_path=viz_path)
+                                     file_path=visualize_path)
 
         mlflow.log_artifacts(self.run_dir, subset) if mlflow.active_run() else None
 
