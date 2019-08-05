@@ -114,7 +114,7 @@ class BoVW:
         hist, des = self.add(image, ind)
 
         match = self.knn_matcher.knnMatch(hist, np.vstack(self.histograms[:-1]), min(self.counter - 1, self.knn))
-        match = self.keypoints_overlap_test(match, des) if robust else None
+        match = self.keypoints_overlap_test(match, des) if robust else match
 
         # SUPER FIX
         if len(match) > 0:
