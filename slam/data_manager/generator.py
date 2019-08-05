@@ -128,7 +128,9 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  cached_images=None,
                  filter_invalid=True,
                  max_memory_consumption=0.8,
-                 return_confidences=False):
+                 return_confidences=False,
+                 trajectory_id='',
+                 include_last=False):
         super().set_processing_attrs(image_data_generator,
                                      target_size,
                                      'rgb',
@@ -144,6 +146,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         assert isinstance(image_col, list)
 
         self.df = dataframe
+        self._include_last() if include_last else None
         self.df[image_col] = self.df[image_col].astype(str)
         self.directory = directory
         self.dtype = dtype
@@ -204,11 +207,21 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.return_confidences = return_confidences
 
+        self.trajectory_id = trajectory_id
+
         super(ExtendedDataFrameIterator, self).__init__(
             self.samples,
             batch_size,
             shuffle,
             seed)
+
+    def _include_last(self):
+        index = len(self.df)
+
+        for col in self.df.columns:
+            col_next = col + '_next'
+            if col_next in self.df.columns:
+                self.df.at[index, col] = self.df[col_next].iloc[index - 1]
 
     def _check_stop_caching(self):
         self.stop_caching = False

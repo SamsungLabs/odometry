@@ -40,8 +40,8 @@ class AggregateTrajectory:
         
     def append(self, df):
         for index, row in df.iterrows():
-            from_index = row['from']
-            to_index = row['to']
+            from_index = row['from_index']
+            to_index = row['to_index']
             euler_angles = row[['euler_x', 'euler_y', 'euler_z']].values
             translation = row[['t_x', 't_y', 't_z']].values
             

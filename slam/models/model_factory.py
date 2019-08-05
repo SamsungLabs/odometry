@@ -1,6 +1,7 @@
 import mlflow
-from functools import partial
 
+import tensorflow as tf
+import keras
 from keras.layers import Input
 from keras.models import Model, load_model
 from keras.optimizers import Adam
@@ -39,7 +40,10 @@ class PretrainedModelFactory(BaseModelFactory):
         self.model = None
 
     def construct(self):
-        self.model = load_model(
+        sess = tf.Session()
+        keras.backend.set_session(sess)
+        with sess.as_default():
+            self.model = load_model(
             self.pretrained_path,
             custom_objects={'mean_squared_error': mean_squared_error,
                             'mean_absolute_error': mean_absolute_error,

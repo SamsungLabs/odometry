@@ -16,6 +16,7 @@ from .odometry import construct_rigidity_model
 
 from .relocalization import BoVW
 
+from .slam import DummySlam
 
 __all__ = [
     'PretrainedModelFactory',
@@ -32,5 +33,6 @@ __all__ = [
     'construct_flexible_model',
     'construct_multiscale_model',
     'construct_rigidity_model',
-    'BoVW'
+    'BoVW',
+    'DummySlam'
 ]

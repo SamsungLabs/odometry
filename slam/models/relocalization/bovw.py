@@ -31,15 +31,10 @@ class BoVW:
         self.descriptor_extractor = cv2.BOWImgDescriptorExtractor(self.extractor, self.knn_matcher)
         self.knn = knn
 
-        self.histograms = None
-        self.images = None
-        self.matches = None
-        self.counter = None
-
         self.clear()
 
         self.index_mapping = dict()
-       
+
         self.run_dir = run_dir
 
     def fit(self, generator):
@@ -84,6 +79,8 @@ class BoVW:
         ratio_threshold = 0.7
         good_matches = list()
         for match in matches:
+            if len(match) < 2:
+                continue
             if match[0].distance < ratio_threshold * match[1].distance:
                 good_matches.append(match)
         return good_matches
@@ -94,9 +91,9 @@ class BoVW:
 
         good_matches = list()
         for k in range(len(match[0])):
-            ind = match[0][k].trainIdx
+            index = match[0][k].trainIdx
 
-            image = np.uint8(self.images[ind])
+            image = np.uint8(self.images[index)
 
             kp2, des2 = self.extractor.detectAndCompute(image, None)
 
@@ -110,31 +107,41 @@ class BoVW:
 
         return good_matches
 
-    def predict(self, image: np.ndarray, ind: int, robust: bool = True):
+    def predict(self, image: np.ndarray, index: int, robust: bool = True):
 
-        self.index_mapping[self.counter] = ind
+        assert self.counter > 0
+
+        hist, des = self.add(image, index)
+
+        match = self.knn_matcher.knnMatch(hist, np.vstack(self.histograms[:-1]), min(self.counter - 1, self.knn))
+        match = self.keypoints_overlap_test(match, des) if robust else match
+
+        # SUPER FIX
+        if len(match) > 0:
+            df = pd.DataFrame({'to_db_index': [self.counter - 1] * len(match),
+                               'from_db_index': [m[0].trainIdx for m in match],
+                               'to_index': [index] * len(match),
+                               'from_index': [self.index_mapping[m[0].trainIdx] for m in match]})
+        else:
+            df = pd.DataFrame({'to_db_index': [self.counter - 1],
+                               'from_db_index': [self.counter - 2],
+                               'to_index': [index],
+                               'from_index': [self.index_mapping[self.counter - 2]]})
+
+        self.matches = self.matches.append(df)
+
+        return df
+
+    def add(self, image, index):
+        self.index_mapping[self.counter] = index
         self.images.append(image)
-
         image = np.uint8(image)
         kp, des = self.extractor.detectAndCompute(image, None)
         hist = self.descriptor_extractor.compute(image=image, keypoints=kp)
-
-        if self.counter > 0:
-            match = self.knn_matcher.knnMatch(hist, np.vstack(self.histograms), min(self.counter, self.knn))
-            match = self.keypoints_overlap_test(match, des) if robust else None
-        else:
-            match = list()
-
-        df = pd.DataFrame({'to_db_index': [self.counter] * len(match),
-                           'from_db_index': [m[0].trainIdx for m in match],
-                           'to_index': [ind] * len(match),
-                           'from_index': [self.index_mapping[m[0].trainIdx] for m in match]})
-
-        self.matches.append(df)
         self.histograms.append(hist)
         self.counter += 1
 
-        return df
+        return hist, des
 
     def clear(self):
         self.histograms = list()

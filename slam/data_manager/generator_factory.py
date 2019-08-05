@@ -118,6 +118,12 @@ class GeneratorFactory:
         for trajectory_name in tqdm.tqdm(trajectories, desc=f'Collect {subset} trajectories'):
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
             current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
+
+            for image_col in self.image_col:
+                image_col_next = image_col + '_next'
+                if image_col_next in current_df.columns:
+                    current_df[image_col_next] = trajectory_name + '/' + current_df[image_col_next]
+
             current_df['trajectory_id'] = trajectory_name
             df = current_df if df is None else df.append(current_df, sort=False)
 
@@ -139,7 +145,12 @@ class GeneratorFactory:
             pickle.dump(self.cached_images, cache_fp)
         print(f'Saved cached images to {cache_file}')
 
-    def _get_generator(self, dataframe, generator_args, trajectory=False):
+    def _get_generator_from_dataframe(self,
+                                      dataframe,
+                                      generator_args,
+                                      trajectory=False,
+                                      include_last=False,
+                                      trajectory_id=''):
 
         if dataframe is None:
             return None
@@ -164,14 +175,70 @@ class GeneratorFactory:
             interpolation='nearest',
             cached_images=self.cached_images,
             filter_invalid=filter_invalid,
+            include_last=include_last,
+            trajectory_id=trajectory_id,
             *self.args, **self.kwargs)
 
-    def get_train_generator(self, trajectory=False):
-        df_train = self.df_train_trajectory if trajectory else self.df_train
-        return self._get_generator(df_train, self.train_generator_args, trajectory=trajectory)
+    def _get_generators_list(self, dataframe, generator_args, trajectories, include_last=False):
 
-    def get_val_generator(self):
-        return self._get_generator(self.df_val, self.val_generator_args, trajectory=True)
+        if dataframe is None:
+            return None
 
-    def get_test_generator(self):
-        return self._get_generator(self.df_test, self.test_generator_args, trajectory=True)
+        generators = list()
+        for trajectory in trajectories:
+
+            trajectory_dataframe = dataframe[dataframe['trajectory_id'] == trajectory].reset_index(drop=True)
+            generator = self._get_generator_from_dataframe(trajectory_dataframe,
+                                                           generator_args,
+                                                           trajectory=True,
+                                                           include_last=include_last,
+                                                           trajectory_id=trajectory)
+            generators.append(generator)
+
+        return generators
+
+    def _get_generator(self,
+                       dataframe,
+                       generator_args,
+                       trajectories,
+                       as_is=False,
+                       as_list=False,
+                       include_last=False):
+        if as_list:
+            return self._get_generators_list(dataframe,
+                                             generator_args,
+                                             trajectories,
+                                             include_last=include_last)
+        else:
+            return self._get_generator_from_dataframe(dataframe,
+                                                      self.train_generator_args,
+                                                      trajectory=as_is,
+                                                      include_last=include_last)
+
+    def get_train_generator(self, as_is=False, as_list=False, include_last=False):
+        df_train = self.df_train_trajectory if as_is else self.df_train
+
+        return self._get_generator(df_train,
+                                   self.train_generator_args,
+                                   self.train_trajectories,
+                                   as_is=as_is,
+                                   as_list=as_list,
+                                   include_last=include_last)
+
+    def get_val_generator(self, as_list=False, include_last=False):
+
+        return self._get_generator(self.df_val,
+                                   self.val_generator_args,
+                                   self.val_trajectories,
+                                   as_is=True,
+                                   as_list=as_list,
+                                   include_last=include_last)
+
+    def get_test_generator(self, as_list=False, include_last=False):
+
+        return self._get_generator(self.df_test,
+                                   self.test_generator_args,
+                                   self.test_trajectories,
+                                   as_is=True,
+                                   as_list=as_list,
+                                   include_last=include_last)

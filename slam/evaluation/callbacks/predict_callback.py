@@ -53,7 +53,7 @@ class Predict(keras.callbacks.Callback):
         self.rpe_indices = rpe_indices
         self.workers = 8
 
-        self.train_generator = dataset.get_train_generator(trajectory=self.evaluate)
+        self.train_generator = dataset.get_train_generator(as_is=self.evaluate)
         self.val_generator = dataset.get_val_generator()
         self.test_generator = dataset.get_test_generator()
 
