@@ -87,8 +87,8 @@ class BaseSlam:
                 batch[index, 0] = current_frame
                 batch[index, 1] = self.last_frame
             else:
-                batch[index, 0] = self.reloc_model.images[row['to_db_index']]
-                batch[index, 1] = self.reloc_model.images[row['from_db_index']]
+                batch[index, 0] = self.reloc_model.images[int(row['to_db_index'])]
+                batch[index, 1] = self.reloc_model.images[int(row['from_db_index'])]
 
         return batch
 
