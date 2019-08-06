@@ -11,10 +11,10 @@ from slam.data_manager.generator_factory import GeneratorFactory
 
 class BoVWTrainer(BaseTrainer):
 
-    def __init__(self, voc_size, train_sampling_rate, *args, **kwargs):
+    def __init__(self, voc_size, train_sampling_step, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.voc_size = voc_size
-        self.train_sampling_rate = train_sampling_rate
+        self.train_sampling_step = train_sampling_step
 
     def get_dataset(self,
                     train_trajectories=None,
@@ -39,7 +39,7 @@ class BoVWTrainer(BaseTrainer):
                                 image_col=self.image_col,
                                 load_mode=self.load_mode,
                                 preprocess_mode=self.preprocess_mode,
-                                train_sampling_step=self.train_sampling_rate,
+                                train_sampling_step=self.train_sampling_step,
                                 cached_images={})
 
     def get_model(self):
