@@ -47,7 +47,7 @@ def load_metrics(run_name, dataset_type):
         if run_name == base_run_name:
             metrics.append(client.get_run(run_info.run_id).data.metrics)
             if not model_name:
-                model_name = client.get_run(run_info.run_id).data.params.get('model_name', 'Unknown')
+                model_name = client.get_run(run_info.run_id).data.params.get('model.name', 'Unknown')
 
     return metrics, model_name
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_type', '-t', type=str, required=True,
-                        help='You can find available exp names in odometry.preprocessing.dataset_configs.py')
+                        help='You can find available exp names in slam.preprocessing.dataset_configs.py')
 
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
                         required=True)
