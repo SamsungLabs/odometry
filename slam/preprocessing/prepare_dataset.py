@@ -64,7 +64,7 @@ def set_logger(output_dir):
 
 
 def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optical_flow_checkpoint,
-                    depth_checkpoint=None, pwc_features=False):
+                    depth_checkpoint=None, pwc_features=False, stride=1):
 
     limit_resources()
 
@@ -85,7 +85,8 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
     with open(output_root.joinpath('prepare_dataset.json').as_posix(), mode='w+') as f:
         dataset_config = {'depth_checkpoint': depth_checkpoint,
                           'optical_flow_checkpoint': optical_flow_checkpoint,
-                          'target_size': target_size}
+                          'target_size': target_size,
+                          'stride': stride}
         json.dump(dataset_config, f)
 
     trajectories = [d.as_posix() for d in list(Path(dataset_root).rglob('*/**'))]
@@ -105,7 +106,7 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                                     parser=trajectory_parser,
                                     single_frame_estimators=sf_estimators,
                                     pair_frames_estimators=pf_estimators,
-                                    stride=1)
+                                    stride=stride)
             df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
 
             counter += 1

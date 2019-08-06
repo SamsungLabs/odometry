@@ -14,7 +14,7 @@ from slam.utils import mlflow_logging
 
 class GeneratorFactory:
 
-    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.')
+    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.', stride=1)
     def __init__(self,
                  dataset_root,
                  csv_name='df.csv',
@@ -95,7 +95,7 @@ class GeneratorFactory:
         self.input_shapes = self.get_train_generator().input_shapes \
             if self.train_trajectories else self.get_val_generator().input_shapes
 
-    def _log_dataset_params(self,):
+    def _log_dataset_params(self):
         if mlflow.active_run():
 
             dataset_config_path = os.path.join(self.dataset_root, 'prepare_dataset.json')
@@ -104,6 +104,7 @@ class GeneratorFactory:
                     dataset_config = json.load(f)
                     mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
                     mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
+                    mlflow.log_param('stride', dataset_config['stride'])
             except FileNotFoundError:
                 warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun '
                               f'prepare_dataset.py for this dataset. Path {dataset_config_path}', UserWarning)
