@@ -83,12 +83,12 @@ class BaseSlam:
         batch = np.zeros((self.knn + 1, 2, *self.input_shapes, 3))
 
         for index, row in df.iterrows():
-            if 'to_db_index' in row.index and not np.isnan(row['to_db_index']):
-                batch[index, 0] = self.reloc_model.images[row['to_db_index']]
-                batch[index, 1] = self.reloc_model.images[row['from_db_index']]
-            else:
+            if np.isnan(row['to_db_index']):
                 batch[index, 0] = current_frame
                 batch[index, 1] = self.last_frame
+            else:
+                batch[index, 0] = self.reloc_model.images[row['to_db_index']]
+                batch[index, 1] = self.reloc_model.images[row['from_db_index']]
 
         return batch
 
@@ -124,7 +124,9 @@ class BaseSlam:
 
     def predict(self, frame):
 
-        matches = pd.DataFrame({'to_index': [self.frame_index],
+        matches = pd.DataFrame({'to_db_index': [np.nan],
+                                'from_db_index' : [np.nan],
+                                'to_index': [self.frame_index],
                                 'from_index': [self.frame_index - 1]})
 
         new_key_frame = self.keyframe_selector.is_key_frame(self.last_keyframe, frame, self.frame_index)
