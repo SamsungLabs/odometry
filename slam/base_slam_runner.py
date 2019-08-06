@@ -31,22 +31,20 @@ class BaseSlamRunner(BaseTrainer):
         self.preprocess_mode = 'rgb'
         self.batch_size = 1
 
-    def create_file_path(self, trajectory_id, subset):
+    def create_trajectory_dir(self, trajectory_id, subset):
         trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(self.run_dir,
-                                 subset,
-                                 f'{trajectory_name}.html')
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        return file_path
+        dir_path = os.path.join(self.run_dir, subset, f'{trajectory_name}.html')
+        os.makedirs(dir_path, exist_ok=True)
+        return dir_path
 
     def evaluate_trajectory(self, prediction, gt, subset):
 
         trajectory_id = prediction['id']
+
+        trajectory_dir = self.create_trajectory_dir(trajectory_id, subset)
+
+        prediction['frame_history'].to_csv(os.path.join(trajectory_dir, 'frame_history.csv'))
         predicted_trajectory = prediction['trajectory']
-
-        print(f'Processing {trajectory_id}')
-
-        file_path = self.create_file_path(trajectory_id, subset)
 
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
         record = calculate_metrics(gt_trajectory,
@@ -57,10 +55,12 @@ class BaseSlamRunner(BaseTrainer):
         trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}'
                                                for key, value in record.items()])
         title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
+
+        visualize_path = os.path.join(trajectory_dir, trajectory_id.replace('/', '_'))
         visualize_trajectory_with_gt(gt_trajectory,
                                      predicted_trajectory,
                                      title=title,
-                                     file_path=file_path)
+                                     file_path=visualize_path)
 
         mlflow.log_artifacts(self.run_dir, subset) if mlflow.active_run() else None
 
@@ -70,6 +70,7 @@ class BaseSlamRunner(BaseTrainer):
 
         records = list()
         for generator in generators:
+            print(f'Predicting {generator.trajectory_id}')
             prediction = slam.predict_generator(generator)
             record = self.evaluate_trajectory(prediction, df, subset)
             records.append(record)
