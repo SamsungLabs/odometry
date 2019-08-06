@@ -5,7 +5,7 @@ import pandas as pd
 
 from tensorflow.python.client import device_lib
 
-from slam.models.model_factory import PretrainedModelFactory
+from slam.models import PretrainedModelFactory
 
 from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
 from submodules.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
