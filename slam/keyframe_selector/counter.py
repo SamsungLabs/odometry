@@ -6,4 +6,4 @@ class CounterKeyFrameSelector(BaseKeyfameSelector):
         self.period = period
 
     def is_key_frame(self, keyframe, frame, index):
-        return not bool(index % self.period)
+        return index % self.period == 0
