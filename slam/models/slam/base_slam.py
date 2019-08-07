@@ -125,7 +125,7 @@ class BaseSlam:
 
             self.predict(image)
 
-        frame_history = self.append_frame_path(self. frame_history, generator.df)
+        frame_history = self.append_frame_path(self.frame_history, generator.df)
 
         return {'id': generator.trajectory_id,
                 'trajectory': self.aggregator.get_trajectory(),
