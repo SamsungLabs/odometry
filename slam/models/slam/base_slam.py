@@ -111,8 +111,8 @@ class BaseSlam:
         self.keyframe_selector = self.get_keyframe_selector()
 
     def append_frame_path(self, matches, df):
-        df_path = pd.DataFrame({'from_path': [df.rgb_path[i] for i in matches.from_index],
-                                'to_path': [df.rgb_path[i] for i in matches.to_index]})
+        df_path = pd.DataFrame({'from_path': [df.path_to_rgb[i] for i in matches.from_index],
+                                'to_path': [df.path_to_rgb[i] for i in matches.to_index]})
         return pd.concat([matches, df_path], axis=1)
 
     def predict_generator(self, generator):
