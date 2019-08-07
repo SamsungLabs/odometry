@@ -33,7 +33,7 @@ class BaseSlamRunner(BaseTrainer):
 
     def create_trajectory_dir(self, trajectory_id, subset):
         trajectory_name = trajectory_id.replace('/', '_')
-        dir_path = os.path.join(self.run_dir, subset, f'{trajectory_name}.html')
+        dir_path = os.path.join(self.run_dir, subset, trajectory_name)
         os.makedirs(dir_path, exist_ok=True)
         return dir_path
 
