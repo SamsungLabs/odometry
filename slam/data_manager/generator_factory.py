@@ -104,7 +104,7 @@ class GeneratorFactory:
                     dataset_config = json.load(f)
                     mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
                     mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
-                    mlflow.log_param('stride', dataset_config['stride'])
+                    mlflow.log_param('stride', dataset_config.get('stride', None))
             except FileNotFoundError:
                 warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun '
                               f'prepare_dataset.py for this dataset. Path {dataset_config_path}', UserWarning)
