@@ -238,6 +238,7 @@ if __name__ == '__main__':
                               debug=args.debug,
                               shared=args.shared,
                               gmem=args.gmem,
+                              round_robin=args.round_robin,
                               cache=args.cache)
 
     leaderboard.submit()
