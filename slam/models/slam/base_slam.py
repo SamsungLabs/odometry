@@ -121,8 +121,7 @@ class BaseSlam:
             self.predict(image)
 
         return {'id': generator.trajectory_id,
-                'trajectory': self.aggregator.get_trajectory(),
-                'keyframe_history': self.keyframe_history,
+                'trajectory': self.aggregator.get_trajectory()
                 'frame_history': self.frame_history}
 
     def predict(self, frame):
