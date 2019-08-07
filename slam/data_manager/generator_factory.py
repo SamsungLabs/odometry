@@ -64,12 +64,13 @@ class GeneratorFactory:
             val_ratio = 1. / number_of_folds
 
         if val_ratio:
-            val_size = int(np.ceil(val_ratio * len(self.df_train))) # upper-round to cover all dataset with k folds
+            size = len(self.df_train)
+            val_size = int(np.ceil(val_ratio * size)) # upper-round to cover all dataset with k folds
             start = val_size * fold_index
             end = val_size * (fold_index + 1)
-            mask = np.zeros(len(self.df_train))
+            mask = np.zeros(size)
             mask[start:end] = 1
-            print(f'fold #{fold_index}: validate on samples {start} -- {end} (out of {len(self.df_train)})')
+            print(f'fold #{fold_index}: validate on samples {start} -- {end} (out of {size})')
             self.df_train = self.df_train.iloc[~mask]
             self.df_val = self.df_val.iloc[mask]
 
