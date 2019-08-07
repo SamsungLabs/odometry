@@ -43,7 +43,7 @@ class BaseSlamRunner(BaseTrainer):
 
         trajectory_dir = self.create_trajectory_dir(trajectory_id, subset)
 
-        prediction['frame_history'].to_csv(os.path.join(trajectory_dir, 'frame_history.csv'))
+        prediction['frame_history'].to_csv(os.path.join(trajectory_dir, 'frame_history.csv'), index=False)
         predicted_trajectory = prediction['trajectory']
 
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
