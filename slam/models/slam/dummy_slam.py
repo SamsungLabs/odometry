@@ -1,5 +1,6 @@
 from slam.models.slam.base_slam import BaseSlam
 from slam.models.relocalization import BoVW
+from slam.keyframe_selector import CounterKeyFrameSelector
 from slam.aggregate import AggregateTrajectory
 from slam.utils import mlflow_logging
 
@@ -17,3 +18,6 @@ class DummySlam(BaseSlam):
 
     def get_aggregator(self):
         return AggregateTrajectory()
+
+    def get_keyframe_selector(self):
+        return CounterKeyFrameSelector()
