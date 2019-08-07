@@ -27,6 +27,7 @@ class Leaderboard:
                  debug=False,
                  shared=False,
                  gmem=None,
+                 round_robin=0,
                  cache=False):
 
         if not os.path.exists(trainer_path):
@@ -54,6 +55,7 @@ class Leaderboard:
         self.machines = machines.split(' ')
         self.shared = shared
         self.gmem = gmem
+        self.round_robin = min(len(self.machines), round_robin or len(self.machines))
         self.cache = cache
 
     def submit(self):
@@ -96,7 +98,8 @@ class Leaderboard:
 
         run_name = self.run_name + f'_b_{bundle_id}'
 
-        machines = np.random.choice(self.machines, min(len(self.machines), 4), replace=False)
+        machines = np.random.choice(self.machines, self.round_robin, replace=False)
+
         seed = np.random.randint(1000000)
         cmd = self.get_lsf_command(dataset_type, run_name, ' '.join(machines), seed)
         self.log(f'Running command: {cmd}')
@@ -220,7 +223,8 @@ if __name__ == '__main__':
                                 'airugpua07 airugpua08 airugpua09 airugpua10 airugpub01 airugpub02')
     parser.add_argument('--shared', action='store_true')
     parser.add_argument('--gmem', type=str, help='Video memory reserved for training', default=None)
-    parser.add_argument('--cache', action='store_true')
+    parser.add_argument('--round_robin', type=int, help='Number of machines available for submitting each job to avoid sending all jobs to a single machine (0 for selecting all machines)', default=0)
+    parser.add_argument('--cache', action='store_true', help='Cache images')
 
     args = parser.parse_args()
 
