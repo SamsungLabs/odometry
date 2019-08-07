@@ -129,7 +129,6 @@ class BaseSlam:
 
         return {'id': generator.trajectory_id,
                 'trajectory': self.aggregator.get_trajectory(),
-                'keyframe_history': self.keyframe_history,
                 'frame_history': frame_history}
 
     def predict(self, frame):
