@@ -21,7 +21,7 @@ class DummySlamRunner(BaseSlamRunner):
 
     @staticmethod
     def get_parser():
-        parser = super().get_parser()
+        parser = BaseSlamRunner.get_parser()
         parser.add_argument('--kfs_period', type=int, default=10, help='Period of keyframe selection')
         return parser
 
