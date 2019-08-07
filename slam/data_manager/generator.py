@@ -98,7 +98,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.filter_invalid = filter_invalid
 
-        self.return_confidence = return_confidences
+        self.return_confidence = return_confidence
 
         self.trajectory_id = trajectory_id
 
