@@ -111,8 +111,8 @@ class BaseSlam:
         self.keyframe_selector = self.get_keyframe_selector()
 
     def append_frame_path(self, matches, df):
-        df_path = pd.DataFrame({'from_path': [df.path_to_rgb[i] for i in matches.from_index],
-                                'to_path': [df.path_to_rgb[i] for i in matches.to_index]})
+        df_path = pd.DataFrame({'to_path': [df.path_to_rgb[i] for i in matches.from_index],
+                                'from_path': [df.path_to_rgb[i] for i in matches.to_index]})
         return pd.concat([matches, df_path], axis=1)
 
     def predict_generator(self, generator):
@@ -142,7 +142,7 @@ class BaseSlam:
         new_key_frame = self.keyframe_selector.is_key_frame(self.last_keyframe, frame, self.frame_index)
 
         if new_key_frame:
-            matches = matches.append(self.reloc_model.predict(frame, self.frame_index))
+            matches = matches.append(self.reloc_model.predict(frame, self.frame_index), ignore_index=True)
             self.last_keyframe = frame
 
         batch = self.batchify(matches, frame)
@@ -153,7 +153,7 @@ class BaseSlam:
 
         matches = self.append_predict(matches, predicts)
 
-        self.frame_history = self.frame_history.append(matches)
+        self.frame_history = self.frame_history.append(matches, ignore_index=True)
 
         self.last_frame = frame
 
