@@ -31,9 +31,6 @@ class GeneratorFactory:
                  val_ratio=0.0,
                  number_of_folds=None,
                  fold_index=0,
-                 train_sampling_step=1,
-                 val_sampling_step=1,
-                 test_sampling_step=1,
                  batch_size=128,
                  cached_images=None,
                  *args, **kwargs):
@@ -67,19 +64,14 @@ class GeneratorFactory:
             val_ratio = 1. / number_of_folds
 
         if val_ratio:
-            val_samples = int(np.ceil(val_ratio * len(self.df_val)))  # upper-round to cover all dataset with k folds
-            start = val_samples * fold_index
-            end = start + val_samples
-            print(f'fold #{fold_index}: validate on samples {start} -- {end} (out of {len(self.df_val)})')
-            self.df_train = pd.concat([self.df_train[:start], self.df_train[end:]])
-            self.df_val = self.df_val[start:end]
-
-        self.df_train = self.df_train.iloc[::train_sampling_step] if self.df_train is not None else None
-        self.df_val = self.df_val.iloc[::val_sampling_step] if self.df_val is not None else None
-        self.df_test = self.df_test.iloc[::test_sampling_step] if self.df_test is not None else None
-
-        assert val_sampling_step == test_sampling_step
-        self.sampling_step = val_sampling_step
+            val_size = int(np.ceil(val_ratio * len(self.df_train))) # upper-round to cover all dataset with k folds
+            start = val_size * fold_index
+            end = val_size * (fold_index + 1)
+            mask = np.zeros(len(self.df_train))
+            mask[start:end] = 1
+            print(f'fold #{fold_index}: validate on samples {start} -- {end} (out of {len(self.df_train)})')
+            self.df_train = self.df_train.iloc[~mask]
+            self.df_val = self.df_val.iloc[mask]
 
         self.train_generator_args = train_generator_args or {}
         self.val_generator_args = val_generator_args or {}
