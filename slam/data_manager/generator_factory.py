@@ -79,7 +79,7 @@ class GeneratorFactory:
         self.df_test = self.df_test.iloc[::test_sampling_step] if self.df_test is not None else None
 
         assert val_sampling_step == test_sampling_step
-        self.df_train_trajectory = self.df_train.copy().iloc[::val_sampling_step]
+        self.sampling_step = val_sampling_step
 
         self.train_generator_args = train_generator_args or {}
         self.val_generator_args = val_generator_args or {}
@@ -92,8 +92,10 @@ class GeneratorFactory:
         if type(self.cached_images) == str:
             self.load_cache(self.cached_images)
 
-        self.input_shapes = self.get_train_generator().input_shapes \
-            if self.train_trajectories else self.get_val_generator().input_shapes
+    @property
+    def input_shapes(self):
+        return (self.get_train_generator().input_shapes if self.train_trajectories
+                else self.get_val_generator().input_shapes)
 
     def _log_dataset_params(self):
         if mlflow.active_run():
