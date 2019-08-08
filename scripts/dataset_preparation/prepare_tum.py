@@ -25,5 +25,4 @@ if __name__ == '__main__':
                     target_size=(120, 160),
                     optical_flow_checkpoint=args.of_checkpoint,
                     stride=args.stride,
-                    depth_checkpoint=args.depth_checkpoint if args.depth else None,
-                    swap_angles=True)
+                    depth_checkpoint=args.depth_checkpoint if args.depth else None)
