@@ -110,11 +110,6 @@ class BaseSlam:
 
         self.keyframe_selector = self.get_keyframe_selector()
 
-    def append_frame_path(self, matches, df):
-        df_path = pd.DataFrame({'to_path': df.path_to_rgb.values[matches.to_index.values].reset_index(drop=True),
-                                'from_path': df.path_to_rgb.values[matches.from_index.values].reset_index(drop=True)})
-        return pd.concat([matches, df_path], axis=1)
-
     def predict_generator(self, generator):
 
         self.init(generator[0][0][0][0])
@@ -125,7 +120,9 @@ class BaseSlam:
 
             self.predict(image)
 
-        frame_history = self.append_frame_path(self.frame_history, generator.df)
+        paths = generator.df.path_to_rgb.values
+        self.frame_history['to_path'] = paths[self.frame_history.to_index.values]
+        self.frame_history['from_path'] = paths[self.frame_history.from_index.values]
 
         return {'id': generator.trajectory_id,
                 'trajectory': self.aggregator.get_trajectory(),
