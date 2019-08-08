@@ -10,8 +10,7 @@ from keras.layers import (Layer,
                           ReLU,
                           PReLU,
                           LeakyReLU,
-                          Multiply,
-                          Concatenate,
+                          multiply,
                           concatenate)
 from keras.regularizers import l2
 
@@ -56,7 +55,7 @@ def gated_conv2d(inputs, filters, kernel_size, activation='linear', name=None, b
 
     f = conv2d(inputs, filters, kernel_size, activation=activation, name=f_name, batchnorm=batchnorm, **kwargs)
     g = conv2d(inputs, filters, kernel_size, activation='sigmoid', name=g_name, batchnorm=batchnorm, **kwargs)
-    return Multiply()([f, g])
+    return multiply([f, g])
 
 
 def gated_conv2d_transpose(inputs, filters, kernel_size, activation='linear', name=None, batchnorm=False, **kwargs):
@@ -67,7 +66,7 @@ def gated_conv2d_transpose(inputs, filters, kernel_size, activation='linear', na
 
     f = conv2d_transpose(inputs, filters, kernel_size, activation=activation, name=f_name, batchnorm=batchnorm, **kwargs)
     g = conv2d_transpose(inputs, filters, kernel_size, activation='sigmoid', name=g_name, batchnorm=batchnorm, **kwargs)
-    return Multiply()([f, g])
+    return multiply([f, g])
 
 
 def construct_fc(inputs,
@@ -118,7 +117,7 @@ def construct_outputs(fc_rotation,
                                    kernel_initializer='glorot_normal',
                                    trainable=False,
                                    name=f'{output_name}_confidence')(x)
-                output = Concatenate(name=f'{output_name}_with_confidence')([output, confidence])
+                output = concatenate([output, confidence], name=f'{output_name}_with_confidence')
 
             outputs.append(output)
 
@@ -171,10 +170,7 @@ def grid_sample(x, shifted_grid):
     return q_ij
 
 
-class DepthFlowLayer(Layer):
-
-    def __init__(self, **kwargs):
-        super(DepthFlowLayer, self).__init__(**kwargs)
+class DepthFlow(Layer):
 
     def build(self, input_shape):
         height, width = input_shape[1], input_shape[2]
@@ -184,7 +180,7 @@ class DepthFlowLayer(Layer):
         self.batch_grid_x = tf.expand_dims(grid_x, axis=0)
         self.batch_grid_y = tf.expand_dims(grid_y, axis=0)
 
-        super(DepthFlowLayer, self).build(input_shape)
+        super().build(input_shape)
 
     def call(self, x):
         flow_x, flow_y = x[..., 0], x[..., 1]
@@ -203,7 +199,11 @@ class DepthFlowLayer(Layer):
         return (input_shape[0], input_shape[1], input_shape[2], 1)
 
 
-class AddGridLayer(Layer):
+def depth_flow(inputs, *args, **kwargs):
+    return DepthFlow(*args, **kwargs)(inputs)
+
+
+class AddGrid(Layer):
 
     def __init__(self, f_x=1, f_y=1, c_x=0.5, c_y=0.5, **kwargs):
 
@@ -220,7 +220,7 @@ class AddGridLayer(Layer):
         self.c_x = c_x
         self.c_y = c_y
 
-        super(AddGridLayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def build(self, input_shape):
         height = input_shape[1]
@@ -237,7 +237,7 @@ class AddGridLayer(Layer):
                                     tf.expand_dims(yy, 1)), axis=2)
         self.grid = tf.expand_dims(grid, axis=0)
 
-        super(AddGridLayer, self).build(input_shape)
+        super().build(input_shape)
 
     def call(self, x):
         '''
@@ -249,3 +249,7 @@ class AddGridLayer(Layer):
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1], input_shape[2], input_shape[3] + 2)
+
+
+def add_grid(inputs, f_x=1, f_y=1, c_x=0.5, c_y=0.5, **kwargs):
+    return AddGrid(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y, **kwargs)(inputs)

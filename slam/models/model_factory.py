@@ -61,8 +61,8 @@ class PretrainedModelFactory(BaseModelFactory):
                             'construct_fc': construct_fc,
                             'construct_double_fc': construct_double_fc,
                             'construct_outputs': construct_outputs,
-                            'DepthFlowLayer': DepthFlowLayer,
-                            'AddGridLayer': AddGridLayer,
+                            'DepthFlow': DepthFlow,
+                            'AddGrid': AddGrid,
                             })
         return self.model
 

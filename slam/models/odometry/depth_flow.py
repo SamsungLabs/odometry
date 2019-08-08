@@ -28,7 +28,7 @@ def construct_encoder(inputs,
         flow = concat(inputs[:2])
 
         if add_grid:
-            flow = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(flow)
+            flow = AddGrid(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(flow)
 
         for i in range(1, 5):
             flow = conv2d(flow,
@@ -41,12 +41,12 @@ def construct_encoder(inputs,
     # depth convolutional branch
     if use_depth:
         if use_association_layer: # pass flow_z as input
-            depth = DepthFlowLayer()(concat(inputs))
+            depth = DepthFlow()(concat(inputs))
         else:
             depth = concat(inputs[2:])
 
         if add_grid:
-            depth = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(depth)
+            depth = AddGrid(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(depth)
 
         for i in range(1, 5):
             depth = conv2d(depth,
