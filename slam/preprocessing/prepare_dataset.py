@@ -18,13 +18,8 @@ def initialize_estimators(target_size,
 
     single_frame_estimators = list()
 
-    if swap_angles:
-        euler_cols = ['euler_y', 'euler_x', 'euler_z']
-    else:
-        euler_cols = ['euler_x', 'euler_y', 'euler_z']
-
     quaternion2euler_estimator = estimators.Quaternion2EulerEstimator(input_col=['q_w', 'q_x', 'q_y', 'q_z'],
-                                                                      output_col=euler_cols)
+                                                                      output_col=['euler_x', 'euler_y', 'euler_z'])
     single_frame_estimators.append(quaternion2euler_estimator)
 
     if depth_checkpoint:
@@ -38,7 +33,10 @@ def initialize_estimators(target_size,
 
     cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
     input_col = cols + [col + '_next' for col in cols]
-    output_col = cols
+    if swap_angles:
+        output_col = ['euler_y', 'euler_x', 'euler_z', 't_x', 't_y', 't_z']
+    else:
+        output_col = cols
     global2relative_estimator = estimators.Global2RelativeEstimator(input_col=input_col,
                                                                     output_col=output_col)
 
