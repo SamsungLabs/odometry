@@ -1,10 +1,18 @@
 import tensorflow as tf
 
 from keras import backend as K
-from keras.layers.advanced_activations import LeakyReLU, PReLU
-from keras.layers.convolutional import Conv2D, Conv2DTranspose
-from keras.layers import BatchNormalization, Layer, Dense, Activation, Multiply, Concatenate
-from keras.layers.merge import concatenate
+from keras.layers import (Layer,
+                          Conv2D,
+                          Conv2DTranspose,
+                          Dense,
+                          BatchNormalization,
+                          Activation,
+                          ReLU,
+                          PReLU,
+                          LeakyReLU,
+                          Multiply,
+                          Concatenate,
+                          concatenate)
 from keras.regularizers import l2
 
 
