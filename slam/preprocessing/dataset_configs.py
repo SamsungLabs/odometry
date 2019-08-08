@@ -147,7 +147,6 @@ def get_kitti_4_6_mixed_config(dataset_root):
               'rpe_indices': 'kitti',
              }
     config['strides'] = [Path(t).parents[0].as_posix() for t in config['train_trajectories']]
-    print(config)
     return config
 
 
