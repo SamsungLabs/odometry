@@ -120,8 +120,12 @@ class BaseSlam:
 
             self.predict(image)
 
+        paths = generator.df.path_to_rgb.values
+        self.frame_history['to_path'] = paths[self.frame_history.to_index.values]
+        self.frame_history['from_path'] = paths[self.frame_history.from_index.values]
+
         return {'id': generator.trajectory_id,
-                'trajectory': self.aggregator.get_trajectory()
+                'trajectory': self.aggregator.get_trajectory(),
                 'frame_history': self.frame_history}
 
     def predict(self, frame):
@@ -134,7 +138,7 @@ class BaseSlam:
         new_key_frame = self.keyframe_selector.is_key_frame(self.last_keyframe, frame, self.frame_index)
 
         if new_key_frame:
-            matches = matches.append(self.reloc_model.predict(frame, self.frame_index))
+            matches = matches.append(self.reloc_model.predict(frame, self.frame_index), ignore_index=True)
             self.last_keyframe = frame
 
         batch = self.batchify(matches, frame)
@@ -145,7 +149,7 @@ class BaseSlam:
 
         matches = self.append_predict(matches, predicts)
 
-        self.frame_history = self.frame_history.append(matches)
+        self.frame_history = self.frame_history.append(matches, ignore_index=True)
 
         self.last_frame = frame
 
