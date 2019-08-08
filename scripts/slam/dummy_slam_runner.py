@@ -7,9 +7,9 @@ from slam.models import DummySlam
 
 class DummySlamRunner(BaseSlamRunner):
 
-    def __init__(self, knn=20, kfs_period=10, *args, **kwargs):
+    def __init__(self, knn=20, keyframe_period=10, *args, **kwargs):
         super().__init__(knn=knn, *args, **kwargs)
-        self.kfs_period = kfs_period
+        self.keyframe_period = keyframe_period
 
     def get_slam(self):
         return DummySlam(reloc_weights_path=self.reloc_weights,
@@ -17,12 +17,12 @@ class DummySlamRunner(BaseSlamRunner):
                          odometry_model_path=self.odometry_model,
                          knn=self.knn,
                          input_shapes=self.config['target_size'],
-                         kfs_period=self.kfs_period)
+                         keyframe_period=self.keyframe_period)
 
     @staticmethod
     def get_parser():
         parser = BaseSlamRunner.get_parser()
-        parser.add_argument('--kfs_period', type=int, default=10, help='Period of keyframe selection')
+        parser.add_argument('--keyframe_period', type=int, default=10, help='Period of keyframe selection')
         return parser
 
 
