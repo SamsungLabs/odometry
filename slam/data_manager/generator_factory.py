@@ -31,9 +31,13 @@ class GeneratorFactory:
                  val_ratio=0.0,
                  number_of_folds=None,
                  fold_index=0,
+<<<<<<< HEAD
                  train_strides=1,
                  val_strides=1,
                  test_strides=1,
+=======
+                 stride=1,
+>>>>>>> Added column containing strides to dataframes
                  batch_size=128,
                  cached_images=None,
                  *args, **kwargs):
