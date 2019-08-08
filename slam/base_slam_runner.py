@@ -101,5 +101,6 @@ class BaseSlamRunner(BaseTrainer):
         parser.add_argument('--reloc_weights', type=str)
         parser.add_argument('--optflow_weights', type=str)
         parser.add_argument('--odometry_model', type=str)
+        parser.add_argument('--knn', type=int, default=20, help='Number of nearest neighbors')
 
         return parser

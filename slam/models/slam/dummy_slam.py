@@ -8,8 +8,9 @@ from slam.utils import mlflow_logging
 class DummySlam(BaseSlam):
 
     @mlflow_logging(prefix='slam.', name='Dummy')
-    def __init__(self, *args, **kwargs):
+    def __init__(self, keyframe_period, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.keyframe_period = keyframe_period
 
     def get_relocalization_model(self):
         reloc_model = BoVW(knn=self.knn)
@@ -20,4 +21,4 @@ class DummySlam(BaseSlam):
         return AggregateTrajectory()
 
     def get_keyframe_selector(self):
-        return CounterKeyFrameSelector()
+        return CounterKeyFrameSelector(self.keyframe_period)
