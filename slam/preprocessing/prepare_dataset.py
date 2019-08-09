@@ -66,8 +66,6 @@ def set_logger(output_dir):
 
 def get_default_dataset_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_root', type=str, required=True)
-    parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--of_checkpoint', type=str,
                         default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/pwcnet.ckpt-84000'))
     parser.add_argument('--depth', action='store_true')

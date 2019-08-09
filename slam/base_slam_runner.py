@@ -31,13 +31,6 @@ class BaseSlamRunner(BaseTrainer):
         self.preprocess_mode = 'rgb'
         self.batch_size = 1
 
-    def create_path(self, trajectory_id, subdir='', name=''):
-        trajectory_name = trajectory_id.replace('/', '_')
-        dir_path = os.path.join(self.run_dir, subdir)
-        file_path = os.path.join(self.run_dir, name or trajectory_name)
-        os.makedirs(dir_path, exist_ok=True)
-        return file_path
-
     def create_visualization_path(self, trajectory_id, subset):
         trajectory_name = trajectory_id.replace('/', '_')
         file_path = os.path.join(self.run_dir, 'visuals', subset, trajectory_name)
