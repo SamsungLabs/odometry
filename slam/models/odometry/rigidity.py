@@ -1,5 +1,4 @@
-from keras.layers.convolutional import Conv2D
-from keras.layers import GlobalAveragePooling2D, Lambda
+from keras.layers import Lambda, Conv2D, GlobalAveragePooling2D
 
 from slam.models.layers import concat, conv2d, AddGridLayer
 from slam.utils import mlflow_logging
