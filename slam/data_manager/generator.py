@@ -6,11 +6,10 @@ import PIL
 import keras_preprocessing.image as keras_image
 from keras_preprocessing.image import ImageDataGenerator
 
-from .generator_utils import (get_channels_count,
-                              fill_flow,
-                              fill_depth,
-                              load_pil_image,
-                              resize_image)
+from slam.utils import (get_channels_count,
+                        get_fill_fn,
+                        load_image_arr,
+                        resize_image_arr)
 
 
 class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_image.Iterator):
@@ -31,7 +30,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  subset=None,
                  interpolation='nearest',
                  dtype='float32',
-                 flow_fill_method='random',
+                 fill_flow_method='random',
+                 fill_depth_method='random',
                  depth_multiplicator=1.0,
                  cached_images=None,
                  filter_invalid=True,
@@ -84,8 +84,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.image_shapes = {col: self.target_size + (get_channels_count(self.preprocess_mode[col]),) \
                              for col in self.image_cols}
 
-        self._fill_flow = fill_flow(method=flow_fill_method)
-        self._fill_depth = fill_depth(method='random')
+        self.fill_flow_fn = get_fill_fn(fill_flow_method, nan_value=np.nan, mean=0, std=1)
+        self.fill_depth_fn = get_fill_fn(fill_depth_method, nan_value=0)
         self.depth_multiplicator = depth_multiplicator
 
         self.set_cache(cached_images)
@@ -150,7 +150,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             elif load_mode == 'rgb':
                 pil_mode = 'RGB'
 
-            image_arr = load_pil_image(fpath, mode=pil_mode)
+            image_arr = load_image_arr(fpath, mode=pil_mode)
 
         if len(image_arr.shape) == 2:
             image_arr = np.expand_dims(image_arr, -1)
@@ -164,10 +164,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         if load_mode == 'motion_maps_xy':
             image_arr = image_arr[[0,1,4,5],:,:].transpose(1, 2, 0)
 
-        image_arr = resize_image(image_arr,
-                                 self.target_size,
-                                 data_format=self.data_format,
-                                 mode=self.interpolation)
+        image_arr = resize_image_arr(image_arr,
+                                     self.target_size,
+                                     data_format=self.data_format,
+                                     mode=self.interpolation)
         return image_arr
 
     def _preprocess_image(self, image_arr, load_mode, preprocess_mode):
@@ -189,7 +189,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                     image_arr = np.ones_like(image_arr) * (1. / max_depth)
 
             elif (image_arr == 0).any():
-                image_arr = self._fill_depth(image_arr)
+                image_arr = self.fill_depth_fn(image_arr)
 
         if load_mode == preprocess_mode:
             return image_arr
@@ -197,8 +197,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         if load_mode == 'flow_xy' and preprocess_mode == 'flow_xy_nan':
             isnan = (np.isnan(image_arr[:, :, 0]) | np.isnan(image_arr[:, :, 1])).astype(self.dtype)
             if isnan.any():
-                image_arr[:, :, 0] = self._fill_flow(image_arr[:, :, 0])
-                image_arr[:, :, 1] = self._fill_flow(image_arr[:, :, 1])
+                image_arr[:, :, 0] = self.fill_flow_fn(image_arr[:, :, 0])
+                image_arr[:, :, 1] = self.fill_flow_fn(image_arr[:, :, 1])
 
             image_arr = np.concatenate([image_arr, np.expand_dims(isnan, -1)], axis=-1)
 
