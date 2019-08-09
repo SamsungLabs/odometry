@@ -14,7 +14,7 @@ from slam.utils import mlflow_logging
 
 class GeneratorFactory:
 
-    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.', stride=1)
+    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.')
     def __init__(self,
                  dataset_root,
                  csv_name='df.csv',
@@ -31,7 +31,9 @@ class GeneratorFactory:
                  val_ratio=0.0,
                  number_of_folds=None,
                  fold_index=0,
-                 stride=1,
+                 train_strides=1,
+                 val_strides=1,
+                 test_strides=1,
                  batch_size=128,
                  cached_images=None,
                  *args, **kwargs):
@@ -57,11 +59,9 @@ class GeneratorFactory:
         self.val_trajectories = val_trajectories
         self.test_trajectories = test_trajectories
 
-        self.stride = stride
-
-        self.df_train = self._get_multi_df_dataset(self.train_trajectories, 'train', stride=self.stride)
-        self.df_val = self._get_multi_df_dataset(self.val_trajectories, 'val')
-        self.df_test = self._get_multi_df_dataset(self.test_trajectories, 'test')
+        self.df_train = self._get_multi_df_dataset(self.train_trajectories, 'train', strides=train_strides)
+        self.df_val = self._get_multi_df_dataset(self.val_trajectories, 'val', strides=val_strides)
+        self.df_test = self._get_multi_df_dataset(self.test_trajectories, 'test', strides=test_strides)
 
         if number_of_folds is not None:
             val_ratio = 1. / number_of_folds
@@ -104,7 +104,6 @@ class GeneratorFactory:
                     dataset_config = json.load(f)
                     mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
                     mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
-                    mlflow.log_param('stride', dataset_config.get('stride', None))
             except FileNotFoundError:
                 warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun '
                               f'prepare_dataset.py for this dataset. Path {dataset_config_path}', UserWarning)

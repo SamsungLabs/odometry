@@ -124,7 +124,9 @@ class BaseTrainer:
                                 preprocess_mode=self.preprocess_mode,
                                 depth_multiplicator=self.config['depth_multiplicator'],
                                 cached_images={} if self.cache else None,
-                                stride=self.config.get('stride', 1))
+                                train_strides=self.config['train_strides'],
+                                val_strides=self.config['val_strides'],
+                                test_strides=self.config['test_strides'])
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,

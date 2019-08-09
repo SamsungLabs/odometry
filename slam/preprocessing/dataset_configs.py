@@ -56,7 +56,9 @@ def get_zju_config(dataset_root):
               'target_size': (120, 160),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
               }
     return config
 
@@ -77,7 +79,9 @@ def get_euroc_config(dataset_root):
               'target_size': (120, 160),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
               }
     return config
 
@@ -99,7 +103,9 @@ def get_kitti_8_3_config(dataset_root):
               'target_size': (96, 320),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
               }
     return config
 
@@ -120,7 +126,9 @@ def get_kitti_4_6_config(dataset_root):
               'target_size': (96, 320),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
              }
     return config
 
@@ -146,7 +154,11 @@ def get_kitti_4_6_mixed_config(dataset_root):
               'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti',
              }
-    config['strides'] = [Path(t).parents[0].as_posix() for t in config['train_trajectories']]
+
+    sub_dirs = ['train', 'val', 'test']
+    for d in sub_dirs:
+        config[f'{d}_strides'] = [Path(t).parents[0].as_posix() for t in config[f'{d}_trajectories']]
+
     return config
 
 
@@ -158,7 +170,9 @@ def get_discoman_v10_config(dataset_root):
               'target_size': (90, 160),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
              }
 
     sub_dirs = ['train', 'val', 'test']
@@ -179,7 +193,9 @@ def get_mini_discoman_v10_config(dataset_root):
               'target_size': (90, 160),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
              }
 
     sub_size = {'train': 33, 'val': 15, 'test': 8} # as in TUM
@@ -204,7 +220,9 @@ def get_discoman_v10_mixed_config(dataset_root):
               'target_size': (90, 160),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
-              'strides': list(),
+              'train_strides': list(),
+              'val_strides': list(),
+              'test_strides': list(),
              }
 
     sub_dirs = ['train', 'val', 'test']
@@ -220,8 +238,7 @@ def get_discoman_v10_mixed_config(dataset_root):
                 if is_int(trajectory.name):
                     trajectory_name = trajectory.relative_to(dataset_root).as_posix()
                     config[f'{d}_trajectories'].append(trajectory_name)
-                    if d == 'train':
-                        config['strides'].append(stride)
+                    config[f'{d}_strides'].append(stride)
     return config
 
 
@@ -233,12 +250,13 @@ def get_mini_discoman_v10_mixed_config(dataset_root):
               'target_size': (90, 160),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
-              'strides': list(),
+              'train_strides': list(),
+              'val_strides': list(),
+              'test_strides': list(),
              }
 
-    sub_dirs = ['train', 'val', 'test']
     sub_size = {'train': 33, 'val': 15, 'test': 8} # as in TUM
-
+    sub_dirs = ['train', 'val', 'test']
     for stride_dir in Path(dataset_root).iterdir():
         stride = int(stride_dir.name)
 
@@ -252,8 +270,7 @@ def get_mini_discoman_v10_mixed_config(dataset_root):
                 if is_int(trajectory.name):
                     trajectory_name = trajectory.relative_to(dataset_root).as_posix()
                     config[f'{d}_trajectories'].append(trajectory_name)
-                    if d == 'train':
-                        config['strides'].append(stride)
+                    config[f'{d}_strides'].append(stride)
     return config
 
 
@@ -265,7 +282,9 @@ def get_discoman_debug_config(dataset_root):
               'target_size': (90, 160),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
               }
     return config
 
@@ -278,7 +297,9 @@ def get_tum_debug_config(dataset_root):
               'target_size': (120, 160),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
               }
     return config
 
@@ -296,7 +317,9 @@ def get_tum_fr1_config(dataset_root):
               'target_size': (120, 160),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
               }
     return config
 
@@ -316,7 +339,9 @@ def get_tum_fr2_config(dataset_root):
               'target_size': (120, 160),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
               }
     return config
 
@@ -364,7 +389,9 @@ def get_tum_fr3_config(dataset_root):
               'target_size': (120, 160),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
-              'strides': 1,
+              'train_strides': 1,
+              'val_strides': 1,
+              'test_strides': 1,
               }
     return config
 
