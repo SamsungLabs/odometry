@@ -261,7 +261,7 @@ def get_mini_discoman_v10_mixed_config(dataset_root):
         stride = int(stride_dir.name)
 
         for d in sub_dirs:
-            if d != 'train' and stride != 1:
+            if d in ('val', 'test') and stride != 1:
                 continue
 
             for trajectory in stride_dir.joinpath(d).glob('*'):
