@@ -60,8 +60,8 @@ class BaseSlamRunner(BaseTrainer):
         predicted_trajectory = prediction['trajectory']
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
         record = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices=self.config['rpe_indices'])
-        record = normalize_metrics(record)
-        trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}' for key, value in record.items()])
+        normalized_record = normalize_metrics(record)
+        trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}' for key, value in normalized_record.items()])
         title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
         visualization_path = self.create_visualization_path(trajectory_id, subset)
         visualize_trajectory_with_gt(gt_trajectory,
