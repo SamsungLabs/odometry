@@ -214,7 +214,7 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
                         required=True)
     parser.add_argument('--bundle_size', '-b', type=int, help='Number runs in evaluate', required=True)
-    parser.add_argument('--core' , '-c', type=int, help='Number of cpu core', default=8)
+    parser.add_argument('--core', '-c', type=int, help='Number of cpu core', default=8)
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console')
     parser.add_argument('--debug', action='store_true')
