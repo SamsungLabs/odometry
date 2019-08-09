@@ -26,6 +26,8 @@ class Leaderboard:
                  verbose=False,
                  debug=False,
                  shared=False,
+                 gmem=None,
+                 round_robin=0,
                  cache=False):
 
         if not os.path.exists(trainer_path):
@@ -52,6 +54,8 @@ class Leaderboard:
         self.verbose = verbose
         self.machines = machines.split(' ')
         self.shared = shared
+        self.gmem = gmem
+        self.round_robin = min(len(self.machines), round_robin or len(self.machines))
         self.cache = cache
 
     def submit(self):
@@ -65,7 +69,7 @@ class Leaderboard:
 
         pool = Pool(len(self.leader_boards))
         for d_type in self.leader_boards:
-            print(f'{self.get_timestamp()} Submitting {d_type}')
+            self.log(f'Submitting {d_type}')
             pool.apply_async(self.submit_bundle, (d_type, ))
         pool.close()
         pool.join()
@@ -74,14 +78,14 @@ class Leaderboard:
 
         self.setup_logger(dataset_type)
 
-        self.log('Started submitting jobs', dataset_type)
+        self.log('Submitting jobs', dataset_type)
 
         started_jobs_id = set()
         for b in range(self.bundle_size):
             job_id = self.submit_job(dataset_type, b)
             started_jobs_id.add(job_id)
 
-        self.log(f'Started started_jobs_id {started_jobs_id}', dataset_type)
+        self.log(f'Started {started_jobs_id}', dataset_type)
         self.wait_jobs(dataset_type, started_jobs_id)
 
         self.log('Averaging metrics', dataset_type)
@@ -94,10 +98,11 @@ class Leaderboard:
 
         run_name = self.run_name + f'_b_{bundle_id}'
 
-        machines = np.random.choice(self.machines, min(len(self.machines), 4), replace=False)
+        machines = np.random.choice(self.machines, self.round_robin, replace=False)
+
         seed = np.random.randint(1000000)
         cmd = self.get_lsf_command(dataset_type, run_name, ' '.join(machines), seed)
-        self.log(f'Running command: {cmd}')
+        self.log(f'Executing command: {cmd}')
 
         p = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
         outs, errs = p.communicate(timeout=4)
@@ -130,7 +135,11 @@ class Leaderboard:
         else:
             raise RuntimeError('Unknown dataset_type')
 
-        mode = "shared:gmem=6G:gtile='!'" if self.shared else 'exclusive_process'
+        if self.shared:
+            mode = 'shared' + (f':gmem={self.gmem}' if self.gmem else '') + ":gtile='!'"
+        else:
+            mode = 'exclusive_process'
+
         command = ['bsub',
                    f'-n 1 -R "span[hosts=1] affinity[core({self.core}):distribute=pack]"',
                    f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
@@ -159,7 +168,7 @@ class Leaderboard:
             still_running_jobs = started_jobs_id.intersection(job_ids)
             sorted_jobs = list(still_running_jobs)
             sorted_jobs.sort()
-            self.log(f'Jobs {sorted_jobs} are still running', dataset_type)
+            self.log(f'Running {sorted_jobs}', dataset_type)
 
             if still_running_jobs:
                 time.sleep(10)
@@ -202,10 +211,10 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_type', '-t', type=str, required=True,
                         help='You can find availible exp names in slam.preprocessing.dataset_configs.py')
 
-    parser.add_argument('--run_name', '-n', type=str, help='Name of the run. Must be unique and specific',
-                        required=True)
-    parser.add_argument('--bundle_size', '-b', type=int, help='Number runs in evaluate', required=True)
-    parser.add_argument('--core' , '-c', type=int, help='Number of cpu core', default=8)
+    parser.add_argument('--run_name', '-n', type=str, required=True,
+                        help='Name of the run. Must be unique and specific')
+    parser.add_argument('--bundle_size', '-b', type=int, required=True, help='Number runs in evaluate')
+    parser.add_argument('--core' , '-c', type=int, default=8, help='Number of cpu core')
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console')
     parser.add_argument('--debug', action='store_true')
@@ -213,7 +222,12 @@ if __name__ == '__main__':
                         default='airugpua01 airugpua02 airugpua03 airugpua04 airugpua05 airugpua06 '
                                 'airugpua07 airugpua08 airugpua09 airugpua10 airugpub01 airugpub02')
     parser.add_argument('--shared', action='store_true')
-    parser.add_argument('--cache', action='store_true')
+    parser.add_argument('--gmem', type=str, default=None, help='Video memory reserved for training')
+    parser.add_argument('--round_robin', type=int, default=0,
+                        help='Number of machines available for submitting each job '
+                             'to avoid sending all jobs to a single machine '
+                             '(0 for selecting all machines)')
+    parser.add_argument('--cache', action='store_true', help='Cache images')
 
     args = parser.parse_args()
 
@@ -226,6 +240,8 @@ if __name__ == '__main__':
                               machines=args.machines,
                               debug=args.debug,
                               shared=args.shared,
+                              gmem=args.gmem,
+                              round_robin=args.round_robin,
                               cache=args.cache)
 
     leaderboard.submit()
