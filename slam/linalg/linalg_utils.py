@@ -69,23 +69,29 @@ def split_se3(se3):
 
 def euler_to_quaternion(euler_angles):
     yaw, pitch, roll = euler_angles[2], euler_angles[1], euler_angles[0]
-    q_x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-    q_y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-    q_z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-    q_w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    cr = np.cos(roll/2)
+    sr = np.sin(roll/2)
+    cp = np.cos(pitch/2)
+    sp = np.sin(pitch/2)
+    cy = np.cos(yaw/2)
+    sy = np.sin(yaw/2)
+    q_x = sr * cp * cy - cr * sp * sy
+    q_y = cr * sp * cy + sr * cp * sy
+    q_z = cr * cp * sy - sr * sp * cy
+    q_w = cr * cp * cy + sr * sp * sy
     return [q_w, q_x, q_y, q_z]
 
 
 def quaternion_to_euler(quaternion):
     q_w, q_x, q_y, q_z = (quaternion[0], quaternion[1], quaternion[2], quaternion[3])
-    t0 =  2.0 * (w * x + y * z)
-    t1 =  1.0 - 2.0 * (x * x + y * y)
+    t0 =  2.0 * (q_w * q_x + q_y * q_z)
+    t1 =  1.0 - 2.0 * (q_x * q_x + q_y * q_y)
     roll = math.atan2(t0, t1)
-    t2 =  2.0 * (w * y - z * x)
+    t2 =  2.0 * (q_w * q_y - q_z * q_x)
     t2 = np.clip(t2, -1, 1)
     pitch = math.asin(t2)
-    t3 =  2.0 * (w * z + x * y)
-    t4 =  1.0 - 2.0 * (y * y + z * z)
+    t3 =  2.0 * (q_w * q_z + q_x * q_y)
+    t4 =  1.0 - 2.0 * (q_y * q_y + q_z * q_z)
     yaw = math.atan2(t3, t4)
     return [roll, pitch, yaw]
 
