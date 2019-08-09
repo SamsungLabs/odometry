@@ -67,19 +67,15 @@ class GeneratorFactory:
             val_ratio = 1. / number_of_folds
 
         if val_ratio:
-            val_samples = int(np.ceil(val_ratio * len(self.df_val)))  # upper-round to cover all dataset with k folds
-            start = val_samples * fold_index
-            end = start + val_samples
-            print(f'fold #{fold_index}: validate on samples {start} -- {end} (out of {len(self.df_val)})')
-            self.df_train = pd.concat([self.df_train[:start], self.df_train[end:]])
-            self.df_val = self.df_val[start:end]
-
-        self.df_train = self.df_train.iloc[::train_sampling_step] if self.df_train is not None else None
-        self.df_val = self.df_val.iloc[::val_sampling_step] if self.df_val is not None else None
-        self.df_test = self.df_test.iloc[::test_sampling_step] if self.df_test is not None else None
-
-        assert val_sampling_step == test_sampling_step
-        self.df_train_trajectory = self.df_train.copy().iloc[::val_sampling_step]
+            size = len(self.df_train)
+            val_size = int(np.ceil(val_ratio * size)) # upper-round to cover all dataset with k folds
+            start = val_size * fold_index
+            end = val_size * (fold_index + 1)
+            mask = np.zeros(size)
+            mask[start:end] = 1
+            print(f'fold #{fold_index}: validate on samples {start} -- {end} (out of {size})')
+            self.df_train = self.df_train.iloc[~mask]
+            self.df_val = self.df_val.iloc[mask]
 
         self.train_generator_args = train_generator_args or {}
         self.val_generator_args = val_generator_args or {}
@@ -92,8 +88,10 @@ class GeneratorFactory:
         if type(self.cached_images) == str:
             self.load_cache(self.cached_images)
 
-        self.input_shapes = self.get_train_generator().input_shapes \
-            if self.train_trajectories else self.get_val_generator().input_shapes
+    @property
+    def input_shapes(self):
+        return (self.get_train_generator().input_shapes if self.train_trajectories
+                else self.get_val_generator().input_shapes)
 
     def _log_dataset_params(self):
         if mlflow.active_run():
