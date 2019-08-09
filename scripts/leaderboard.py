@@ -69,6 +69,7 @@ class Leaderboard:
 
         pool = Pool(len(self.leader_boards))
         for d_type in self.leader_boards:
+            self.log(f'Submitting {d_type}')
             pool.apply_async(self.submit_bundle, (d_type, ))
         pool.close()
         pool.join()
@@ -77,14 +78,14 @@ class Leaderboard:
 
         self.setup_logger(dataset_type)
 
-        self.log('Started submitting jobs', dataset_type)
+        self.log('Submitting jobs', dataset_type)
 
         started_jobs_id = set()
         for b in range(self.bundle_size):
             job_id = self.submit_job(dataset_type, b)
             started_jobs_id.add(job_id)
 
-        self.log(f'Started started_jobs_id {started_jobs_id}', dataset_type)
+        self.log(f'Started {started_jobs_id}', dataset_type)
         self.wait_jobs(dataset_type, started_jobs_id)
 
         self.log('Averaging metrics', dataset_type)
@@ -101,7 +102,7 @@ class Leaderboard:
 
         seed = np.random.randint(1000000)
         cmd = self.get_lsf_command(dataset_type, run_name, ' '.join(machines), seed)
-        self.log(f'Running command: {cmd}')
+        self.log(f'Executing command: {cmd}')
 
         p = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
         outs, errs = p.communicate(timeout=4)
@@ -167,7 +168,7 @@ class Leaderboard:
             still_running_jobs = started_jobs_id.intersection(job_ids)
             sorted_jobs = list(still_running_jobs)
             sorted_jobs.sort()
-            self.log(f'Jobs {sorted_jobs} are still running', dataset_type)
+            self.log(f'Running {sorted_jobs}', dataset_type)
 
             if still_running_jobs:
                 time.sleep(10)
