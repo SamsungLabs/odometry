@@ -102,39 +102,27 @@ def construct_double_fc(inputs,
     return fc2
 
 
-def construct_outputs(fc_rotation, fc_translation, regularization=0):
+def construct_outputs(fc_rotation,
+                      fc_translation,
+                      regularization=0,
+                      return_confidence=False):
     outputs = []
     for x, output_names in ((fc_rotation, ['euler_x', 'euler_y', 'euler_z']),
                             (fc_translation, ['t_x', 't_y', 't_z'])):
         for output_name in output_names:
             output = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(x)
+
+            if return_confidence:
+                confidence = Dense(1,
+                                   kernel_regularizer=l2(regularization),
+                                   kernel_initializer='glorot_normal',
+                                   trainable=False,
+                                   name=f'{output_name}_confidence')(x)
+                output = Concatenate(name=f'{output_name}_with_confidence')([output, confidence])
+
             outputs.append(output)
 
     return outputs
-
-
-def construct_outputs_with_confidences(outputs,
-                                       fc_rotation,
-                                       fc_translation,
-                                       regularization=0,
-                                       kernel_initializer='glorot_normal'):
-    confidences = []
-    names = []
-    for x, output_names in ((fc_rotation, ['euler_x', 'euler_y', 'euler_z']),
-                            (fc_translation, ['t_x', 't_y', 't_z'])):
-        for output_name in output_names:
-            confidence = Dense(1,
-                               activation='relu',
-                               kernel_regularizer=l2(regularization),
-                               kernel_initializer=kernel_initializer,
-                               trainable=False,
-                               name=f'{output_name}_confidence')(x)
-            confidences.append(confidence)
-            names.append(f'{output_name}_with_confidence')
-
-    outputs_with_confidences = [Concatenate(name=name)([output, confidence])
-                                for output, confidence, name in zip(outputs, confidences, names)]
-    return outputs_with_confidences
 
 
 def grid_sample(x, shifted_grid):
