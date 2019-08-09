@@ -69,7 +69,6 @@ class Leaderboard:
 
         pool = Pool(len(self.leader_boards))
         for d_type in self.leader_boards:
-            print(f'{self.get_timestamp()} Submitting {d_type}')
             pool.apply_async(self.submit_bundle, (d_type, ))
         pool.close()
         pool.join()
