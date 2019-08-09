@@ -37,8 +37,6 @@ class BaseSlam:
         self.aggregator = None
         self.keyframe_selector = None
 
-        self.frame_history = None
-
         self.last_frame = None
         self.last_keyframe = None
 
@@ -114,19 +112,23 @@ class BaseSlam:
 
         self.init(generator[0][0][0][0])
 
+        frame_history = pd.DataFrame()
+
         for frame_index in trange(1, len(generator)):
             x, y = generator[frame_index]
             image = x[0][0]
 
-            self.predict(image)
+            prediction = self.predict(image)
+
+            frame_history = frame_history.append(prediction, ignore_index=True)
 
         paths = generator.df.path_to_rgb.values
-        self.frame_history['to_path'] = paths[self.frame_history.to_index.values]
-        self.frame_history['from_path'] = paths[self.frame_history.from_index.values]
+        frame_history['to_path'] = paths[frame_history.to_index.values]
+        frame_history['from_path'] = paths[frame_history.from_index.values]
 
         return {'id': generator.trajectory_id,
                 'trajectory': self.aggregator.get_trajectory(),
-                'frame_history': self.frame_history}
+                'frame_history': frame_history}
 
     def predict(self, frame):
 
@@ -149,16 +151,15 @@ class BaseSlam:
 
         matches = self.append_predict(matches, predicts)
 
-        self.frame_history = self.frame_history.append(matches, ignore_index=True)
-
         self.last_frame = frame
 
         self.aggregator.append(matches)
 
         self.frame_index += 1
 
+        return matches
+
     def init(self, image):
-        self.frame_history = pd.DataFrame()
 
         self.reloc_model.clear()
         self.aggregator.clear()
