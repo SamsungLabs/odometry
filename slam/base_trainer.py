@@ -1,4 +1,5 @@
 import os
+import shutil
 import mlflow
 import datetime
 import argparse
@@ -96,6 +97,8 @@ class BaseTrainer:
             raise RuntimeError('run_name must be unique')
 
         self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
+        if os.path.exists(self.run_dir):
+            shutil.rmtree(self.run_dir)
         self.save_dir = self.run_dir
 
         mlflow.set_tracking_uri(self.tracking_uri)

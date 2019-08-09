@@ -1,14 +1,10 @@
 import os
-
+import psutil
 import numpy as np
 import pandas as pd
-
-
 import PIL
 import keras_preprocessing.image as keras_image
 from keras_preprocessing.image import ImageDataGenerator
-import psutil
-
 
 from .generator_utils import (get_channels_count,
                               fill_flow,
@@ -159,13 +155,13 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         if len(image_arr.shape) == 2:
             image_arr = np.expand_dims(image_arr, -1)
 
-        if load_mode == 'seven_flow':
+        if load_mode == 'motion_maps':
             image_arr = image_arr.transpose(1, 2, 0)
 
-        if load_mode == 'zt_yr_dof_flow':
+        if load_mode == 'motion_maps_z':
             image_arr = image_arr[[2,5],:,:].transpose(1, 2, 0)
 
-        if load_mode == 'xyt_xyr_dof_flow':
+        if load_mode == 'motion_maps_xy':
             image_arr = image_arr[[0,1,4,5],:,:].transpose(1, 2, 0)
 
         image_arr = resize_image(image_arr,
