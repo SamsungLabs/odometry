@@ -67,8 +67,8 @@ def split_se3(se3):
     return rotation_matrix, translation
 
 
-def euler_to_quaternion(euler_angles):
-    yaw, pitch, roll = euler_angles[2], euler_angles[1], euler_angles[0]
+def euler_to_quaternion(euler_angles_xyz):
+    yaw, pitch, roll = euler_angles_xyz[2], euler_angles_xyz[1], euler_angles_xyz[0]
     cr = np.cos(roll/2)
     sr = np.sin(roll/2)
     cp = np.cos(pitch/2)
@@ -79,11 +79,11 @@ def euler_to_quaternion(euler_angles):
     q_y = cr * sp * cy + sr * cp * sy
     q_z = cr * cp * sy - sr * sp * cy
     q_w = cr * cp * cy + sr * sp * sy
-    return [q_w, q_x, q_y, q_z]
+    return q_w, q_x, q_y, q_z
 
 
 def quaternion_to_euler(quaternion):
-    q_w, q_x, q_y, q_z = (quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+    q_w, q_x, q_y, q_z = quaternion
     t0 =  2.0 * (q_w * q_x + q_y * q_z)
     t1 =  1.0 - 2.0 * (q_x * q_x + q_y * q_y)
     roll = math.atan2(t0, t1)
@@ -93,12 +93,12 @@ def quaternion_to_euler(quaternion):
     t3 =  2.0 * (q_w * q_z + q_x * q_y)
     t4 =  1.0 - 2.0 * (q_y * q_y + q_z * q_z)
     yaw = math.atan2(t3, t4)
-    return [roll, pitch, yaw]
+    return roll, pitch, yaw
 
 
 def euler_to_quaternion_uncertainty(euler_angles_xyz, covariance_matrix_euler=np.eye(6,6)):
     
-    yaw, pitch, roll = euler_angles_xyz
+    yaw, pitch, roll = euler_angles_xyz[2], euler_angles_xyz[1], euler_angles_xyz[0]
     
     cr = np.cos(roll/2)
     sr = np.sin(roll/2)
@@ -115,14 +115,13 @@ def euler_to_quaternion_uncertainty(euler_angles_xyz, covariance_matrix_euler=np
     ssc = sr * sp * cy
     sss = sr * sp * sy
     
-    devers_q_on_eulers =[[ (scc-ccs)/2 ,  (scs-csc)/2 ,  (css-scc)/2],
-                         [-(csc+scs)/2 , -(ssc+ccs)/2 ,  (ccc+sss)/2],
-                         [ (scc-css)/2 ,  (ccc-sss)/2 ,  (ccs-ssc)/2],
-                         [ (ccc+sss)/2 , -(css+scc)/2 , -(csc+scs)/2]]
-    jacobian= np.vstack((
-                         np.hstack((np.eye(3,3)    , np.zeros((3,3)))),
-                         np.hstack((np.zeros((4,3)), devers_q_on_eulers))
-                       ))
+    derivatives = [[ (scc-ccs)/2 ,  (scs-csc)/2 ,  (css-scc)/2],
+                   [-(csc+scs)/2 , -(ssc+ccs)/2 ,  (ccc+sss)/2],
+                   [ (scc-css)/2 ,  (ccc-sss)/2 ,  (ccs-ssc)/2],
+                   [ (ccc+sss)/2 , -(css+scc)/2 , -(csc+scs)/2]]
+    
+    jacobian = np.eye(7,6)
+    jacobian[3:, 3:] = derivatives
     covariance_matrix_quaternion = jacobian @ covariance_matrix_euler @ jacobian.T
     
     return covariance_matrix_quaternion
