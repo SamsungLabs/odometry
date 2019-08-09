@@ -4,6 +4,7 @@ import tqdm
 import pandas as pd
 from pathlib import Path
 
+
 def force_make_dir(column_dst_dir):
     if os.path.exists(column_dst_dir):
         shutil.rmtree(column_dst_dir)
@@ -45,6 +46,14 @@ def create_pair_indices(single_frame_df, stride):
     return zip(first_part_indices, second_part_indices)
 
 
+def load_pair_indices(path):
+    df = pd.read_csv(path)
+    first_part_indices = df.from_index.values
+    second_part_indices = df.to_index.values
+    assert len(first_part_indices) == len(second_part_indices)
+    return zip(first_part_indices, second_part_indices)
+
+
 def transform_single_frame_df_to_paired(single_frame_df, pair_indices=None):
     first_part_indices, second_part_indices = zip(*pair_indices)
     first_part_df = single_frame_df.iloc[list(first_part_indices)].copy().reset_index(drop=True)
@@ -58,7 +67,8 @@ def prepare_trajectory(root,
                        single_frame_estimators=None, 
                        pair_frames_estimators=None,
                        stride=1,
-                       pair_indices=None):
+                       path_to_pair_indices=None):
+    assert stride >= 1
 
     if not isinstance(root, Path):
         root = Path(root)
@@ -74,9 +84,9 @@ def prepare_trajectory(root,
     for estimator in single_frame_estimators:
         single_frame_df = work_with_estimator(root.as_posix(), single_frame_df, estimator)
 
-    assert (stride is None) != (pair_indices is None)
-    if stride:
-        assert stride >= 1
+    if path_to_pair_indices:
+        pair_indices = load_pair_indices(path_to_pair_indices)
+    else:
         pair_indices = create_pair_indices(single_frame_df, stride)
 
     paired_frame_df = transform_single_frame_df_to_paired(single_frame_df, pair_indices)

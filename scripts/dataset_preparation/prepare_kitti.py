@@ -4,19 +4,13 @@ import os
 import __init_path__
 import env
 
-from slam.preprocessing import prepare_dataset
+from slam.preprocessing import prepare_dataset, get_default_dataset_parser
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = get_default_dataset_parser()
     parser.add_argument('--dataset_root', type=str,
                         default=os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012/dataset/sequences/'))
     parser.add_argument('--output_dir', type=str, required=True)
-    parser.add_argument('--of_checkpoint', type=str,
-                        default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/pwcnet.ckpt-84000'))
-    parser.add_argument('--depth', action='store_true')
-    parser.add_argument('--depth_checkpoint', type=str,
-                        default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/model-199160'))
-    parser.add_argument('--stride', type=int, default=1)
     args = parser.parse_args()
 
     prepare_dataset(dataset_type='KITTI',

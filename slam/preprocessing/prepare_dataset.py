@@ -1,10 +1,11 @@
 import os
 import json
-import shutil
 import logging
 import argparse
 from tqdm import tqdm
 from pathlib import Path
+
+import env
 
 from slam.utils.computation_utils import limit_resources
 from slam.preprocessing import parsers, estimators, prepare_trajectory
@@ -63,8 +64,25 @@ def set_logger(output_dir):
     logger.addHandler(fh)
 
 
+def get_default_dataset_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset_root', type=str, required=True)
+    parser.add_argument('--output_dir', type=str, required=True)
+    parser.add_argument('--of_checkpoint', type=str,
+                        default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/pwcnet.ckpt-84000'))
+    parser.add_argument('--depth', action='store_true')
+    parser.add_argument('--depth_checkpoint', type=str,
+                        default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/model-199160'))
+    parser.add_argument('--stride', type=int, default=1)
+    parser.add_argument('--indices_root', type=str, default=None,
+                        help='Path to directory with same structure as dataset. In trajectory subdirectories stored'
+                             'df.csv files with new pair indices.')
+
+    return parser
+
+
 def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optical_flow_checkpoint,
-                    depth_checkpoint=None, pwc_features=False, stride=1):
+                    depth_checkpoint=None, pwc_features=False, stride=1, indices_root=None):
 
     limit_resources()
 
@@ -100,13 +118,17 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
             trajectory_name = trajectory[len(dataset_root) + int(dataset_root[-1] != '/'):]
             output_dir = output_root.joinpath(trajectory_name)
 
-            logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}')
+            indices_path = os.path.join(indices_root, trajectory_name) if indices_root else None
+
+            logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}.'
+                        f'Indices path: {indices_path}')
 
             df = prepare_trajectory(output_dir,
                                     parser=trajectory_parser,
                                     single_frame_estimators=sf_estimators,
                                     pair_frames_estimators=pf_estimators,
-                                    stride=stride)
+                                    stride=stride,
+                                    path_to_pair_indices=indices_path)
             df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
 
             counter += 1
