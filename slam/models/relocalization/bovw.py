@@ -12,7 +12,12 @@ from slam.utils import mlflow_logging
 class BoVW:
 
     @mlflow_logging(ignore=('run_dir',), name='BoW', prefix='model.')
-    def __init__(self, clusters_num=64, knn=20, feature='SIFT', matcher='BruteForce', run_dir=None):
+    def __init__(self, clusters_num=64,
+                 knn=20,
+                 matches_threshold=10,
+                 feature='SIFT',
+                 matcher='BruteForce',
+                 run_dir=None):
 
         if feature == 'SIFT':
             self.extractor = cv2.xfeatures2d.SIFT_create()
@@ -30,6 +35,12 @@ class BoVW:
         self.voc = None
         self.descriptor_extractor = cv2.BOWImgDescriptorExtractor(self.extractor, self.knn_matcher)
         self.knn = knn
+        self.matches_threshold = matches_threshold
+
+        self.histograms = None
+        self.images = None
+        self.matches = None
+        self.counter = None
 
         self.clear()
 
@@ -74,8 +85,8 @@ class BoVW:
 
     @staticmethod
     def ratio_test(matches):
-        'David G. Lowe. Distinctive image features from scale-invariant keypoints. Int. J. Comput. Vision, 60(2):91–110'
-        'November 2004.'
+        """David G. Lowe. Distinctive image features from scale-invariant keypoints. Int. J. Comput. Vision,
+         60(2):91–110, November 2004."""
         ratio_threshold = 0.7
         good_matches = list()
         for match in matches:
@@ -86,8 +97,6 @@ class BoVW:
         return good_matches
 
     def keypoints_overlap_test(self, match, des1):
-
-        matches_threshold = 10
 
         good_matches = list()
         for k in range(len(match[0])):
@@ -100,7 +109,7 @@ class BoVW:
             descriptors_match = self.knn_matcher.knnMatch(des2, des1, 2)
             good_descriptors_match = self.ratio_test(descriptors_match)
 
-            if len(good_descriptors_match) > matches_threshold:
+            if len(good_descriptors_match) > self.matches_threshold:
                 good_matches.append((match[0][k], len(good_descriptors_match)))
 
         good_matches.sort(key=lambda tup: tup[1], reverse=True)
