@@ -157,7 +157,8 @@ def get_kitti_4_6_mixed_config(dataset_root):
 
     sub_dirs = ['train', 'val', 'test']
     for d in sub_dirs:
-        config[f'{d}_strides'] = [Path(t).parents[0].as_posix() for t in config[f'{d}_trajectories']]
+        trajectories = config[f'{d}_trajectories']
+        config[f'{d}_strides'] = [int(Path(t).parent.name) for t in trajectories] if trajectories else None
 
     return config
 
