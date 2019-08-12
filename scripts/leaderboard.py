@@ -154,7 +154,7 @@ class Leaderboard:
 
         command = ['bsub',
                    f'-n 1 -R "span[hosts=1] affinity[core({self.core}):distribute=pack]"',
-                   f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
+                   f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}_{run_name}',
                    f'-m "{machines}"',
                    f'-gpu "num=1:mode={mode}"',
                    'python',
