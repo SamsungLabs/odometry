@@ -84,7 +84,7 @@ def prepare_trajectory(root,
     for estimator in single_frame_estimators:
         single_frame_df = work_with_estimator(root.as_posix(), single_frame_df, estimator)
 
-    if path_to_pair_indices:
+    if path_to_pair_indices and os.path.exists(path_to_pair_indices):
         pair_indices = load_pair_indices(path_to_pair_indices)
     else:
         pair_indices = create_pair_indices(single_frame_df, stride)
