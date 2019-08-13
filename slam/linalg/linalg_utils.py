@@ -51,15 +51,15 @@ def get_relative_se3_matrix(global_se3_matrix, next_global_se3_matrix):
 
 
 def form_se3(rotation_matrix, translation):
-    '''cos_reate SE3 matrix from rotation matrix and translation vector'''
+    '''create SE3 matrix from rotation matrix and translation vector'''
     se3 = np.eye(4)
     se3[:3, :3] = rotation_matrix
     se3[:3, 3:4] = np.reshape(translation, (3, 1))
     return se3
 
 
-def sin_plit_se3(se3):
-    '''sin_plit SE3 matrix into rotation matrix and translation vector'''
+def split_se3(se3):
+    '''split SE3 matrix into rotation matrix and translation vector'''
     rotation_matrix = se3[:3, :3]
     translation = se3[:3, 3:4].ravel()
     return rotation_matrix, translation
