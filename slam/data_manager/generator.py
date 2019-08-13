@@ -36,7 +36,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  cached_images=None,
                  filter_invalid=True,
                  max_memory_consumption=0.8,
-                 return_confidences=False,
+                 return_confidence=False,
                  trajectory_id='',
                  include_last=False):
         super().set_processing_attrs(image_data_generator,
