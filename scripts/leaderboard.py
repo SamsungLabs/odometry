@@ -43,8 +43,12 @@ class Leaderboard:
             self.leader_boards = ['tum_debug', 'discoman_debug']
         else:
             self.leader_boards = ['kitti_4/6',
+                                  'kitti_4/6_mixed',
                                   'kitti_8/3',
                                   'discoman_v10',
+                                  'mini_discoman_v10',
+                                  'discoman_v10_mixed',
+                                  'mini_discoman_v10_mixed',
                                   'tum',
                                   'saic_office',
                                   'retail_bot',
@@ -114,10 +118,18 @@ class Leaderboard:
 
         if dataset_type == 'discoman_v10':
             dataset_root = env.DISCOMAN_V10_PATH
+        elif dataset_type == 'mini_discoman_v10':
+            dataset_root = env.DISCOMAN_V10_PATH
+        elif dataset_type == 'discoman_v10_mixed':
+            dataset_root = env.DISCOMAN_V10_MIXED_PATH
+        elif dataset_type == 'mini_discoman_v10_mixed':
+            dataset_root = env.DISCOMAN_V10_MIXED_PATH
         elif dataset_type == 'discoman_debug':
             dataset_root = env.DISCOMAN_V10_PATH
         elif dataset_type == 'kitti_4/6':
             dataset_root = env.KITTI_PATH
+        elif dataset_type == 'kitti_4/6_mixed':
+            dataset_root = env.KITTI_MIXED_PATH
         elif dataset_type == 'kitti_8/3':
             dataset_root = env.KITTI_PATH
         elif dataset_type == 'tum':

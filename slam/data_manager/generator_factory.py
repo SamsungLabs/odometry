@@ -14,7 +14,7 @@ from slam.utils import mlflow_logging
 
 class GeneratorFactory:
 
-    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.', stride=1)
+    @mlflow_logging(ignore=('train_trajectories', 'val_trajectories', 'test_trajectories'), prefix='gen_factory.')
     def __init__(self,
                  dataset_root,
                  csv_name='df.csv',
@@ -31,6 +31,9 @@ class GeneratorFactory:
                  val_ratio=0.0,
                  number_of_folds=None,
                  fold_index=0,
+                 train_strides=1,
+                 val_strides=1,
+                 test_strides=1,
                  batch_size=128,
                  cached_images=None,
                  *args, **kwargs):
@@ -56,9 +59,9 @@ class GeneratorFactory:
         self.val_trajectories = val_trajectories
         self.test_trajectories = test_trajectories
 
-        self.df_train = self._get_multi_df_dataset(self.train_trajectories, 'train')
-        self.df_val = self._get_multi_df_dataset(self.val_trajectories, 'val')
-        self.df_test = self._get_multi_df_dataset(self.test_trajectories, 'test')
+        self.df_train = self._get_multi_df_dataset(self.train_trajectories, 'train', strides=train_strides)
+        self.df_val = self._get_multi_df_dataset(self.val_trajectories, 'val', strides=val_strides)
+        self.df_test = self._get_multi_df_dataset(self.test_trajectories, 'test', strides=test_strides)
 
         if number_of_folds is not None:
             val_ratio = 1. / number_of_folds
@@ -99,19 +102,22 @@ class GeneratorFactory:
                     dataset_config = json.load(f)
                     mlflow.log_param('depth_checkpoint', dataset_config['depth_checkpoint'])
                     mlflow.log_param('optical_flow_checkpoint', dataset_config['optical_flow_checkpoint'])
-                    mlflow.log_param('stride', dataset_config.get('stride', None))
             except FileNotFoundError:
                 warnings.warn('WARNING!!!. No prepare_dataset.json for this dataset. You need to rerun '
                               f'prepare_dataset.py for this dataset. Path {dataset_config_path}', UserWarning)
                 mlflow.log_param('depth_checkpoint', None)
                 mlflow.log_param('optical_flow_checkpoint', None)
 
-    def _get_multi_df_dataset(self, trajectories, subset=''):
+    def _get_multi_df_dataset(self, trajectories, subset, stride=1):
         df = None
         if not trajectories:
             return df
 
-        for trajectory_name in tqdm.tqdm(trajectories, desc=f'Collect {subset} trajectories'):
+        strides = [stride] * len(trajectories) if isinstance(stride, int) else stride
+
+        for trajectory_name, stride in tqdm.tqdm(zip(trajectories, strides),
+                                                 total=len(trajectories),
+                                                 desc=f'Collect {subset} trajectories'):
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
             current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
 
@@ -121,6 +127,7 @@ class GeneratorFactory:
                     current_df[image_col_next] = trajectory_name + '/' + current_df[image_col_next]
 
             current_df['trajectory_id'] = trajectory_name
+            current_df['stride'] = stride
             df = current_df if df is None else df.append(current_df, sort=False)
 
         df.index = range(len(df))
