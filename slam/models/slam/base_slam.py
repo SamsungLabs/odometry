@@ -92,9 +92,10 @@ class BaseSlam:
 
     @staticmethod
     def append_predict(matches, predicts):
-        columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z',
+        columns = {'euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z',
                    'euler_x_confidence', 'euler_y_confidence', 'euler_z_confidence', 'euler_t_x_confidence',
-                   'euler_t_y_confidence', 'euler_t_z_confidence']
+                   'euler_t_y_confidence', 'euler_t_z_confidence'}
+        columns = columns.intersection(set(matches.columns))
         for i, col in enumerate(columns):
             matches[col] = predicts[i][:len(matches), 0]
         return matches
