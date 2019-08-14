@@ -6,8 +6,10 @@ from slam.linalg import (convert_euler_angles_to_rotation_matrix,
                          form_se3, 
                          split_se3,
                          GlobalTrajectory)
+from slam.aggregation.base_aggregator import BaseAggregator
 
-class AggregateTrajectory:
+
+class DummyAverage(BaseAggregator):
     def __init__(self):
         self.clear()
         
