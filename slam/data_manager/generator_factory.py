@@ -60,8 +60,8 @@ class GeneratorFactory:
         self.test_trajectories = test_trajectories
 
         self.df_train, self.df_train_as_is = self._get_multi_df_dataset(self.train_trajectories, 'train', strides=train_strides)
-        self.df_val, _ = self._get_multi_df_dataset(self.val_trajectories, 'val', strides=val_strides)
-        self.df_test, _ = self._get_multi_df_dataset(self.test_trajectories, 'test', strides=test_strides)
+        self.df_val, self.df_val_as_is = self._get_multi_df_dataset(self.val_trajectories, 'val', strides=val_strides)
+        self.df_test, self.df_test_as_is = self._get_multi_df_dataset(self.test_trajectories, 'test', strides=test_strides)
 
         if number_of_folds is not None:
             val_ratio = 1. / number_of_folds
@@ -234,20 +234,24 @@ class GeneratorFactory:
                                    as_list=as_list,
                                    include_last=include_last)
 
-    def get_val_generator(self, as_list=False, include_last=False):
+    def get_val_generator(self, as_is=True, as_list=False, include_last=False):
 
-        return self._get_generator(self.df_val,
+        df_val = self.df_val_as_is if as_is else self.df_val
+
+        return self._get_generator(df_val,
                                    self.val_generator_args,
                                    self.val_trajectories,
-                                   as_is=True,
+                                   as_is=as_is,
                                    as_list=as_list,
                                    include_last=include_last)
 
-    def get_test_generator(self, as_list=False, include_last=False):
+    def get_test_generator(self, as_is=True, as_list=False, include_last=False):
 
-        return self._get_generator(self.df_test,
+        df_test = self.df_test_as_is if as_is else self.df_test
+
+        return self._get_generator(df_test,
                                    self.test_generator_args,
                                    self.test_trajectories,
-                                   as_is=True,
+                                   as_is=as_is,
                                    as_list=as_list,
                                    include_last=include_last)
