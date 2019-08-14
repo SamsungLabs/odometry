@@ -9,7 +9,7 @@ from slam.linalg import (convert_euler_angles_to_rotation_matrix,
 from slam.aggregation.base_aggregator import BaseAggregator
 
 
-class DummyAverage(BaseAggregator):
+class DummyAverager(BaseAggregator):
     def __init__(self):
         self.clear()
         

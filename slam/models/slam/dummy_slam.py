@@ -1,7 +1,7 @@
 from slam.models.slam.base_slam import BaseSlam
 from slam.models.relocalization import BoVW
 from slam.keyframe_selector import CounterKeyFrameSelector
-from slam.aggregation import DummyAverage
+from slam.aggregation import DummyAverager
 from slam.utils import mlflow_logging
 
 
@@ -18,7 +18,7 @@ class DummySlam(BaseSlam):
         return reloc_model
 
     def get_aggregator(self):
-        return DummyAverage()
+        return DummyAverager()
 
     def get_keyframe_selector(self):
         return CounterKeyFrameSelector(self.keyframe_period)
