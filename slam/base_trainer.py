@@ -1,4 +1,5 @@
 import os
+import shutil
 import mlflow
 import datetime
 import argparse
@@ -96,6 +97,8 @@ class BaseTrainer:
             raise RuntimeError('run_name must be unique')
 
         self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
+        if os.path.exists(self.run_dir):
+            shutil.rmtree(self.run_dir)
         self.save_dir = self.run_dir
 
         mlflow.set_tracking_uri(self.tracking_uri)
@@ -120,7 +123,10 @@ class BaseTrainer:
                                 batch_size=self.batch_size,
                                 preprocess_mode=self.preprocess_mode,
                                 depth_multiplicator=self.config['depth_multiplicator'],
-                                cached_images={} if self.cache else None)
+                                cached_images={} if self.cache else None,
+                                train_strides=self.config['train_strides'],
+                                val_strides=self.config['val_strides'],
+                                test_strides=self.config['test_strides'])
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
