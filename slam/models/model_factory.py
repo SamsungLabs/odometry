@@ -22,8 +22,8 @@ from slam.models.layers import (activ,
                                 construct_fc,
                                 construct_double_fc,
                                 construct_outputs,
-                                DepthFlowLayer,
-                                AddGridLayer)
+                                DepthFlow,
+                                AddGrid)
 from slam.utils import mlflow_logging
 
 

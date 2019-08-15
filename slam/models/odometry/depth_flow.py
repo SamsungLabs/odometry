@@ -5,8 +5,8 @@ from slam.models.layers import (concat,
                                 conv2d,
                                 construct_fc,
                                 construct_outputs,
-                                DepthFlowLayer,
-                                AddGridLayer)
+                                DepthFlow,
+                                AddGrid)
 from slam.utils import mlflow_logging
 
 
