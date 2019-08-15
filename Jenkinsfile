@@ -19,7 +19,7 @@ pipeline {
             steps {
                 echo 'Testing..'
                 sh '/home/odometry/miniconda/bin/activate /home/odometry/miniconda/envs/odometry'
-                sh '/home/odometry/miniconda/envs/odometry/bin/python -m unittest discover -s tests'
+                sh '/home/odometry/miniconda/envs/odometry/bin/python -m unittest discover -s tests -p "test_*.py"'
             }
         }
     }
