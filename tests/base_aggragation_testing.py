@@ -3,10 +3,10 @@ import unittest
 import numpy as np
 import pandas as pd
 
+import env
 from slam.evaluation import calculate_metrics, normalize_metrics
 from slam.linalg import RelativeTrajectory
 
-from slam.aggregation import DummyAverager
 from slam.utils import visualize_trajectory_with_gt
 
 
