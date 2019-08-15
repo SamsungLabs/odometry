@@ -59,9 +59,9 @@ class GeneratorFactory:
         self.val_trajectories = val_trajectories
         self.test_trajectories = test_trajectories
 
-        self.df_train = self._get_multi_df_dataset(self.train_trajectories, 'train', strides=train_strides)
-        self.df_val = self._get_multi_df_dataset(self.val_trajectories, 'val', strides=val_strides)
-        self.df_test = self._get_multi_df_dataset(self.test_trajectories, 'test', strides=test_strides)
+        self.df_train, self.df_train_as_is = self._get_multi_df_dataset(self.train_trajectories, 'train', strides=train_strides)
+        self.df_val, self.df_val_as_is = self._get_multi_df_dataset(self.val_trajectories, 'val', strides=val_strides)
+        self.df_test, self.df_test_as_is = self._get_multi_df_dataset(self.test_trajectories, 'test', strides=test_strides)
 
         if number_of_folds is not None:
             val_ratio = 1. / number_of_folds
@@ -108,12 +108,13 @@ class GeneratorFactory:
                 mlflow.log_param('depth_checkpoint', None)
                 mlflow.log_param('optical_flow_checkpoint', None)
 
-    def _get_multi_df_dataset(self, trajectories, subset, stride=1):
+    def _get_multi_df_dataset(self, trajectories, subset, strides=1):
         df = None
+        df_as_is = None
         if not trajectories:
-            return df
+            return df, df_as_is
 
-        strides = [stride] * len(trajectories) if isinstance(stride, int) else stride
+        strides = [strides] * len(trajectories) if isinstance(strides, int) else strides
 
         for trajectory_name, stride in tqdm.tqdm(zip(trajectories, strides),
                                                  total=len(trajectories),
@@ -130,8 +131,12 @@ class GeneratorFactory:
             current_df['stride'] = stride
             df = current_df if df is None else df.append(current_df, sort=False)
 
+            current_df_as_is = current_df.iloc[::stride]
+            df_as_is = current_df_as_is if df_as_is is None else df_as_is.append(current_df_as_is, sort=False)
+
         df.index = range(len(df))
-        return df
+        df_as_is.index = range(len(df_as_is))
+        return df, df_as_is
 
     def load_cache(self, cache_file):
         try:
@@ -219,7 +224,8 @@ class GeneratorFactory:
                                                       include_last=include_last)
 
     def get_train_generator(self, as_is=False, as_list=False, include_last=False):
-        df_train = self.df_train_trajectory if as_is else self.df_train
+
+        df_train = self.df_train_as_is if as_is else self.df_train
 
         return self._get_generator(df_train,
                                    self.train_generator_args,
@@ -228,20 +234,24 @@ class GeneratorFactory:
                                    as_list=as_list,
                                    include_last=include_last)
 
-    def get_val_generator(self, as_list=False, include_last=False):
+    def get_val_generator(self, as_is=True, as_list=False, include_last=False):
 
-        return self._get_generator(self.df_val,
+        df_val = self.df_val_as_is if as_is else self.df_val
+
+        return self._get_generator(df_val,
                                    self.val_generator_args,
                                    self.val_trajectories,
-                                   as_is=True,
+                                   as_is=as_is,
                                    as_list=as_list,
                                    include_last=include_last)
 
-    def get_test_generator(self, as_list=False, include_last=False):
+    def get_test_generator(self, as_is=True, as_list=False, include_last=False):
 
-        return self._get_generator(self.df_test,
+        df_test = self.df_test_as_is if as_is else self.df_test
+
+        return self._get_generator(df_test,
                                    self.test_generator_args,
                                    self.test_trajectories,
-                                   as_is=True,
+                                   as_is=as_is,
                                    as_list=as_list,
                                    include_last=include_last)
