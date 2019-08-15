@@ -1,4 +1,4 @@
-from keras.layers import Flatten
+from keras.layers import Lambda, Flatten
 
 from slam.models.layers import (concat,
                                 conv2d,
@@ -48,6 +48,7 @@ def construct_flexible_model(inputs,
                              kernel_initializer='glorot_normal',
                              use_gated_convolutions=False,
                              use_batchnorm=False,
+                             split=False,
                              return_confidence=False):
 
     inputs = concat(inputs)
@@ -58,20 +59,29 @@ def construct_flexible_model(inputs,
                                  kernel_initializer=kernel_initializer,
                                  use_gated_convolutions=use_gated_convolutions,
                                  use_batchnorm=use_batchnorm)
-    fc2_rotation = construct_double_fc(features,
-                                       hidden_size=hidden_size,
-                                       regularization=regularization,
-                                       activation=activation,
-                                       kernel_initializer=kernel_initializer,
-                                       name='rotation')
-    fc2_translation = construct_double_fc(features,
-                                          hidden_size=hidden_size,
-                                          regularization=regularization,
-                                          activation=activation,
-                                          kernel_initializer=kernel_initializer,
-                                          name='translation')
-    outputs = construct_outputs(fc2_rotation,
-                                fc2_translation,
+
+    if split:
+        size = features._keras_shape[-1] // 2
+        features_rotation = Lambda(lambda x: x[..., :size])(features)
+        features_translation = Lambda(lambda x: x[..., size:])(features)
+    else:
+        features_rotation = features
+        features_translation = features
+
+    fc_rotation = construct_double_fc(features_rotation,
+                                      hidden_size=hidden_size,
+                                      regularization=regularization,
+                                      activation=activation,
+                                      kernel_initializer=kernel_initializer,
+                                      name='rotation')
+    fc_translation = construct_double_fc(features_translation,
+                                         hidden_size=hidden_size,
+                                         regularization=regularization,
+                                         activation=activation,
+                                         kernel_initializer=kernel_initializer,
+                                         name='translation')
+    outputs = construct_outputs(fc_rotation,
+                                fc_translation,
                                 regularization=regularization,
                                 return_confidence=return_confidence)
     return outputs
