@@ -9,7 +9,8 @@ import env
 from slam.evaluation import calculate_metrics, normalize_metrics
 from slam.linalg import RelativeTrajectory
 
-from slam.aggregation import DummyAverage
+from slam.aggregation import DummyAverager
+from slam.aggregation import Grap
 from slam.utils import visualize_trajectory_with_gt
 
 
@@ -160,5 +161,10 @@ class BaseTest(unittest.TestCase):
 
 
 class TestDummyAverage(BaseTest):
+    def setUp(self) -> None:
+        self.algorithm = DummyAverage()
+
+
+class TestGraphOptimizer(BaseTest):
     def setUp(self) -> None:
         self.algorithm = DummyAverage()
