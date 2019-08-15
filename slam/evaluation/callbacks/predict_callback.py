@@ -16,10 +16,12 @@ from slam.utils import visualize_trajectory_with_gt, visualize_trajectory
 
 
 def _process_single_task(args):
-    predicted_trajectory, gt_trajectory, trajectory_id, rpe_indices = args
+    predicted_trajectory, gt_trajectory, trajectory_id, rpe_indices, backend, cuda = args
     trajectory_metrics = calculate_metrics(gt_trajectory,
                                            predicted_trajectory,
-                                           rpe_indices=rpe_indices)
+                                           rpe_indices=rpe_indices,
+                                           backend=backend,
+                                           cuda=cuda)
     return trajectory_metrics
 
 
@@ -35,7 +37,10 @@ class Predict(keras.callbacks.Callback):
                  save_best_only=True,
                  max_to_visualize=5,
                  evaluate=False,
-                 rpe_indices='full'):
+                 rpe_indices='full',
+                 backend='numpy',
+                 cuda=False,
+                 workers=8):
         super(Predict, self).__init__()
         self.model = model
         self.run_dir = run_dir
@@ -51,7 +56,9 @@ class Predict(keras.callbacks.Callback):
         self.max_to_visualize = max_to_visualize
         self.evaluate = evaluate
         self.rpe_indices = rpe_indices
-        self.workers = 8
+        self.backend = backend
+        self.cuda = cuda
+        self.workers = workers if backend == 'numpy' else 0
 
         self.train_generator = dataset.get_train_generator(as_is=self.evaluate)
         self.val_generator = dataset.get_val_generator()
@@ -156,7 +163,9 @@ class Predict(keras.callbacks.Callback):
             tasks.append([predicted_trajectory,
                           gt_trajectory,
                           trajectory_id,
-                          self.rpe_indices])
+                          self.rpe_indices,
+                          self.backend,
+                          self.cuda])
 
         return tasks
 
@@ -175,10 +184,13 @@ class Predict(keras.callbacks.Callback):
         tasks = self._create_tasks(predictions, gt, subset, prediction_id)
 
         if self.evaluate:
-            pool = Pool(self.workers)
-            records = [res for res in pool.imap(_process_single_task, tasks)]
-            pool.close()
-            pool.join()
+            if self.workers:
+                pool = Pool(self.workers)
+                records = [res for res in pool.imap(_process_single_task, tasks)]
+                pool.close()
+                pool.join()
+            else:
+                records = [_process_single_task(task) for task in tasks]
 
         max_to_visualize = (max_to_visualize if max_to_visualize is not None
                             else gt.trajectory_id.nunique())
@@ -186,7 +198,9 @@ class Predict(keras.callbacks.Callback):
         counter = 0
 
         for index, task in enumerate(tasks):
-            predicted_trajectory, gt_trajectory, trajectory_id, _ = task
+            predicted_trajectory = task[0]
+            gt_trajectory = task[1]
+            trajectory_id = task[2]
             if counter < max_to_visualize:
                 trajectory_metrics = records[index] if self.evaluate else None
                 self._visualize_trajectory(predicted_trajectory,
