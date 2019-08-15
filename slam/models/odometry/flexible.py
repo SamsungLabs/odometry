@@ -4,8 +4,7 @@ from slam.models.layers import (concat,
                                 conv2d,
                                 gated_conv2d,
                                 construct_double_fc,
-                                construct_outputs,
-                                construct_outputs_with_confidences)
+                                construct_outputs)
 from slam.utils import mlflow_logging
 
 

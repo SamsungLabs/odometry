@@ -1,11 +1,11 @@
 from keras.layers import Flatten
 
-from odometry.models.layers import (concat,
+from slam.models.layers import (concat,
                                     conv2d,
                                     gated_conv2d,
                                     construct_double_fc,
                                     construct_outputs)
-from odometry.utils import mlflow_logging
+from slam.utils import mlflow_logging
 
 
 def construct_encoder(inputs,
