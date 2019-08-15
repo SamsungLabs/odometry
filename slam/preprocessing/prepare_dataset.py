@@ -11,7 +11,11 @@ from slam.utils.computation_utils import limit_resources
 from slam.preprocessing import parsers, estimators, prepare_trajectory
 
 
-def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint=None, pwc_features=False):
+def initialize_estimators(target_size,
+                          optical_flow_checkpoint,
+                          depth_checkpoint=None,
+                          pwc_features=False,
+                          swap_angles=False):
 
     single_frame_estimators = list()
 
@@ -30,7 +34,10 @@ def initialize_estimators(target_size, optical_flow_checkpoint, depth_checkpoint
 
     cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
     input_col = cols + [col + '_next' for col in cols]
-    output_col = cols
+    if swap_angles:
+        output_col = ['euler_y', 'euler_x', 'euler_z', 't_x', 't_y', 't_z']
+    else:
+        output_col = cols
     global2relative_estimator = estimators.Global2RelativeEstimator(input_col=input_col,
                                                                     output_col=output_col)
 
@@ -80,7 +87,7 @@ def get_default_dataset_parser():
 
 
 def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optical_flow_checkpoint,
-                    depth_checkpoint=None, pwc_features=False, stride=1, indices_root=None):
+                    depth_checkpoint=None, pwc_features=False, stride=1, swap_angles=False, indices_root=None):
 
     limit_resources()
 
@@ -94,7 +101,8 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
     sf_estimators, pf_estimators = initialize_estimators(target_size,
                                                          optical_flow_checkpoint=optical_flow_checkpoint,
                                                          depth_checkpoint=depth_checkpoint,
-                                                         pwc_features=pwc_features)
+                                                         pwc_features=pwc_features,
+                                                         swap_angles=swap_angles)
 
     parser_class = initialize_parser(dataset_type)
 

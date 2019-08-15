@@ -9,8 +9,21 @@ def mean_absolute_error(y_true, y_pred, scale=1.):
     return K.mean(K.abs(y_pred[:, :1] * scale - y_true[:, :1] * scale), axis=-1)
 
 
-def confidence_error(y_true, y_pred, scale=1):
-    return K.mean(K.square(K.abs(y_true[:, 0] * scale - y_pred[:, 0] * scale) - y_pred[:, 1] * scale), axis=-1)
+def confidence_error(y_true, y_pred, scale=1., mode='nll', relative=False):
+    confidence = y_pred[:, 1] * scale
+
+    delta = K.abs(y_true[:, 0] - y_pred[:, 0]) * scale # absolute error
+    if relative:
+        delta /= K.clip(K.abs(y_pred[:, 0]) * scale, K.epsilon(), None) # relative error
+
+    if mode == 'nll': # negative log likelihood
+        return K.mean(confidence + 0.5 * (K.square(delta) / K.exp(2 * confidence)))
+    elif mode == 'mse': # mse
+        return K.mean(K.square(delta - confidence), axis=-1)
+    elif mode == 'mae': # mae
+        return K.mean(K.abs(delta - confidence), axis=-1)
+    else:
+        raise ValueError
 
 
 def mean_squared_logarithmic_error(y_true, y_pred, scale=1.):
