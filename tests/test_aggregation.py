@@ -35,7 +35,7 @@ class BaseTest(object):
         self.assertGreater(record1['RMSE_r'], record2['RMSE_r'])
 
     @staticmethod
-    def evalaute(gt_trajectory, predicted_trajectory, file_name):
+    def evaluate(gt_trajectory, predicted_trajectory, file_name):
         record = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices='full')
         record = normalize_metrics(record)
 
@@ -76,7 +76,7 @@ class BaseTest(object):
         predicted_trajectory = self.algorithm.get_trajectory()
         gt_trajectory = RelativeTrajectory.from_dataframe(gt).to_global()
 
-        self.evalaute(gt_trajectory, predicted_trajectory, 'test_1')
+        self.evaluate(gt_trajectory, predicted_trajectory, 'test_1')
 
     def test_2(self):
 
@@ -95,7 +95,7 @@ class BaseTest(object):
 
         predicted_trajectory = self.algorithm.get_trajectory()
 
-        record = self.evalaute(gt_trajectory, predicted_trajectory, 'test_2')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
         self.assert_almost_zero(record)
 
     def test_3(self):
@@ -114,7 +114,7 @@ class BaseTest(object):
 
         predicted_trajectory = self.algorithm.get_trajectory()
 
-        record = self.evalaute(gt_trajectory, predicted_trajectory, 'test_2')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
         self.assert_almost_zero(record)
 
     def test_4(self):
@@ -133,7 +133,7 @@ class BaseTest(object):
 
         predicted_trajectory = self.algorithm.get_trajectory()
 
-        record = self.evalaute(gt_trajectory, predicted_trajectory, 'test_2')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
         self.assert_almost_zero(record)
 
     def test_5(self):
@@ -148,11 +148,11 @@ class BaseTest(object):
         is_adjustment_measurements = (pred.to_index - pred.from_index) == 1
         adjustment_measurements = pred[is_adjustment_measurements].reset_index(drop=True)
         noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
-        record_noised = self.evalaute(gt_trajectory, noised_trajectory, 'test_5_noised')
+        record_noised = self.evaluate(gt_trajectory, noised_trajectory, 'test_5_noised')
 
         self.algorithm.append(pred)
         predicted_trajectory = self.algorithm.get_trajectory()
-        record_optimized = self.evalaute(gt_trajectory, predicted_trajectory, 'test_5_optimized')
+        record_optimized = self.evaluate(gt_trajectory, predicted_trajectory, 'test_5_optimized')
 
         print('metrics before optimization', record_noised)
         print('metrics after optimization ', record_optimized)
