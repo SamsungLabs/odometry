@@ -1,6 +1,4 @@
-from keras.layers.core import Lambda
-from keras.layers.merge import concatenate
-from keras.layers import BatchNormalization, Flatten, Dense, Concatenate
+from keras.layers import Flatten
 from keras.regularizers import l2
 
 from slam.models.layers import (concat,

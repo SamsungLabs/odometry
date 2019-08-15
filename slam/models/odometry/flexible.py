@@ -1,4 +1,3 @@
-from keras.layers.merge import concatenate
 from keras.layers import Flatten
 
 from slam.models.layers import (concat,
@@ -72,10 +71,8 @@ def construct_flexible_model(inputs,
                                           activation=activation,
                                           kernel_initializer=kernel_initializer,
                                           name='translation')
-    outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization)
-    if not return_confidence:
-        return outputs
-
-    outputs_with_confidences = construct_outputs_with_confidences(outputs, fc2_rotation, fc2_translation,
-                                                                  regularization=regularization)
-    return outputs_with_confidences
+    outputs = construct_outputs(fc2_rotation,
+                                fc2_translation,
+                                regularization=regularization,
+                                return_confidence=return_confidence)
+    return outputs

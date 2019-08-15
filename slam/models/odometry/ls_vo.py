@@ -1,7 +1,9 @@
-from keras.layers.convolutional import Conv2D
-from keras.layers.merge import concatenate
-from keras.layers.pooling import MaxPooling2D
-from keras.layers import Flatten, Cropping2D, Activation
+from keras.layers import (Flatten,
+                          Conv2D,
+                          Cropping2D,
+                          MaxPooling2D,
+                          Activation,
+                          concatenate)
 
 from slam.models.layers import (concat,
                                 conv2d,

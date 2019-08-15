@@ -153,11 +153,12 @@ class ModelWithDecoderFactory(ModelFactory):
 
 class ModelWithConfidenceFactory(ModelFactory):
 
-    def freeze(self):
+    def freeze(self, lr=0.01):
         for layer in self.model.layers:
             layer.trainable = not layer.trainable
 
         self.loss = confidence_error
+        self.lr = lr
         self._compile()
         for layer in self.model.layers:
             print(f'{layer.name:<30} {layer.trainable}')

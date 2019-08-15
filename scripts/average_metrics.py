@@ -42,12 +42,11 @@ def load_metrics(run_name, dataset_type):
     metrics = list()
     model_name = None
     for run_info in client.list_run_infos(exp_id):
-        base_run_name = client.get_run(run_info.run_id).data.params['run_name'].split('_')
-        base_run_name = '_'.join(base_run_name[:-2])
+        data = client.get_run(run_info.run_id).data
+        base_run_name = '_'.join(data.params['run_name'].split('_')[:-2])
         if run_name == base_run_name:
-            metrics.append(client.get_run(run_info.run_id).data.metrics)
-            if not model_name:
-                model_name = client.get_run(run_info.run_id).data.params.get('model.name', 'Unknown')
+            metrics.append(data.metrics)
+            model_name = model_name or data.params.get('model.name', 'Unknown')
 
     return metrics, model_name
 

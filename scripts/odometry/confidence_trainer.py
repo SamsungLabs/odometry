@@ -61,7 +61,10 @@ class ConfidenceTrainer(BaseTrainer):
                                 preprocess_mode=self.preprocess_mode,
                                 depth_multiplicator=self.config['depth_multiplicator'],
                                 cached_images={} if self.cache else None,
-                                return_confidences=True)
+                                train_strides=self.config['train_strides'],
+                                val_strides=self.config['val_strides'],
+                                test_strides=self.config['test_strides'],
+                                return_confidence=True)
 
     def get_model_factory(self, input_shapes):
         return ModelWithConfidenceFactory(self.construct_model_fn,
