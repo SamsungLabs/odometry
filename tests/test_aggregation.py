@@ -80,45 +80,45 @@ class BaseTest(object):
             df[mean_col] = np.random.normal(df[mean_col], df[std_col])
         return df
 
-    # def test_1(self):
-    #     csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv']
-    #
-    #     gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
-    #     predicted_trajectory = self.predict(csv_paths)
-    #
-    #     record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_1')
-    #     self.assert_almost_zero(record)
-    #
-    # def test_2(self):
-    #
-    #     csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv',
-    #                  'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_2.csv']
-    #
-    #     gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
-    #     predicted_trajectory = self.predict(csv_paths)
-    #
-    #     record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
-    #     self.assert_almost_zero(record)
-    #
-    # def test_3(self):
-    #     csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv',
-    #                  'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_2.csv']
-    #
-    #     gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
-    #     predicted_trajectory = self.predict(csv_paths)
-    #
-    #     record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_3')
-    #     self.assert_almost_zero(record)
-    #
-    # def test_4(self):
-    #     csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
-    #     csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed.csv']
-    #
-    #     gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_path_gt)).to_global()
-    #     predicted_trajectory = self.predict(csv_paths)
-    #
-    #     record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_4')
-    #     self.assert_almost_zero(record)
+    def test_1(self):
+        csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv']
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
+        predicted_trajectory = self.predict(csv_paths)
+
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_1')
+        self.assert_almost_zero(record)
+
+    def test_2(self):
+
+        csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv',
+                     'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_2.csv']
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
+        predicted_trajectory = self.predict(csv_paths)
+
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
+        self.assert_almost_zero(record)
+
+    def test_3(self):
+        csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv',
+                     'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_2.csv']
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
+        predicted_trajectory = self.predict(csv_paths)
+
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_3')
+        self.assert_almost_zero(record)
+
+    def test_4(self):
+        csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
+        csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed.csv']
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_path_gt)).to_global()
+        predicted_trajectory = self.predict(csv_paths)
+
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_4')
+        self.assert_almost_zero(record)
 
     def test_5(self):
         csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
