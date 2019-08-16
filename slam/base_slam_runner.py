@@ -87,13 +87,13 @@ class BaseSlamRunner(BaseTrainer):
         slam.construct()
 
         generators = dataset.get_train_generator(as_is=True, as_list=True, include_last=True)
-        self.evaluate_subset(slam, generators, dataset.df_train, 'train') if len(generators) > 0 else None
+        self.evaluate_subset(slam, generators, dataset.df_train, 'train')
 
         generators = dataset.get_val_generator(as_list=True, include_last=True)
-        self.evaluate_subset(slam, generators, dataset.df_val, 'val') if len(generators) > 0 else None
+        self.evaluate_subset(slam, generators, dataset.df_val, 'val')
 
         generators = dataset.get_test_generator(as_list=True, include_last=True)
-        self.evaluate_subset(slam, generators, dataset.df_test, 'test') if len(generators) > 0 else None
+        self.evaluate_subset(slam, generators, dataset.df_test, 'test')
 
     @staticmethod
     def get_parser():

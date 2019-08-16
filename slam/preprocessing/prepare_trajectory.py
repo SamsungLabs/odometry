@@ -48,10 +48,7 @@ def create_pair_indices(single_frame_df, stride):
 
 def load_pair_indices(path):
     df = pd.read_csv(path)
-    first_part_indices = df.from_index.values
-    second_part_indices = df.to_index.values
-    assert len(first_part_indices) == len(second_part_indices)
-    return zip(first_part_indices, second_part_indices)
+    return df[['from_index', 'to_index']].values
 
 
 def transform_single_frame_df_to_paired(single_frame_df, pair_indices=None):

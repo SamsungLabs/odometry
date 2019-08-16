@@ -94,10 +94,10 @@ class BaseSlam:
     def append_predict(matches, predicts):
         columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         for i, col in enumerate(columns):
-            predict = predicts[i]
-            matches[col] = predict[:len(matches), 0]
+            predict = predicts[i][:len(matches)]
+            matches[col] = predict[:, 0]
             if predict.shape[1] == 2:
-                matches[col + "_confidence"] = predict[:len(matches), 1]
+                matches[col + '_confidence'] = predict[:, 1]
 
         return matches
 
@@ -137,7 +137,7 @@ class BaseSlam:
     def predict(self, frame):
 
         matches = pd.DataFrame({'to_db_index': [np.nan],
-                                'from_db_index' : [np.nan],
+                                'from_db_index': [np.nan],
                                 'to_index': [self.frame_index],
                                 'from_index': [self.frame_index - 1]})
 
