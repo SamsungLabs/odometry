@@ -8,10 +8,9 @@ import numpy as np
 from pathlib import Path
 from multiprocessing import Pool
 
-import __init_path__
 import env
 
-from scripts.average_metrics import average_metrics
+from scripts.leaderboard.average_metrics import average_metrics
 
 
 class Leaderboard:
