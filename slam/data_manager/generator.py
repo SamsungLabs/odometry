@@ -36,7 +36,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  cached_images=None,
                  filter_invalid=True,
                  max_memory_consumption=0.8,
-                 return_confidences=False,
+                 return_confidence=False,
                  trajectory_id='',
                  include_last=False):
         super().set_processing_attrs(image_data_generator,
@@ -86,6 +86,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.fill_flow_fn = get_fill_fn(fill_flow_method, nan_value=np.nan, mean=0, std=1)
         self.fill_depth_fn = get_fill_fn(fill_depth_method, nan_value=0)
+
         self.depth_multiplicator = depth_multiplicator
 
         self.set_cache(cached_images)

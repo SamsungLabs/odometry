@@ -122,7 +122,7 @@ class Predict(keras.callbacks.Callback):
                                          title=title,
                                          file_path=file_path)
 
-    def _predict_generator(self, generator, gt):
+    def _predict_generator(self, generator):
         generator.reset()
         generator.y_cols = self.y_cols[:]
         model_output = self.model.predict_generator(generator, steps=len(generator))
@@ -132,9 +132,10 @@ class Predict(keras.callbacks.Callback):
         assert data.shape[1] in (len(columns), 2 * len(columns))
         if data.shape[1] == 2 * len(columns):
             columns.extend([col + '_confidence' for col in columns])
-        predictions = pd.DataFrame(data=data, index=gt.index, columns=columns).astype(float)
-        predictions['path_to_rgb'] = gt.path_to_rgb
-        predictions['path_to_rgb_next'] = gt.path_to_rgb_next
+
+        predictions = pd.DataFrame(data=data, index=generator.df.index, columns=columns).astype(float)
+        predictions['path_to_rgb'] = generator.df.path_to_rgb
+        predictions['path_to_rgb_next'] = generator.df.path_to_rgb_next
         return predictions
 
     def _create_tasks(self,
@@ -162,7 +163,6 @@ class Predict(keras.callbacks.Callback):
 
     def _predict(self,
                  generator,
-                 gt,
                  subset,
                  prediction_id,
                  max_to_visualize=None):
@@ -170,9 +170,9 @@ class Predict(keras.callbacks.Callback):
         if generator is None:
             return dict()
 
-        predictions = self._predict_generator(generator, gt)
+        predictions = self._predict_generator(generator)
 
-        tasks = self._create_tasks(predictions, gt, subset, prediction_id)
+        tasks = self._create_tasks(predictions, generator.df, subset, prediction_id)
 
         if self.evaluate:
             pool = Pool(self.workers)
@@ -180,8 +180,7 @@ class Predict(keras.callbacks.Callback):
             pool.close()
             pool.join()
 
-        max_to_visualize = (max_to_visualize if max_to_visualize is not None
-                            else gt.trajectory_id.nunique())
+        max_to_visualize = max_to_visualize or len(tasks)
 
         counter = 0
 
@@ -219,16 +218,8 @@ class Predict(keras.callbacks.Callback):
 
         prediction_id = f'{(epoch + 1):03d}_train:{train_loss:.6f}_val:{val_loss:.6f}'
 
-        train_metrics = self._predict(self.train_generator,
-                                      self.df_train,
-                                      'train',
-                                      prediction_id,
-                                      self.max_to_visualize)
-        val_metrics = self._predict(self.val_generator,
-                                    self.df_val,
-                                    'val',
-                                    prediction_id,
-                                    self.max_to_visualize)
+        train_metrics = self._predict(self.train_generator, 'train', prediction_id, self.max_to_visualize)
+        val_metrics = self._predict(self.val_generator, 'val', prediction_id, self.max_to_visualize)
 
         if mlflow.active_run():
             if self.evaluate:
@@ -247,10 +238,7 @@ class Predict(keras.callbacks.Callback):
 
         prediction_id = 'test'
 
-        test_metrics = self._predict(self.test_generator,
-                                     self.df_test,
-                                     'test',
-                                     prediction_id)
+        test_metrics = self._predict(self.test_generator, 'test', prediction_id)
 
         if mlflow.active_run():
             if self.evaluate:

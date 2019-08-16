@@ -8,10 +8,9 @@ import numpy as np
 from pathlib import Path
 from multiprocessing import Pool
 
-import __init_path__
 import env
 
-from scripts.average_metrics import average_metrics
+from scripts.leaderboard.average_metrics import average_metrics
 
 
 class Leaderboard:
@@ -154,7 +153,7 @@ class Leaderboard:
 
         command = ['bsub',
                    f'-n 1 -R "span[hosts=1] affinity[core({self.core}):distribute=pack]"',
-                   f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}',
+                   f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}_{run_name}',
                    f'-m "{machines}"',
                    f'-gpu "num=1:mode={mode}"',
                    'python',
@@ -226,7 +225,7 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', '-n', type=str, required=True,
                         help='Name of the run. Must be unique and specific')
     parser.add_argument('--bundle_size', '-b', type=int, required=True, help='Number runs in evaluate')
-    parser.add_argument('--core' , '-c', type=int, default=8, help='Number of cpu core')
+    parser.add_argument('--core' , '-c', type=int, default=3, help='Number of cpu core')
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console')
     parser.add_argument('--debug', action='store_true')
