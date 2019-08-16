@@ -15,8 +15,14 @@ from slam.utils import visualize_trajectory_with_gt
 
 
 class BaseTest(object):
-    def setUp(self) -> None:
+
+    def set_up(self) -> None:
         self.algorithm = None
+        self.columns_mean = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+        self.columns_std = [c + '_confidence' for c in self.columns_mean]
+
+    def read_csv(self, csv_path):
+        return pd.read_csv(os.path.join(env.PROJECT_PATH, csv_path))
 
     def assert_almost_zero(self, record):
         translation_precision = 10
@@ -34,6 +40,14 @@ class BaseTest(object):
         self.assertGreater(record1['RMSE_t'], record2['RMSE_t'])
         self.assertGreater(record1['RMSE_r'], record2['RMSE_r'])
 
+    def predict(self, csv_paths):
+        for p in csv_paths:
+            prediction = self.df2slam_predict(self.read_csv(p))
+            self.algorithm.append(prediction)
+
+        predicted_trajectory = self.algorithm.get_trajectory()
+        return predicted_trajectory
+
     @staticmethod
     def evaluate(gt_trajectory, predicted_trajectory, file_name):
         record = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices='full')
@@ -49,51 +63,41 @@ class BaseTest(object):
 
         return record
 
-    def gt2predict(self, gt, noise=False):
-        columns_mean = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
-        predict = gt[columns_mean]
-        columns_std = [c + '_confidence' for c in columns_mean]
-
-        predict[columns_std] = pd.DataFrame([[0.001] * len(columns_std)] * len(gt), index=predict.index)
+    def df2slam_predict(self, gt):
+        predict = gt[self.columns_mean]
+        predict[self.columns_std] = pd.DataFrame([[1] * len(self.columns_std)] * len(gt), index=predict.index)
         predict['to_index'] = gt['path_to_rgb_next'].apply(lambda x: int(x[4:-4]))
         predict['from_index'] = gt['path_to_rgb'].apply(lambda x: int(x[4:-4]))
-
-        if noise:
-            predict['euler_x'] = np.random.normal(predict['euler_x'], predict['euler_x_confidence'])
-            predict['euler_y'] = np.random.normal(predict['euler_y'], predict['euler_y_confidence'])
-            predict['euler_z'] = np.random.normal(predict['euler_z'], predict['euler_z_confidence'])
-            predict['t_x'] = np.random.normal(predict['t_x'], predict['t_x_confidence'])
-            predict['t_y'] = np.random.normal(predict['t_y'], predict['t_y_confidence'])
-            predict['t_z'] = np.random.normal(predict['t_z'], predict['t_z_confidence'])
-
         return predict
 
-    def test_1(self):
-        csv_path = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv'
-        gt = pd.read_csv(os.path.join(env.PROJECT_PATH, csv_path))
-        predict = self.gt2predict(gt)
-        self.algorithm.append(predict)
-        predicted_trajectory = self.algorithm.get_trajectory()
-        gt_trajectory = RelativeTrajectory.from_dataframe(gt).to_global()
+    def generate_noised_trajectory(self, df):
+        df[self.columns_std] = pd.DataFrame([[0.001] * len(self.columns_std)] * len(df), index=df.index)
 
-        self.evaluate(gt_trajectory, predicted_trajectory, 'test_1')
+        df['euler_x'] = np.random.normal(df['euler_x'], df['euler_x_confidence'])
+        df['euler_y'] = np.random.normal(df['euler_y'], df['euler_y_confidence'])
+        df['euler_z'] = np.random.normal(df['euler_z'], df['euler_z_confidence'])
+        df['t_x'] = np.random.normal(df['t_x'], df['t_x_confidence'])
+        df['t_y'] = np.random.normal(df['t_y'], df['t_y_confidence'])
+        df['t_z'] = np.random.normal(df['t_z'], df['t_z_confidence'])
+
+        return df
+
+    def test_1(self):
+        csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv']
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
+        predicted_trajectory = self.predict(csv_paths)
+
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_1')
+        self.assert_almost_zero(record)
 
     def test_2(self):
 
         csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv',
                      'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_2.csv']
 
-        gt_trajectory = None
-
-        for index, p in enumerate(csv_paths):
-            gt = pd.read_csv(os.path.join(env.PROJECT_PATH, p))
-            prediction = self.gt2predict(gt)
-            self.algorithm.append(prediction)
-
-            if index == 0:
-                gt_trajectory = RelativeTrajectory.from_dataframe(gt).to_global()
-
-        predicted_trajectory = self.algorithm.get_trajectory()
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
+        predicted_trajectory = self.predict(csv_paths)
 
         record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
         self.assert_almost_zero(record)
@@ -102,48 +106,35 @@ class BaseTest(object):
         csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv',
                      'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_2.csv']
 
-        gt_trajectory = None
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
+        predicted_trajectory = self.predict(csv_paths)
 
-        for index, p in enumerate(csv_paths):
-            gt = pd.read_csv(os.path.join(env.PROJECT_PATH, p))
-            prediction = self.gt2predict(gt)
-            self.algorithm.append(prediction)
-
-            if index == 0:
-                gt_trajectory = RelativeTrajectory.from_dataframe(gt).to_global()
-
-        predicted_trajectory = self.algorithm.get_trajectory()
-
-        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_3')
         self.assert_almost_zero(record)
 
     def test_4(self):
         csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv',
                      'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed.csv']
 
-        gt_trajectory = None
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
+        predicted_trajectory = self.predict(csv_paths)
 
-        for index, p in enumerate(csv_paths):
-            gt = pd.read_csv(os.path.join(env.PROJECT_PATH, p))
-            prediction = self.gt2predict(gt)
-            self.algorithm.append(prediction)
-
-            if index == 0:
-                gt_trajectory = RelativeTrajectory.from_dataframe(gt).to_global()
-
-        predicted_trajectory = self.algorithm.get_trajectory()
-
-        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_4')
         self.assert_almost_zero(record)
 
     def test_5(self):
-        csv_path = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
-        gt = pd.read_csv(os.path.join(env.PROJECT_PATH, csv_path))
-        gt_trajectory = RelativeTrajectory.from_dataframe(gt).to_global()
+        csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
+        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_path_gt)).to_global()
 
-        csv_path = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed.csv'
-        gt_slam_predict = pd.read_csv(os.path.join(env.PROJECT_PATH, csv_path))
-        pred = self.gt2predict(gt_slam_predict, noise=True)
+        csv_path_noised = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixesd_noised.csv'
+        csv_path_mixed = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed.csv'
+        if not os.path.exists(os.path.join(env.PROJECT_PATH, csv_path_noised)):
+            noised_df = self.generate_noised_trajectory(self.read_csv(csv_path_mixed))
+            noised_df.to_csv(os.path.join(env.PROJECT_PATH, csv_path_noised))
+        else:
+            noised_df = self.read_csv(csv_path_noised)
+
+        pred = self.df2slam_predict(noised_df)
 
         is_adjustment_measurements = (pred.to_index - pred.from_index) == 1
         adjustment_measurements = pred[is_adjustment_measurements].reset_index(drop=True)
@@ -162,4 +153,5 @@ class BaseTest(object):
 
 class TestDummyAverager(unittest.TestCase, BaseTest):
     def setUp(self) -> None:
+        super().set_up()
         self.algorithm = DummyAverager()
