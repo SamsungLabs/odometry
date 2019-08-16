@@ -1,10 +1,10 @@
 from keras.layers import Lambda, Flatten
 
 from slam.models.layers import (concat,
-                                    conv2d,
-                                    gated_conv2d,
-                                    construct_double_fc,
-                                    construct_outputs)
+                                conv2d,
+                                gated_conv2d,
+                                construct_double_fc,
+                                construct_outputs)
 from slam.utils import mlflow_logging
 
 
