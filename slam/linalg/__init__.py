@@ -7,6 +7,7 @@ from .linalg_utils import split_se3
 from .trajectory import GlobalTrajectory
 from .trajectory import RelativeTrajectory
 
+from .quaternion import QuaternionWithTranslation
 
 __all__ = [
     'convert_rotation_matrix_to_euler_angles',
@@ -15,5 +16,6 @@ __all__ = [
     'form_se3',
     'split_se3',
     'GlobalTrajectory',
-    'RelativeTrajectory'
+    'RelativeTrajectory',
+    'QuaternionWithTranslation'
 ]
