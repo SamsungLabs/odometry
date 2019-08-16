@@ -7,9 +7,10 @@ from slam.models import DummySlam
 
 class DummySlamRunner(BaseSlamRunner):
 
-    def __init__(self, knn=20, keyframe_period=10, *args, **kwargs):
+    def __init__(self, knn=20, keyframe_period=10, matches_threshold=100, *args, **kwargs):
         super().__init__(knn=knn, *args, **kwargs)
         self.keyframe_period = keyframe_period
+        self.matches_threshold = matches_threshold
 
     def get_slam(self):
         return DummySlam(reloc_weights_path=self.reloc_weights,
@@ -17,13 +18,15 @@ class DummySlamRunner(BaseSlamRunner):
                          odometry_model_path=self.odometry_model,
                          knn=self.knn,
                          input_shapes=self.config['target_size'],
-                         keyframe_period=self.keyframe_period)
+                         keyframe_period=self.keyframe_period,
+                         matches_threshold=self.matches_threshold)
 
     @staticmethod
     def get_parser():
-        parser = BaseSlamRunner.get_parser()
-        parser.add_argument('--keyframe_period', type=int, default=10, help='Period of keyframe selection')
-        return parser
+        p = BaseSlamRunner.get_parser()
+        p.add_argument('--keyframe_period', type=int, default=10, help='Period of keyframe selection')
+        p.add_argument('--matches_threshold', type=int, default=100, help='Parameter for BoVW')
+        return p
 
 
 if __name__ == '__main__':
