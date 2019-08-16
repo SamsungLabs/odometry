@@ -9,6 +9,7 @@ from pathlib import Path
 
 import env
 from slam.aggregation import DummyAverager
+from slam.aggregation import GraphOptimizer
 from slam.evaluation import calculate_metrics, normalize_metrics
 from slam.linalg import RelativeTrajectory
 
@@ -35,11 +36,8 @@ class BaseTest(object):
         self.assertAlmostEqual(record['RMSE_r'], 0, places=rotation_precision)
 
     def assert_greater(self, record1, record2):
-        self.assertGreater(record1['ATE'], record2['ATE'])
-        self.assertGreater(record1['RPE_r'], record2['RPE_r'])
-        self.assertGreater(record1['RPE_t'], record2['RPE_t'])
-        self.assertGreater(record1['RMSE_t'], record2['RMSE_t'])
-        self.assertGreater(record1['RMSE_r'], record2['RMSE_r'])
+        for k in record1.keys():
+            self.assertGreater(record1[k], record2[k])
 
     def predict(self, csv_paths):
         for p in csv_paths:
@@ -54,7 +52,7 @@ class BaseTest(object):
         record = normalize_metrics(record)
 
         trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}' for key, value in record.items()])
-        title = f'{"03".upper()}: {trajectory_metrics_as_str}'
+        title = f'{trajectory_metrics_as_str}'
 
         visualize_trajectory_with_gt(gt_trajectory=gt_trajectory,
                                      predicted_trajectory=predicted_trajectory,
@@ -154,3 +152,9 @@ class TestDummyAverager(unittest.TestCase, BaseTest):
     def setUp(self) -> None:
         super().set_up()
         self.algorithm = DummyAverager()
+
+
+class TestGraphOptimizer(unittest.TestCase, BaseTest):
+    def setUp(self) -> None:
+        super().set_up()
+        self.algorithm = GraphOptimizer()
