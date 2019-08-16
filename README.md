@@ -4,7 +4,7 @@ PREREQUISITE:
 
 1. Install g2opy:
     - git clone https://github.com/uoip/g2opy.git submodules/g2opy
-    - sudo apt install libqglviewer-dev
+    - sudo apt install libqglviewer-dev-qt4
     - cd submodules/g2opy
     - mkdir build
     - cd build/
