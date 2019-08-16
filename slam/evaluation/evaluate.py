@@ -77,11 +77,15 @@ def calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
         RPE translation, RPE rotation
     '''
 
-    gt_points = gt_trajectory.points
-    gt_rotation_matrices = gt_trajectory.rotation_matrices
+    gt_points = gt_trajectory.points[..., None]
+    R_gt = gt_trajectory.rotation_matrices
+    R_gt_inv = R_gt.transpose((0, 2, 1))
 
-    predicted_points = predicted_trajectory.points
-    predicted_rotation_matrices = predicted_trajectory.rotation_matrices
+    predicted_points = predicted_trajectory.points[..., None]
+    R_predicted = predicted_trajectory.rotation_matrices
+    R_predicted_inv = R_predicted.transpose((0, 2, 1))
+
+    R = R_gt @ R_predicted_inv
 
     distance_based = (rpe_indices == 'kitti')
     if distance_based:
@@ -106,21 +110,13 @@ def calculate_relative_pose_error(gt_trajectory, predicted_trajectory,
         if len(first_indices) == 0:
             continue
 
-        R_first_gt = gt_rotation_matrices[first_indices]
-        R_second_inv_gt = gt_rotation_matrices[second_indices].transpose((0, 2, 1))
+        delta_predicted = predicted_points[second_indices] - predicted_points[first_indices]
+        delta_gt = gt_points[second_indices] - gt_points[first_indices]
 
-        R_second_predicted = predicted_rotation_matrices[second_indices]
-        R_first_inv_predicted = predicted_rotation_matrices[first_indices].transpose((0, 2, 1))
-
-        delta_predicted = (predicted_points[second_indices] - predicted_points[first_indices]).reshape((-1, 3, 1))
-        delta_gt = (gt_points[second_indices] - gt_points[first_indices]).reshape((-1, 3, 1))
-
-        R = R_second_inv_gt @ R_first_gt @ R_first_inv_predicted
-
-        E_translation = R @ delta_predicted - R_second_inv_gt @ delta_gt
+        E_translation = R[first_indices] @ delta_predicted - delta_gt
         l2_norms = np.sum(E_translation ** 2, axis=(1, 2))
 
-        E_rotation = R @ R_second_predicted
+        E_rotation = R_gt_inv[second_indices] @ R[first_indices] @ R_predicted[second_indices]
         thetas = np.arccos(np.clip((np.trace(E_rotation, axis1=1, axis2=2) - 1) / 2, -1, 1))
 
         if rpe_mode == 'rmse':

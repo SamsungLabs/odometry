@@ -1,7 +1,5 @@
 from keras.applications.resnet50 import ResNet50
-from keras.layers.convolutional import Conv2D
-from keras.layers.merge import concatenate
-from keras.layers import Flatten, Dense
+from keras.layers import Flatten, Dense, Conv2D, concatenate
 from keras.regularizers import l2
 
 from slam.models.layers import (concat,
