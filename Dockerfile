@@ -16,11 +16,14 @@ RUN /home/odometry/miniconda/bin/conda env create -n odometry -f conda.yml
 RUN apt-get install locales
 RUN locale-gen en_US
 
-RUN git clone https://github.com/uoip/g2opy.git g2opy
-RUN cd g2opy
-RUN mkdir build
-RUN cd build
-RUN cmake -DPYBIND11_PYTHON_VERSION=3.6 ..
-RUN make -j8
-RUN cd ..
-RUN python setup.py install
+RUN git clone https://github.com/uoip/g2opy.git /home/odometry/g2opy
+RUN apt-get install -y libeigen3-dev libsuitesparse-dev
+RUN /home/odometry/miniconda/bin/conda install pybind11
+RUN PATH=/home/odometry/miniconda/envs/odometry/bin:$PATH && \
+    cd /home/odometry/g2opy && \
+    mkdir build && \
+    cd build && \
+    cmake -DPYBIND11_PYTHON_VERSION=3.6 .. && \
+    make -j8 && \
+    cd .. && \
+    python setup.py install
