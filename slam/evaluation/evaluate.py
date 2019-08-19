@@ -56,7 +56,10 @@ def calculate_cumulative_distances(points):
 
 
 def get_pairs_of_indices(trajectory_length, step, stride=None, distances=None):
-    if distances is not None:
+    if distances is None:
+        first_indices = np.arange(trajectory_length - step)
+        second_indices = first_indices + step
+    else:
         first_indices, second_indices = [], []
         first_index = 0
         second_distance = step
@@ -67,9 +70,7 @@ def get_pairs_of_indices(trajectory_length, step, stride=None, distances=None):
             first_indices.append(first_index)
             second_indices.append(find_closest_index(distances, second_distance) + 1)
             first_index += stride
-    else:
-        first_indices = np.arange(trajectory_length - step)
-        second_indices = first_indices + step
+
     return first_indices, second_indices
 
 
