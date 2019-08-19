@@ -68,7 +68,7 @@ class MetricAverager:
     def get_base_name(run_name: str) -> Union[str, None]:
         run_name_split = run_name.split('_')
 
-        if len(run_name) < 2 or (run_name_split[-2] != 'b'):
+        if len(run_name_split) < 2 or (run_name_split[-2] != 'b'):
             return None
         else:
             return '_'.join(run_name_split[:-2])
