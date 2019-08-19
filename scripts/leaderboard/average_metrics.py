@@ -15,7 +15,8 @@ class MetricAverager:
     def __init__(self):
         self.client = mlflow.tracking.MlflowClient(env.TRACKING_URI)
         mlflow.set_tracking_uri(env.TRACKING_URI)
-        self.save_once = ['successfully_finished', 'num_of_parameters', 'Number of parameters']
+        self.ignore = ['successfully_finished']
+        self.save_once = ['num_of_parameters', 'Number of parameters']
         self._run_infos = None
 
     def average_db(self):
@@ -83,6 +84,8 @@ class MetricAverager:
     def calculate_mean(self, metrics):
         metrics_mean = dict()
         for k, v in metrics.items():
+            if k in self.ignore:
+                continue
             if k in self.save_once:
                 metrics_mean[k] = v[0]
                 continue
@@ -92,7 +95,7 @@ class MetricAverager:
     def calculate_std(self, metrics):
         metrics_std = dict()
         for k, v in metrics.items():
-            if k in self.save_once:
+            if k in self.save_once or k in self.ignore:
                 continue
             metrics_std[k + '_std'] = np.std(v)
         return metrics_std
