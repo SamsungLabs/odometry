@@ -10,7 +10,7 @@ from multiprocessing import Pool
 
 import env
 
-from scripts.leaderboard.average_metrics import average_metrics
+from scripts.leaderboard.average_metrics import average_run
 
 
 class Leaderboard:
@@ -93,7 +93,7 @@ class Leaderboard:
 
         self.log('Averaging metrics', dataset_type)
         try:
-            average_metrics(self.run_name, dataset_type)
+            average_run(dataset_type, self.run_name)
         except Exception as e:
             self.log(e)
 
