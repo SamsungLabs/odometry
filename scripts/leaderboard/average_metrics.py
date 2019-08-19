@@ -86,9 +86,6 @@ class MetricAverager:
         for k, v in metrics.items():
             if k in self.ignore:
                 continue
-            if k in self.save_once:
-                metrics_mean[k] = v[0]
-                continue
             metrics_mean[k] = np.mean(v)
         return metrics_mean
 
