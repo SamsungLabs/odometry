@@ -7,6 +7,7 @@ import env
 
 from slam.base_trainer import BaseTrainer
 from slam.models import ModelWithConfidenceFactory
+from slam.data_manager import GeneratorFactory
 
 
 class ConfidenceTrainer(BaseTrainer):
