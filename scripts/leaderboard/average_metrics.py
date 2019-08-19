@@ -86,7 +86,6 @@ class MetricAverager:
                 metrics_mean[k] = v[0]
                 continue
             metrics_mean[k] = np.mean(v)
-        metrics_mean = {k + '_mean': np.mean(v) for k, v in metrics.items()}
         return metrics_mean
 
     def calculate_std(self, metrics):
@@ -95,7 +94,6 @@ class MetricAverager:
             if k in self.save_once:
                 continue
             metrics_std[k + '_std'] = np.std(v)
-        metrics_std = {k + '_std': np.std(v) for k, v in metrics.items()}
         return metrics_std
 
     def average_run(self, experiment_name, run_name):
