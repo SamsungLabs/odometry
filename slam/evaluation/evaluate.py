@@ -6,12 +6,30 @@ from slam.utils import Toolbox
 
 
 def calculate_relative_distances(points):
+    """
+    Calculates distances between neighboring points along the trajectory.
+
+    Args:
+        points:               nparray or tensor, n x 3
+
+    Returns:
+        relative_distances:   same dtype as points, n x 1
+    """
     relative_distances = ((points[1:] - points[:-1]) ** 2).sum(1) ** 0.5
     return relative_distances
 
 
-def calculate_curve_length(trajectory):
-    relative_distances = calculate_relative_distances(trajectory)
+def calculate_curve_length(points):
+    """
+    Calculates physical length of trajectory.
+
+    Args:
+        points:         nparray or tensor, n x 3
+
+    Returns:
+        curve length:   float or single tensor
+    """
+    relative_distances = calculate_relative_distances(points)
     return relative_distances.sum()
 
 
@@ -23,6 +41,15 @@ def find_closest_index(arr, value):
 
 
 def calculate_cumulative_distances(points):
+    """
+    Calculates distance from starting point to every point of trajectory.
+
+    Args:
+        points:                 nparray or tensor, n x 3
+
+    Returns:
+        cumulative_distances:   same dtype as points, n x 1
+    """
     relative_distances = calculate_relative_distances(points)
     cumulative_distances = relative_distances.cumsum(0)
     return cumulative_distances
