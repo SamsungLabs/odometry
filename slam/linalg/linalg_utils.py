@@ -103,7 +103,7 @@ def quaternion_to_euler(quaternion):
     return roll, pitch, yaw
 
 
-def euler_to_quaternion_uncertainty(euler_angles_xyz, covariance_matrix_euler=np.eye(6)):
+def convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles_xyz, covariance_matrix_euler=np.eye(6)):
     yaw   = euler_angles_xyz[2]
     pitch = euler_angles_xyz[1]
     roll  = euler_angles_xyz[0]
