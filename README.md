@@ -2,16 +2,13 @@
 
 PREREQUISITE: 
 
-1. Install g2opy:
-    - git clone https://github.com/uoip/g2opy.git submodules/g2opy
-    - sudo apt install libqglviewer-dev-qt4
-    - cd submodules/g2opy
-    - mkdir build
-    - cd build/
-    - cmake -DPYBIND11_PYTHON_VERSION=3.6 ..
-    - make -j8
-    - cd ..
-    - python setup.py install
+Dependences:
+libqglviewer-dev-qt4
+libeigen3-dev
+libsuitesparse-dev
+
+Installation:
+1. build.sh
 
 Add odometry directory to PYTHONPATH: export PYTHONPATH=PATH-TO-ODOMETRY:$PYTHONPATH
 
