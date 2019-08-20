@@ -31,36 +31,36 @@ class BaseSlamRunner(BaseTrainer):
         self.preprocess_mode = 'rgb'
         self.batch_size = 1
 
-    def create_trajectory_dir(self, trajectory_id, subset):
+    def create_visualization_path(self, trajectory_id, subset):
         trajectory_name = trajectory_id.replace('/', '_')
-        dir_path = os.path.join(self.run_dir, subset, trajectory_name)
-        os.makedirs(dir_path, exist_ok=True)
-        return dir_path
+        file_path = os.path.join(self.run_dir, 'visuals', subset, trajectory_name)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        return file_path
+
+    def create_prediction_path(self, trajectory_id):
+        trajectory_name = trajectory_id.replace('/', '_')
+        file_path = os.path.join(self.run_dir, 'predictions', trajectory_name, 'df.csv')
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        return file_path
 
     def evaluate_trajectory(self, prediction, gt, subset):
 
         trajectory_id = prediction['id']
 
-        trajectory_dir = self.create_trajectory_dir(trajectory_id, subset)
+        prediction_path = self.create_prediction_path(trajectory_id)
+        prediction['frame_history'].to_csv(prediction_path, index=False)
 
-        prediction['frame_history'].to_csv(os.path.join(trajectory_dir, 'frame_history.csv'), index=False)
         predicted_trajectory = prediction['trajectory']
-
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
-        record = calculate_metrics(gt_trajectory,
-                                   predicted_trajectory,
-                                   rpe_indices=self.config['rpe_indices'])
-
-        record = normalize_metrics(record)
-        trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}'
-                                               for key, value in record.items()])
+        record = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices=self.config['rpe_indices'])
+        normalized_record = normalize_metrics(record)
+        trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}' for key, value in normalized_record.items()])
         title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
-
-        visualize_path = os.path.join(trajectory_dir, trajectory_id.replace('/', '_'))
+        visualization_path = self.create_visualization_path(trajectory_id, subset)
         visualize_trajectory_with_gt(gt_trajectory,
                                      predicted_trajectory,
                                      title=title,
-                                     file_path=visualize_path)
+                                     file_path=visualization_path)
 
         mlflow.log_artifacts(self.run_dir, subset) if mlflow.active_run() else None
 

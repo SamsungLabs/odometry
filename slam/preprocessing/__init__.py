@@ -1,5 +1,6 @@
 from slam.preprocessing.prepare_trajectory import prepare_trajectory
 from slam.preprocessing.prepare_dataset import prepare_dataset
+from slam.preprocessing.prepare_dataset import get_default_dataset_parser
 from slam.preprocessing.dataset_configs import DATASET_TYPES
 from slam.preprocessing.dataset_configs import get_config
 
@@ -23,6 +24,7 @@ __all__ = [
     'get_config',
     'prepare_trajectory',
     'prepare_dataset',
+    'get_default_dataset_parser',
     'KITTIParser',
     'TUMParser',
     'RetailBotParser',

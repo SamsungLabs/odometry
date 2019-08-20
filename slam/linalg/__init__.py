@@ -9,6 +9,7 @@ from .linalg_utils import euler_to_quaternion
 from .trajectory import GlobalTrajectory
 from .trajectory import RelativeTrajectory
 
+from .quaternion import QuaternionWithTranslation
 
 __all__ = [
     'convert_rotation_matrix_to_euler_angles',
@@ -19,5 +20,6 @@ __all__ = [
     'GlobalTrajectory',
     'RelativeTrajectory',
     'convert_euler_uncertainty_to_quaternion_uncertainty',
-    'euler_to_quaternion'
+    'euler_to_quaternion',
+    'QuaternionWithTranslation'
 ]

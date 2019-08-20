@@ -1,6 +1,6 @@
 from keras.layers import Lambda, Conv2D, GlobalAveragePooling2D
 
-from slam.models.layers import concat, conv2d, AddGridLayer
+from slam.models.layers import concat, conv2d, AddGrid
 from slam.utils import mlflow_logging
 
 
@@ -16,7 +16,7 @@ def construct_rigidity_model(inputs,
 
     inputs = concat(inputs)
     if add_grid_layer:
-        inputs = AddGridLayer(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(inputs)
+        inputs = AddGrid(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(inputs)
 
     conv1 = conv2d(inputs, 32, kernel_size=7, batchnorm=batchnorm, strides=2,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
