@@ -8,7 +8,7 @@ from collections import defaultdict
 import __init_path__
 import env
 
-from typing import List, Set, Union
+from typing import List, Set, Union, Iterator
 
 
 class MetricAverager:
@@ -30,14 +30,21 @@ class MetricAverager:
         run_infos = self.get_run_infos(experiment_name)
         run_names = self.get_run_names(run_infos)
         base_names = self.get_base_names(run_names)
-        base_names = self.filter_already_averaged(run_names, base_names)
+        base_names = filter(lambda x: x + '_avg' not in run_names, base_names)
 
         counter = 0
-        for base_name in base_names:
+        for counter, base_name in enumerate(base_names):
             print(f'    Averaging {base_name} run.')
             self.average_run(experiment_name, base_name)
-            counter += 1
         print(f'    Averaged {counter} runs in {experiment_name} experiment.')
+
+    def get_run_infos(self, experiment_name):
+        if self._run_infos is None:
+            experiment = self.client.get_experiment_by_name(experiment_name)
+            run_infos = self.client.list_run_infos(experiment.experiment_id)
+            return run_infos
+        else:
+            return self._run_infos
 
     def get_run_names(self, run_infos: List[entities.RunInfo]) -> List[str]:
         run_names = list()
@@ -51,18 +58,10 @@ class MetricAverager:
         for run_name in run_names:
             base_name = self.get_base_name(run_name)
             if base_name is None:
-                print(f'    It seems like given run name {run_name} is not belongs to any bundle')
+                print(f'    It seems like {run_name} does not belong to any bundle')
             else:
-                base_names.add(self.get_base_name(run_name))
+                base_names.add(base_name)
         return base_names
-
-    @staticmethod
-    def filter_already_averaged(run_names: List[str], base_names: Set[str]) -> Set[str]:
-        filtered_base_names = set()
-        for base_name in base_names:
-            if (base_name + '_avg') not in run_names:
-                filtered_base_names.add(base_name)
-        return filtered_base_names
 
     @staticmethod
     def get_base_name(run_name: str) -> Union[str, None]:
@@ -73,37 +72,13 @@ class MetricAverager:
         else:
             return '_'.join(run_name_split[:-2])
 
-    def get_run_infos(self, experiment_name):
-        if self._run_infos is None:
-            experiment = self.client.get_experiment_by_name(experiment_name)
-            run_infos = self.client.list_run_infos(experiment.experiment_id)
-            return run_infos
-        else:
-            return self._run_infos
-
-    def calculate_mean(self, metrics):
-        metrics_mean = dict()
-        for k, v in metrics.items():
-            if k in self.ignore:
-                continue
-            metrics_mean[k] = np.mean(v)
-        return metrics_mean
-
-    def calculate_std(self, metrics):
-        metrics_std = dict()
-        for k, v in metrics.items():
-            if k in self.save_once or k in self.ignore:
-                continue
-            metrics_std[k + '_std'] = np.std(v)
-        return metrics_std
-
     def average_run(self, experiment_name, run_name):
         mlflow.set_experiment(experiment_name)
 
         metrics, model_name = self.load_metrics(experiment_name, run_name)
         aggregated_metrics = self.aggregate_metrics(metrics)
-        metrics_mean = self.calculate_mean(aggregated_metrics)
-        metrics_std = self.calculate_std(aggregated_metrics)
+        metrics_mean = self.calculate_stat(aggregated_metrics, np.mean, ignore=self.ignore)
+        metrics_std = self.calculate_stat(aggregated_metrics, np.std, ignore=self.ignore + self.save_once)
 
         num_of_runs = len(next(iter(aggregated_metrics.values())))
         run_name = run_name + '_avg'
@@ -141,6 +116,10 @@ class MetricAverager:
                 aggregated_metrics[k].append(v)
 
         return aggregated_metrics
+
+    @staticmethod
+    def calculate_stat(metrics, stat_fn, ignore):
+        return {k: stat_fn(v) for k, v in metrics.items() if k not in ignore}
 
 
 if __name__ == '__main__':
