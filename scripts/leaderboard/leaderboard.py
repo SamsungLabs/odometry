@@ -11,7 +11,7 @@ from multiprocessing import Pool
 import __init_path__
 import env
 
-from scripts.leaderboard.average_metrics import average_metrics
+from scripts.leaderboard.average_metrics import MetricAverager
 
 
 class Leaderboard:
@@ -33,6 +33,7 @@ class Leaderboard:
         if not os.path.exists(trainer_path):
             raise RuntimeError(f'Could not find trainer script {trainer_path}')
 
+        self.averager = MetricAverager()
         self.trainer_path = trainer_path
         self.dataset_type = dataset_type
         self.run_name = run_name
@@ -74,7 +75,7 @@ class Leaderboard:
         pool = Pool(len(self.leader_boards))
         for d_type in self.leader_boards:
             self.log(f'Submitting {d_type}')
-            pool.apply_async(self.submit_bundle, (d_type, ))
+            pool.apply_async(self.submit_bundle, (d_type,))
         pool.close()
         pool.join()
 
@@ -94,7 +95,7 @@ class Leaderboard:
 
         self.log('Averaging metrics', dataset_type)
         try:
-            average_metrics(self.run_name, dataset_type)
+            self.averager.average_run(dataset_type, self.run_name)
         except Exception as e:
             self.log(e)
 
@@ -217,7 +218,6 @@ class Leaderboard:
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--trainer_path', type=str, required=True)
     parser.add_argument('--dataset_type', '-t', type=str, required=True,
@@ -226,7 +226,7 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', '-n', type=str, required=True,
                         help='Name of the run. Must be unique and specific')
     parser.add_argument('--bundle_size', '-b', type=int, required=True, help='Number runs in evaluate')
-    parser.add_argument('--core' , '-c', type=int, default=3, help='Number of cpu core')
+    parser.add_argument('--core', '-c', type=int, default=3, help='Number of cpu core')
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console')
     parser.add_argument('--debug', action='store_true')
