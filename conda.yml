@@ -38,7 +38,7 @@ dependencies:
   - keras-preprocessing=1.0.9=py_0
   - mako=1.0.10=py_0
   - matplotlib-base=3.1.0=py36h5f35d83_0
-  - mlflow=1.1.0=py_0
+  - mlflow=1.2.0=py_0
   - nbconvert=5.4.1=py_2
   - nbformat=4.4.0=py36_0
   - networkx=2.3=py_0
