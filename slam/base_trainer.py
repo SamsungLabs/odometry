@@ -137,13 +137,8 @@ class BaseTrainer:
 
     def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
         terminate_on_nan_callback = TerminateOnNaN()
-        reduce_lr_callback = ReduceLROnPlateau(factor=self.reduce_factor)
-        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
+
         mlflow_callback = MlflowLogger(prefix=prefix)
-        callbacks = [terminate_on_nan_callback,
-                     reduce_lr_callback,
-                     terminate_on_lr_callback,
-                     mlflow_callback]
 
         monitor = 'val_RPE_t' if evaluate and not self.save_best_only else 'val_loss'
 
@@ -164,7 +159,16 @@ class BaseTrainer:
                                    backend='numpy',
                                    cuda=False,
                                    workers=8)
-        callbacks.append(predict_callback)
+
+        reduce_lr_callback = ReduceLROnPlateau(monitor=monitor, factor=self.reduce_factor)
+
+        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
+
+        callbacks = [terminate_on_nan_callback,
+                     mlflow_callback,
+                     predict_callback,
+                     reduce_lr_callback,
+                     terminate_on_lr_callback]
 
         if self.period:
             weights_dir = os.path.join(save_dir, 'weights')
