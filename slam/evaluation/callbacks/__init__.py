@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-def on_batch_end(cls, batch, logs=None):
+def reset_params_on_batch_end(cls, batch, logs=None):
     cls.params['metrics'] = ['loss', 'val_loss']
 
     logs = logs or {}
@@ -33,10 +33,10 @@ def on_batch_end(cls, batch, logs=None):
         cls.progbar.update(cls.seen, cls.log_values)
 
 
-keras.callbacks.ProgbarLogger.on_batch_end = on_batch_end
+keras.callbacks.ProgbarLogger.on_batch_end = reset_params_on_batch_end
 
 
-def on_train_end(self, logs=None):
+def save_weights_on_train_end(self, logs=None):
     logs = logs or {}
     file_ext = os.path.splitext(self.filepath)[-1]
     file_path = os.path.join(os.path.dirname(self.filepath), 'final' + file_ext)
@@ -46,4 +46,13 @@ def on_train_end(self, logs=None):
         self.model.save(file_path, overwrite=True)
 
 
-keras.callbacks.ModelCheckpoint.on_train_end = on_train_end
+keras.callbacks.ModelCheckpoint.on_train_end = save_weights_on_train_end
+
+
+def update_logs_on_epoch_end(self, epoch, logs=None):
+    logs = logs or {}
+    for callback in self.callbacks:
+        logs = callback.on_epoch_end(epoch, logs) or logs
+
+
+keras.callbacks.CallbackList.on_epoch_end = update_logs_on_epoch_end
