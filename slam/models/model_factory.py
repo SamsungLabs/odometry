@@ -14,16 +14,7 @@ from slam.models.losses import (mean_squared_error,
                                 confidence_error,
                                 rmse,
                                 smooth_L1)
-from slam.models.layers import (activ,
-                                concat,
-                                conv2d,
-                                conv2d_transpose,
-                                gated_conv2d,
-                                construct_fc,
-                                construct_double_fc,
-                                construct_outputs,
-                                DepthFlow,
-                                AddGrid)
+from slam.models.layers import CUSTOM_LAYERS
 from slam.utils import mlflow_logging
 
 
@@ -43,27 +34,15 @@ class PretrainedModelFactory(BaseModelFactory):
         sess = tf.Session()
         keras.backend.set_session(sess)
         with sess.as_default():
-            self.model = load_model(
-            self.pretrained_path,
             custom_objects={'mean_squared_error': mean_squared_error,
                             'mean_absolute_error': mean_absolute_error,
                             'mean_squared_logarithmic_error': mean_squared_logarithmic_error,
                             'smooth_L1': smooth_L1,
-                            'smoothL1': smooth_L1,
                             'flow_loss': mean_squared_logarithmic_error,
                             'confidence_error': confidence_error,
                             'rmse': rmse,
-                            'activ': activ,
-                            'concat': concat,
-                            'conv2d': conv2d,
-                            'conv2d_transpose': conv2d_transpose,
-                            'gated_conv2d': gated_conv2d,
-                            'construct_fc': construct_fc,
-                            'construct_double_fc': construct_double_fc,
-                            'construct_outputs': construct_outputs,
-                            'DepthFlow': DepthFlow,
-                            'AddGrid': AddGrid,
-                            })
+                            **CUSTOM_LAYERS}
+            self.model = load_model(self.pretrained_path, custom_objects=custom_objects)
         return self.model
 
 
