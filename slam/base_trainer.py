@@ -167,7 +167,10 @@ class BaseTrainer:
                                    save_best_only=self.save_best_only,
                                    evaluate=evaluate,
                                    rpe_indices=self.config['rpe_indices'],
-                                   max_to_visualize=self.max_to_visualize)
+                                   max_to_visualize=self.max_to_visualize,
+                                   backend='numpy',
+                                   cuda=False,
+                                   workers=8)
         callbacks.append(predict_callback)
 
         return callbacks
