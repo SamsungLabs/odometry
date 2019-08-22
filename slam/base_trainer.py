@@ -84,7 +84,7 @@ class BaseTrainer:
         exp_dir = exp_name.replace('/', '_')
         if exp is None:
             exp_path = os.path.join(self.artifact_path, exp_dir)
-            os.makedirs(exp_path, exist_ok=True)
+            os.makedirs(exp_path)
             os.chmod(exp_path, 0o777)
             mlflow.create_experiment(exp_name, exp_path)
             exp = client.get_experiment_by_name(exp_name)
@@ -137,25 +137,12 @@ class BaseTrainer:
 
     def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
         terminate_on_nan_callback = TerminateOnNaN()
-        reduce_lr_callback = ReduceLROnPlateau(factor=self.reduce_factor)
-        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
-        mlflow_callback = MlflowLogger(prefix=prefix)
-        callbacks = [terminate_on_nan_callback,
-                     reduce_lr_callback,
-                     terminate_on_lr_callback,
-                     mlflow_callback]
 
-        if self.period:
-            save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
-            weights_dir = os.path.join(save_dir, 'weights')
-            os.makedirs(weights_dir, exist_ok=True)
-            weights_filename = '{epoch:03d}_train:{loss:.6f}_val:{val_loss:.6f}.hdf5'
-            weights_path = os.path.join(weights_dir, weights_filename)
-            checkpoint_callback = ModelCheckpoint(filepath=weights_path,
-                                                  save_best_only=self.save_best_only,
-                                                  mode='min',
-                                                  period=self.period)
-            callbacks.append(checkpoint_callback)
+        mlflow_callback = MlflowLogger(prefix=prefix)
+
+        monitor = 'val_RPE_t' if evaluate and not self.save_best_only else 'val_loss'
+
+        save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
 
         predict_callback = Predict(model=model,
                                    dataset=dataset,
@@ -163,6 +150,7 @@ class BaseTrainer:
                                    save_dir=save_dir,
                                    artifact_dir=self.run_name,
                                    prefix=prefix,
+                                   monitor=monitor,
                                    period=self.period,
                                    save_best_only=self.save_best_only,
                                    evaluate=evaluate,
@@ -171,7 +159,28 @@ class BaseTrainer:
                                    backend='numpy',
                                    cuda=False,
                                    workers=8)
-        callbacks.append(predict_callback)
+
+        reduce_lr_callback = ReduceLROnPlateau(monitor=monitor, factor=self.reduce_factor)
+
+        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
+
+        callbacks = [terminate_on_nan_callback,
+                     mlflow_callback,
+                     predict_callback,
+                     reduce_lr_callback,
+                     terminate_on_lr_callback]
+
+        if self.period:
+            weights_dir = os.path.join(save_dir, 'weights')
+            os.makedirs(weights_dir, exist_ok=True)
+            weights_filename = predict_callback.template + '.hdf5'
+            weights_path = os.path.join(weights_dir, weights_filename)
+            checkpoint_callback = ModelCheckpoint(monitor=monitor,
+                                                  filepath=weights_path,
+                                                  save_best_only=self.save_best_only,
+                                                  mode='min',
+                                                  period=self.period)
+            callbacks.append(checkpoint_callback)
 
         return callbacks
 
@@ -201,8 +210,7 @@ class BaseTrainer:
         self.fit_generator(model=model,
                            dataset=dataset,
                            epochs=self.epochs,
-                           evaluate=True,
-                           save_dir='.')
+                           evaluate=True)
 
         mlflow.log_metric('successfully_finished', 1)
         mlflow.end_run()

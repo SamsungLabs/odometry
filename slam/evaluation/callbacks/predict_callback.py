@@ -1,22 +1,28 @@
 import os
+import stat
 import mlflow
 import numpy as np
 import pandas as pd
-from itertools import chain
 from multiprocessing import Pool
 
 import keras
 from keras import backend as K
 
-from slam.evaluation.evaluate import (calculate_metrics,
-                                      average_metrics,
-                                      normalize_metrics)
+from slam.evaluation import calculate_metrics, average_metrics, normalize_metrics
 from slam.linalg import RelativeTrajectory
-from slam.utils import visualize_trajectory_with_gt, visualize_trajectory
+from slam.utils import (visualize_trajectory_with_gt,
+                        visualize_trajectory,
+                        create_vis_file_path,
+                        create_prediction_file_path,
+                        partial_format)
 
 
-def _process_single_task(args):
-    predicted_trajectory, gt_trajectory, trajectory_id, rpe_indices, backend, cuda = args
+def process_single_task(args):
+    gt_trajectory = args['gt']
+    predicted_trajectory = args['predicted']
+    rpe_indices = args['rpe_indices']
+    backend = args['backend']
+    cuda = args['cuda']
     trajectory_metrics = calculate_metrics(gt_trajectory,
                                            predicted_trajectory,
                                            rpe_indices=rpe_indices,
@@ -33,6 +39,7 @@ class Predict(keras.callbacks.Callback):
                  save_dir=None,
                  artifact_dir=None,
                  prefix=None,
+                 monitor='val_loss',
                  period=10,
                  save_best_only=True,
                  max_to_visualize=5,
@@ -47,10 +54,13 @@ class Predict(keras.callbacks.Callback):
         self.save_dir = save_dir
         self.artifact_dir = artifact_dir
         self.prefix = prefix
+        self.add_prefix = lambda k: (self.prefix + '_' + k) if self.prefix else k
 
+        self.monitor = monitor
+        self.template = ''.join(['{epoch:03d}', '_', self.monitor, '_', '{', self.monitor, ':.6f', '}'])
         self.period = period
         self.epoch = 0
-        self.last_evaluated_epoch = 0
+        self.epochs_since_last_predict = 0
         self.best_loss = np.inf
         self.save_best_only = save_best_only
         self.max_to_visualize = max_to_visualize
@@ -70,66 +80,37 @@ class Predict(keras.callbacks.Callback):
 
         self.y_cols = self.train_generator.y_cols[:]
 
-        if self.save_dir:
-            self.visuals_dir = os.path.join(self.save_dir, 'visuals')
-            os.makedirs(self.visuals_dir, exist_ok=True)
-
-            self.predictions_dir = os.path.join(self.save_dir, 'predictions')
-            os.makedirs(self.predictions_dir, exist_ok=True)
-
         self.save_artifacts = self.run_dir and self.artifact_dir
 
-    def _create_visualization_file_path(self, trajectory_id, subset, prediction_id):
-        trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(self.visuals_dir,
-                                 prediction_id,
-                                 subset,
-                                 f'{trajectory_name}.html')
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        return file_path
-
-    def _create_prediction_file_path(self, trajectory_id, subset, prediction_id):
-        trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(self.predictions_dir,
-                                 prediction_id,
-                                 subset,
-                                 f'{trajectory_name}.csv')
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        return file_path
-
-    def _create_trajectory(self, df):
+    def create_trajectory(self, df):
         return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
 
-    def _save_predictions(self, predictions, trajectory_id, subset, prediction_id):
-        file_path = self._create_prediction_file_path(trajectory_id,
-                                                      subset,
-                                                      prediction_id)
+    def save_predictions(self, predictions, trajectory_id, subset, prediction_id):
+        file_path = create_prediction_file_path(trajectory_id, subset, prediction_id, self.save_dir)
         predictions.to_csv(file_path)
+        os.chmod(file_path, 0o777)
 
-    def _visualize_trajectory(self,
-                              predicted_trajectory,
-                              gt_trajectory,
-                              trajectory_id,
-                              subset,
-                              prediction_id,
-                              trajectory_metrics=None):
-        file_path = self._create_visualization_file_path(trajectory_id,
-                                                         subset,
-                                                         prediction_id)
+    def visualize_trajectory(self,
+                             predicted_trajectory,
+                             gt_trajectory,
+                             trajectory_id,
+                             subset,
+                             prediction_id,
+                             record=None):
+        file_path = create_vis_file_path(trajectory_id, subset, prediction_id, self.save_dir)
         if gt_trajectory is None:
             title = trajectory_id.upper()
             visualize_trajectory(predicted_trajectory, title=title, file_path=file_path)
         else:
-            trajectory_metrics = normalize_metrics(trajectory_metrics)
-            trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}'
-                                                   for key, value in trajectory_metrics.items()])
-            title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
+            record_as_str = ', '.join([f'{k}: {v:.6f}' for k, v in normalize_metrics(record).items()])
+            title = f'{trajectory_id.upper()}: {record_as_str}'
             visualize_trajectory_with_gt(gt_trajectory,
                                          predicted_trajectory,
                                          title=title,
                                          file_path=file_path)
+        os.chmod(file_path, 0o777)
 
-    def _predict_generator(self, generator):
+    def predict_generator(self, generator):
         generator.reset()
         generator.y_cols = self.y_cols[:]
         model_output = self.model.predict_generator(generator, steps=len(generator))
@@ -145,114 +126,139 @@ class Predict(keras.callbacks.Callback):
         predictions['path_to_rgb_next'] = generator.df.path_to_rgb_next
         return predictions
 
-    def _create_tasks(self,
-                      predictions,
-                      gt,
-                      subset,
-                      prediction_id):
-        tasks = []
-
-        for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
-            self._save_predictions(predictions.iloc[indices],
-                                   trajectory_id,
-                                   subset,
-                                   prediction_id)
-
-            predicted_trajectory = self._create_trajectory(predictions.iloc[indices])
-            gt_trajectory = self._create_trajectory(gt.iloc[indices]) if self.evaluate else None
-
-            tasks.append([predicted_trajectory,
-                          gt_trajectory,
-                          trajectory_id,
-                          self.rpe_indices,
-                          self.backend,
-                          self.cuda])
-
-        return tasks
-
-    def _predict(self,
-                 generator,
-                 subset,
-                 prediction_id,
-                 max_to_visualize=None):
-
+    def create_tasks(self, generator, subset):
         if generator is None:
             return dict()
 
-        predictions = self._predict_generator(generator)
+        gt = generator.df
+        predictions = self.predict_generator(generator)
 
-        tasks = self._create_tasks(predictions, generator.df, subset, prediction_id)
+        tasks = []
 
-        if self.evaluate:
-            if self.workers:
-                pool = Pool(self.workers)
-                records = [res for res in pool.imap(_process_single_task, tasks)]
-                pool.close()
-                pool.join()
-            else:
-                records = [_process_single_task(task) for task in tasks]
+        for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
+            predicted_df = predictions.iloc[indices]
+            predicted_trajectory = self.create_trajectory(predicted_df)
+            gt_trajectory = self.create_trajectory(gt.iloc[indices]) if self.evaluate else None
 
+            tasks.append({'df': predicted_df,
+                          'predicted': predicted_trajectory,
+                          'gt': gt_trajectory,
+                          'id': trajectory_id,
+                          'subset': subset,
+                          'rpe_indices': self.rpe_indices,
+                          'backend': self.backend,
+                          'cuda': self.cuda})
+
+        return tasks
+
+    def save_tasks(self, tasks, prediction_id, max_to_visualize=None):
         max_to_visualize = max_to_visualize or len(tasks)
 
-        counter = 0
+        for counter, task in enumerate(tasks):
+            predicted_df = task['df']
+            trajectory_id = task['id']
+            subset = task['subset']
 
-        for index, task in enumerate(tasks):
-            predicted_trajectory = task[0]
-            gt_trajectory = task[1]
-            trajectory_id = task[2]
+            self.save_predictions(predicted_df,
+                                  trajectory_id,
+                                  subset,
+                                  prediction_id)
+
             if counter < max_to_visualize:
-                trajectory_metrics = records[index] if self.evaluate else None
-                self._visualize_trajectory(predicted_trajectory,
-                                           gt_trajectory,
-                                           trajectory_id,
-                                           subset,
-                                           prediction_id,
-                                           trajectory_metrics)
-            counter += 1
+                gt_trajectory = task['gt']
+                predicted_trajectory = task['predicted']
+                record = task.get('record', None)
 
-        if self.evaluate:
-            total_metrics = {f'{(self.prefix + "_") if self.prefix else ""}{subset}_{key}': float(value)
-                             for key, value in average_metrics(records).items()}
-            return total_metrics
+                self.visualize_trajectory(predicted_trajectory,
+                                          gt_trajectory,
+                                          trajectory_id,
+                                          subset,
+                                          prediction_id,
+                                          record)
 
-    def on_epoch_end(self, epoch, logs={}):
+    def process_tasks(self, tasks):
+        if self.workers:
+            with Pool(self.workers) as pool:
+                records = [res for res in pool.imap(process_single_task, tasks)]
+        else:
+            records = [process_single_task(task) for task in tasks]
+        return records
 
-        self.last_evaluated_epoch = epoch
+    def evaluate_tasks(self, tasks):
+        records = self.process_tasks(tasks)
+        assert len(records) == len(tasks)
+
+        subset = None
+        for index, record in enumerate(records):
+            tasks[index]['record'] = record
+            subset = subset or tasks[index]['subset']
+            assert subset == tasks[index]['subset']
+
+        total_metrics = average_metrics(records)
+        total_metrics = {self.add_prefix(subset + '_' + k): float(v) for k, v in total_metrics.items()}
+        return tasks, total_metrics
+
+    def is_best(self, logs):
+        loss = logs.get(self.monitor, np.inf)
+        if self.save_best_only and self.best_loss < loss:
+            return False
+        else:
+            self.best_loss = min(loss, self.best_loss)
+            return True
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+
         self.epoch += 1
+        self.epochs_since_last_predict += 1
 
-        if not self.period or self.epoch % self.period:
-            return
+        if self.period and self.epochs_since_last_predict % self.period == 0:
 
-        train_loss = logs['loss']
-        val_loss = logs.get('val_loss', np.inf)
-        if self.save_best_only and self.best_loss < val_loss:
-            return
+            if not self.is_best(logs):
+                return logs
 
-        self.best_loss = min(val_loss, self.best_loss)
+            prediction_id = partial_format(self.template, epoch=epoch + 1, **logs)
 
-        prediction_id = f'{(epoch + 1):03d}_train:{train_loss:.6f}_val:{val_loss:.6f}'
-
-        train_metrics = self._predict(self.train_generator, 'train', prediction_id, self.max_to_visualize)
-        val_metrics = self._predict(self.val_generator, 'val', prediction_id, self.max_to_visualize)
-
-        if mlflow.active_run():
+            val_tasks = self.create_tasks(self.val_generator, 'val')
             if self.evaluate:
-                [mlflow.log_metric(key=key, value=value, step=epoch + 1) for key, value in train_metrics.items()]
-                [mlflow.log_metric(key=key, value=value, step=epoch + 1) for key, value in val_metrics.items()]
+                val_tasks, val_metrics = self.evaluate_tasks(val_tasks)
+                prediction_id = partial_format(prediction_id, **val_metrics)
 
-            if self.save_artifacts:
-                mlflow.log_artifacts(self.run_dir, self.artifact_dir)
+                if not self.is_best(val_metrics):
+                    return logs
 
-    def on_train_end(self, logs={}):
+            train_tasks = self.create_tasks(self.train_generator, 'train')
+            if self.evaluate:
+                train_tasks, train_metrics = self.evaluate_tasks(train_tasks)
+                prediction_id = partial_format(prediction_id, **train_metrics)
 
+                logs = dict(**logs, **train_metrics, **val_metrics)
+
+            self.save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
+
+            if mlflow.active_run():
+                if self.evaluate:
+                    [mlflow.log_metric(key=k, value=v, step=epoch + 1) for k, v in train_metrics.items()]
+                    [mlflow.log_metric(key=k, value=v, step=epoch + 1) for k, v in val_metrics.items()]
+
+                if self.save_artifacts:
+                    mlflow.log_artifacts(self.run_dir, self.artifact_dir)
+
+            self.epochs_since_last_predict = 0
+
+        return logs
+
+    def on_train_end(self, logs=None):
         # Check to not calculate metrics twice on_train_end
-        if self.last_evaluated_epoch != (self.epoch - 1):
-            self.period = 1  
+        if self.epochs_since_last_predict:
+            self.period = 1
             self.on_epoch_end(self.epoch - 1, logs)
 
-        prediction_id = 'test'
+        test_tasks, test_metrics = self.create_tasks(self.test_generator, 'test')
+        if self.evaluate:
+            test_tasks, train_metrics = self.evaluate_tasks(test_tasks)
 
-        test_metrics = self._predict(self.test_generator, 'test', prediction_id)
+        self.save_tasks(test_tasks, prediction_id='test')
 
         if mlflow.active_run():
             if self.evaluate:
