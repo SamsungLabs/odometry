@@ -157,7 +157,6 @@ class Predict(keras.callbacks.Callback):
         return predictions
 
     def create_tasks(self, generator):
-
         if generator is None:
             return dict()
 
@@ -184,8 +183,7 @@ class Predict(keras.callbacks.Callback):
     def save_tasks(self, tasks, subset, prediction_id, max_to_visualize=None):
         max_to_visualize = max_to_visualize or len(tasks)
 
-        counter = 0
-        for index, task in enumerate(tasks):
+        for counter, task in enumerate(tasks):
             predicted_df = task['df']
             gt_trajectory = task['gt']
             predicted_trajectory = task['predicted']
@@ -204,7 +202,6 @@ class Predict(keras.callbacks.Callback):
                                           subset,
                                           prediction_id,
                                           record)
-            counter += 1
 
     def process_tasks(self, tasks):
         if self.workers:
