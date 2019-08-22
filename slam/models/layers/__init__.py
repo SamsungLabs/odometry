@@ -17,8 +17,7 @@ from .wrappers import conv2d
 from .wrappers import conv2d_transpose
 from .wrappers import gated_conv2d
 from .wrappers import gated_conv2d_transpose
-from .wrappers import construct_fc
-from .wrappers import construct_double_fc
+from .wrappers import dense
 
 from .special_layers import AddGrid
 from .special_layers import DepthFlow
@@ -46,8 +45,7 @@ __all__ = [
     'conv2d_transpose',
     'gated_conv2d',
     'gated_conv2d_transpose',
-    'construct_fc',
-    'construct_double_fc',
+    'dense',
     'AddGrid',
     'DepthFlow',
     'add_grid',
@@ -68,14 +66,13 @@ CUSTOM_LAYERS = {
      'repeat': repeat,
      'expand_as': expand_as,
      'chunk': chunk,
-     'concat': concat, 
+     'concat': concat,
      'activ': activ,
      'conv2d': conv2d,
      'conv2d_transpose': conv2d_transpose,
      'gated_conv2d': gated_conv2d,
      'gated_conv2d_transpose': gated_conv2d_transpose,
-     'construct_fc': construct_fc,
-     'construct_double_fc': construct_double_fc,
+     'dense': dense,
      'AddGrid': AddGrid,
      'DepthFlow': DepthFlow,
      'add_grid': add_grid,
