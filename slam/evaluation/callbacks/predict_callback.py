@@ -13,7 +13,7 @@ from slam.evaluation import (calculate_metrics,
 from slam.linalg import RelativeTrajectory
 from slam.utils import (visualize_trajectory_with_gt,
                         visualize_trajectory,
-                        PartialFormatter)
+                        partial_format)
 
 
 def process_single_task(args):
@@ -231,10 +231,6 @@ class Predict(keras.callbacks.Callback):
             self.best_loss = min(loss, self.best_loss)
             return True
 
-    def fill(self, template, **kwargs):
-        template = PartialFormatter().format(template, **kwargs)
-        return template
-
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
 
@@ -246,12 +242,12 @@ class Predict(keras.callbacks.Callback):
             if not self.is_best(logs):
                 return logs
 
-            prediction_id = self.fill(self.template, epoch=epoch + 1, **logs)
+            prediction_id = partial_format(self.template, epoch=epoch + 1, **logs)
 
             val_tasks = self.create_tasks(self.val_generator)
             if self.evaluate:
                 val_tasks, val_metrics = self.evaluate_tasks(val_tasks, 'val')
-                prediction_id = self.fill(prediction_id, **val_metrics)
+                prediction_id = partial_format(prediction_id, **val_metrics)
 
             if not self.is_best(val_metrics):
                 return logs
@@ -259,7 +255,7 @@ class Predict(keras.callbacks.Callback):
             train_tasks = self.create_tasks(self.train_generator)
             if self.evaluate:
                 train_tasks, train_metrics = self.evaluate_tasks(train_tasks, 'train')
-                prediction_id = self.fill(prediction_id, **train_metrics)
+                prediction_id = partial_format(prediction_id, **train_metrics)
 
             self.save_tasks(train_tasks, 'train', prediction_id, self.max_to_visualize)
             del train_tasks
