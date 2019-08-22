@@ -4,7 +4,7 @@ from functools import partial
 import __init_path__
 import env
 
-from confidence_trainer import ConfidenceTrainer
+from scripts.odometry.confidence_trainer import ConfidenceTrainer
 from slam.models import construct_flexible_model
 
 
@@ -24,6 +24,7 @@ class FlexibleWithConfidenceTrainer(ConfidenceTrainer):
         self.load_mode = ['flow_xy']
         self.preprocess_mode = ['flow_xy']
         self.batch_size = 128
+        self.target_size = self.config['target_size']
 
     def get_dataset(self, train_trajectories=None, val_trajectories=None):
         return super().get_dataset(train_trajectories=train_trajectories,

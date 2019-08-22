@@ -22,6 +22,7 @@ class RigidityTrainer(BaseTrainer):
         self.load_mode = ['flow_xy']
         self.preprocess_mode = ['flow_xy']
         self.batch_size = 128
+        self.target_size = self.config['target_size']
 
     def get_dataset(self, train_trajectories=None, val_trajectories=None):
         return super().get_dataset(train_trajectories=train_trajectories,

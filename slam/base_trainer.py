@@ -36,13 +36,6 @@ class BaseTrainer:
 
         self.config = get_config(dataset_root, dataset_type)
 
-        self.start_run(self.config['exp_name'], run_name)
-
-        mlflow.log_param('run_name', run_name)
-        mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
-        mlflow.log_param('epochs', epochs)
-        mlflow.log_param('seed', seed)
-
         self.dataset_root = dataset_root
         self.dataset_type = dataset_type
         self.run_name = run_name
@@ -57,11 +50,34 @@ class BaseTrainer:
         self.reduce_factor = reduce_factor
         self.max_to_visualize = 5
 
+        self.construct_model_fn = None
+        self.lr = None
+        self.loss = None
+        self.scale_rotation = None
+
+        self.x_col = None
+        self.y_col = None
+        self.image_col = None
+        self.load_mode = None
+        self.preprocess_mode = None
+        self.batch_size = None
+        self.target_size = None
+
+        self.run_dir = None
+        self.save_dir = None
+
         self.set_model_args()
 
         self.set_dataset_args()
 
-        set_computation(self.seed)
+        set_computation(self.seed, per_process_gpu_memory_fraction=kwargs['per_process_gpu_memory_fraction'])
+
+        self.start_run(self.config['exp_name'], run_name)
+
+        mlflow.log_param('run_name', run_name)
+        mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
+        mlflow.log_param('epochs', epochs)
+        mlflow.log_param('seed', seed)
 
     def set_model_args(self):
         self.construct_model_fn = None
@@ -76,6 +92,7 @@ class BaseTrainer:
         self.load_mode = None
         self.preprocess_mode = None
         self.batch_size = 128
+        self.target_size = self.config['target_size']
 
     def start_run(self, exp_name, run_name):
         client = mlflow.tracking.MlflowClient(self.tracking_uri)
@@ -115,7 +132,7 @@ class BaseTrainer:
                                 train_trajectories=train_trajectories,
                                 val_trajectories=val_trajectories,
                                 test_trajectories=test_trajectories,
-                                target_size=self.config['target_size'],
+                                target_size=self.target_size,
                                 x_col=self.x_col,
                                 y_col=self.y_col,
                                 image_col=self.image_col,
@@ -221,7 +238,8 @@ class BaseTrainer:
         parser.add_argument('--epochs', '-ep', type=int, default=100,
                             help='Number of epochs')
         parser.add_argument('--period', type=int, default=10,
-                            help='Evaluate / checkpoint period (set to -1 for not saving weights and intermediate results)')
+                            help='Evaluate / checkpoint period'
+                                 '(set to -1 for not saving weights and intermediate results)')
         parser.add_argument('--save_best_only', action='store_true',
                             help='Evaluate / checkpoint only if validation loss improves')
         parser.add_argument('--min_lr', type=float, default=1e-5,
