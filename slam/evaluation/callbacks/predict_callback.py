@@ -223,13 +223,13 @@ class Predict(keras.callbacks.Callback):
         total_metrics = {self.add_prefix(subset + '_' + k): float(v) for k, v in total_metrics.items()}
         return tasks, total_metrics
 
-    def check_exit(self, logs):
+    def is_best(self, logs):
         loss = logs.get(self.monitor, np.inf)
         if self.save_best_only and self.best_loss < loss:
-            return True
+            return False
         else:
             self.best_loss = min(loss, self.best_loss)
-            return False
+            return True
 
     def fill(self, template, **kwargs):
         template = PartialFormatter().format(template, **kwargs)
@@ -243,7 +243,7 @@ class Predict(keras.callbacks.Callback):
 
         if self.period and self.epochs_since_last_predict % self.period == 0:
 
-            if self.check_exit(logs):
+            if not self.is_best(logs):
                 return logs
 
             prediction_id = self.fill(self.template, epoch=epoch + 1, **logs)
@@ -253,7 +253,7 @@ class Predict(keras.callbacks.Callback):
                 val_tasks, val_metrics = self.evaluate_tasks(val_tasks, 'val')
                 prediction_id = self.fill(prediction_id, **val_metrics)
 
-            if self.check_exit(val_metrics):
+            if not self.is_best(val_metrics):
                 return logs
 
             train_tasks = self.create_tasks(self.train_generator)
