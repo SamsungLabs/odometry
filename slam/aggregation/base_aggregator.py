@@ -4,3 +4,6 @@ class BaseAggregator:
 
     def get_trajectory(self):
         raise RuntimeError('Not implemented')
+
+    def clear(self):
+        raise RuntimeError('Not implemented')
