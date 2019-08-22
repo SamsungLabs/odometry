@@ -1,6 +1,4 @@
 import tensorflow as tf
-
-from keras import backend as K
 from keras.layers import (Layer,
                           Dense,
                           multiply,
