@@ -24,3 +24,8 @@ class PartialFormatter(Formatter):
 
         format_string = ''.join(tokens)
         return super().vformat(format_string, args, kwargs)
+
+
+def partial_format(template, **kwargs):
+    template = PartialFormatter().format(template, **kwargs)
+    return template
