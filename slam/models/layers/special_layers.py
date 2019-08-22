@@ -31,6 +31,7 @@ def construct_outputs(fc_rotation,
 class DepthFlow(Layer):
 
     def build(self, input_shape):
+        assert input_shape[-1] >= 4
         height, width = input_shape[1], input_shape[2]
         xx = tf.expand_dims(tf.linspace(-1., 1., width), 1)
         yy = tf.expand_dims(tf.linspace(-1., 1., height), 1)
@@ -53,8 +54,9 @@ class DepthFlow(Layer):
         return depth_flow
 
     def compute_output_shape(self, input_shape):
-        assert input_shape[-1] >= 4
-        return (input_shape[0], input_shape[1], input_shape[2], 1)
+        output_shape = list(input_shape)
+        output_shape[-1] = 1
+        return tuple(output_shape)
 
 
 def depth_flow(inputs, **kwargs):
