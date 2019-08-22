@@ -158,10 +158,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             image_arr = image_arr.transpose((1, 2, 0))
 
         if load_mode == 'motion_maps_z':
-            image_arr = image_arr[[2, 5], :, :].transpose((1, 2, 0))
+            image_arr = image_arr[[2, 5]].transpose((1, 2, 0))
 
         if load_mode == 'motion_maps_xy':
-            image_arr = image_arr[[0, 1, 4, 5], :, :].transpose((1, 2, 0))
+            image_arr = image_arr[[0, 1, 4, 5]].transpose((1, 2, 0))
 
         image_arr = resize_image_arr(image_arr,
                                      self.target_size,
