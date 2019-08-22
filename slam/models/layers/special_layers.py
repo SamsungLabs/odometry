@@ -1,9 +1,5 @@
 import tensorflow as tf
-from keras.layers import (Layer,
-                          Dense,
-                          multiply,
-                          subtract,
-                          concatenate)
+from keras.layers import Layer, Dense, concatenate
 from keras.regularizers import l2
 
 from .functions import grid_sample
