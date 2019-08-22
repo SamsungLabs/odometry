@@ -56,18 +56,17 @@ class BaseTrainer:
         self.scale_rotation = None
 
         self.x_col = None
-        self.y_col = None
+        self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         self.image_col = None
         self.load_mode = None
         self.preprocess_mode = None
-        self.batch_size = None
-        self.target_size = None
+        self.batch_size = 128
+        self.target_size = self.config['target_size']
 
         self.run_dir = None
         self.save_dir = None
 
         self.set_model_args()
-
         self.set_dataset_args()
 
         set_computation(self.seed, per_process_gpu_memory_fraction=kwargs['per_process_gpu_memory_fraction'])
@@ -80,19 +79,10 @@ class BaseTrainer:
         mlflow.log_param('seed', seed)
 
     def set_model_args(self):
-        self.construct_model_fn = None
-        self.lr = None
-        self.loss = None
-        self.scale_rotation = None
+        pass
 
     def set_dataset_args(self):
-        self.x_col = None
-        self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
-        self.image_col = None
-        self.load_mode = None
-        self.preprocess_mode = None
-        self.batch_size = 128
-        self.target_size = self.config['target_size']
+        pass
 
     def start_run(self, exp_name, run_name):
         client = mlflow.tracking.MlflowClient(self.tracking_uri)
