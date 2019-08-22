@@ -63,7 +63,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         image_col = image_col or []
         self.image_cols = [image_col] if isinstance(image_col, str) else image_col
 
-        print(self.image_cols, self.x_cols, self.y_cols, self.df.columns)
         assert set(self.image_cols) <= (set(self.x_cols) | set(self.y_cols))
         assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
 
