@@ -20,7 +20,7 @@ from .logging_utils import mlflow_logging
 
 from .toolbox import Toolbox
 
-from .formatter import PartialFormatter
+from .formatter import partial_format
 
 
 __all__ = [
@@ -40,5 +40,5 @@ __all__ = [
     'parse_video',
     'mlflow_logging',
     'Toolbox',
-    'PartialFormatter'
+    'partial_format'
 ]
