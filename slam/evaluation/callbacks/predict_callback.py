@@ -13,6 +13,8 @@ from slam.evaluation import (calculate_metrics,
 from slam.linalg import RelativeTrajectory
 from slam.utils import (visualize_trajectory_with_gt,
                         visualize_trajectory,
+                        create_vis_file_path,
+                        create_prediction_file_path,
                         partial_format)
 
 
@@ -79,45 +81,13 @@ class Predict(keras.callbacks.Callback):
 
         self.y_cols = self.train_generator.y_cols[:]
 
-        if self.save_dir:
-            self.visuals_dir = os.path.join(self.save_dir, 'visuals')
-            os.makedirs(self.visuals_dir, exist_ok=True)
-
-            self.predictions_dir = os.path.join(self.save_dir, 'predictions')
-            os.makedirs(self.predictions_dir, exist_ok=True)
-
         self.save_artifacts = self.run_dir and self.artifact_dir
-
-    def create_file_path(self, save_dir, trajectory_id, subset, prediction_id, ext):
-        trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(save_dir,
-                                 prediction_id,
-                                 subset,
-                                 trajectory_name + '.' + ext)
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        return file_path
-
-    def create_visualization_file_path(self, trajectory_id, subset, prediction_id):
-        return self.create_file_path(self.visuals_dir,
-                                     trajectory_id,
-                                     subset,
-                                     prediction_id,
-                                     ext='html')
-
-    def create_prediction_file_path(self, trajectory_id, subset, prediction_id):
-        return self.create_file_path(self.predictions_dir,
-                                     trajectory_id,
-                                     subset,
-                                     prediction_id,
-                                     ext='csv')
 
     def create_trajectory(self, df):
         return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
 
     def save_predictions(self, predictions, trajectory_id, subset, prediction_id):
-        file_path = self.create_prediction_file_path(trajectory_id,
-                                                     subset,
-                                                     prediction_id)
+        file_path = create_prediction_file_path(trajectory_id, subset, prediction_id, self.save_dir)
         predictions.to_csv(file_path)
 
     def visualize_trajectory(self,
@@ -127,9 +97,7 @@ class Predict(keras.callbacks.Callback):
                              subset,
                              prediction_id,
                              record=None):
-        file_path = self.create_visualization_file_path(trajectory_id,
-                                                        subset,
-                                                        prediction_id)
+        file_path = create_vis_file_path(trajectory_id, subset, prediction_id, self.save_dir)
         if gt_trajectory is None:
             title = trajectory_id.upper()
             visualize_trajectory(predicted_trajectory, title=title, file_path=file_path)
@@ -178,6 +146,8 @@ class Predict(keras.callbacks.Callback):
                           'rpe_indices': self.rpe_indices,
                           'backend': self.backend,
                           'cuda': self.cuda})
+
+        return tasks
 
         return tasks
 

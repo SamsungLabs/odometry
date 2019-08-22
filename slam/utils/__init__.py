@@ -1,6 +1,9 @@
 from .computation_utils import set_computation
 from .computation_utils import make_memory_safe
 
+from .file_utils import create_vis_file_path
+from .file_utils import create_prediction_file_path
+
 from .io_utils import resize_image
 from .io_utils import save_image
 from .io_utils import load_image
@@ -26,6 +29,8 @@ from .formatter import partial_format
 __all__ = [
     'set_computation',
     'make_memory_safe',
+    'create_vis_file_path',
+    'create_prediction_file_path',
     'resize_image',
     'save_image',
     'load_image',
