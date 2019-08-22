@@ -89,10 +89,10 @@ class Predict(keras.callbacks.Callback):
 
     def create_file_path(self, save_dir, trajectory_id, subset, prediction_id, ext):
         trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(self.visuals_dir,
+        file_path = os.path.join(save_dir,
                                  prediction_id,
                                  subset,
-                                 f'{trajectory_name}.html')
+                                 trajectory_name + '.' + ext)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         return file_path
 
