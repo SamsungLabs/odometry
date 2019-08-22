@@ -149,8 +149,6 @@ class Predict(keras.callbacks.Callback):
 
         return tasks
 
-        return tasks
-
     def save_tasks(self, tasks, subset, prediction_id, max_to_visualize=None):
         max_to_visualize = max_to_visualize or len(tasks)
 
