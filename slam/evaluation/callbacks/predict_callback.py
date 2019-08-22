@@ -88,6 +88,7 @@ class Predict(keras.callbacks.Callback):
     def save_predictions(self, predictions, trajectory_id, subset, prediction_id):
         file_path = create_prediction_file_path(trajectory_id, subset, prediction_id, self.save_dir)
         predictions.to_csv(file_path)
+        os.chmod(file_path, 0o777)
 
     def visualize_trajectory(self,
                              predicted_trajectory,
@@ -107,6 +108,7 @@ class Predict(keras.callbacks.Callback):
                                          predicted_trajectory,
                                          title=title,
                                          file_path=file_path)
+        os.chmod(file_path, 0o777)
 
     def predict_generator(self, generator):
         generator.reset()
