@@ -257,6 +257,8 @@ class Predict(keras.callbacks.Callback):
                 train_tasks, train_metrics = self.evaluate_tasks(train_tasks, 'train')
                 prediction_id = partial_format(prediction_id, **train_metrics)
 
+                logs = dict(**logs, **train_metrics, **val_metrics)
+
             self.save_tasks(train_tasks, 'train', prediction_id, self.max_to_visualize)
             del train_tasks
 
@@ -271,7 +273,6 @@ class Predict(keras.callbacks.Callback):
                 if self.save_artifacts:
                     mlflow.log_artifacts(self.run_dir, self.artifact_dir)
 
-            logs = dict(**logs, **train_metrics, **val_metrics)
             self.epochs_since_last_predict = 0
 
         return logs
@@ -282,9 +283,9 @@ class Predict(keras.callbacks.Callback):
             self.period = 1
             self.on_epoch_end(self.epoch - 1, logs)
 
-        test_tasks, test_metrics = self.create_tasks(self.test_generator, 'test')
+        test_tasks, test_metrics = self.create_tasks(self.test_generator)
         if self.evaluate:
-            test_tasks, train_metrics = self.evaluate_tasks(test_tasks)
+            test_tasks, train_metrics = self.evaluate_tasks(test_tasks, 'test')
 
         prediction_id = 'test'
 
