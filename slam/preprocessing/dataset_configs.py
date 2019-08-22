@@ -39,7 +39,7 @@ def get_config(dataset_root: str, dataset_type: str) -> Dict:
     return config
 
 
-def get_zju_config(dataset_root):
+def get_zju_config(_dataset_root):
     config = {'train_trajectories': ['A0',
                                      'A3',
                                      'A4',
@@ -54,6 +54,7 @@ def get_zju_config(dataset_root):
                                     'B3'],
               'exp_name': 'zju',
               'target_size': (120, 160),
+              'source_size': (480, 640),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               'train_strides': 1,
@@ -63,7 +64,7 @@ def get_zju_config(dataset_root):
     return config
 
 
-def get_euroc_config(dataset_root):
+def get_euroc_config(_dataset_root):
     config = {'train_trajectories': ['MH_01_easy',
                                      'MH_03_medium',
                                      'MH_04_difficult',
@@ -77,6 +78,7 @@ def get_euroc_config(dataset_root):
                                     'V2_02_medium'],
               'exp_name': 'euroc',
               'target_size': (120, 160),
+              'source_size': (480, 640),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               'train_strides': 1,
@@ -86,7 +88,7 @@ def get_euroc_config(dataset_root):
     return config
 
 
-def get_kitti_8_3_config(dataset_root):
+def get_kitti_8_3_config(_dataset_root):
     config = {'train_trajectories': ['00',
                                      '01',
                                      '02',
@@ -101,6 +103,7 @@ def get_kitti_8_3_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_8/3',
               'target_size': (96, 320),
+              'source_size': (384, 1280),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti',
               'train_strides': 1,
@@ -110,7 +113,7 @@ def get_kitti_8_3_config(dataset_root):
     return config
 
 
-def get_kitti_4_6_config(dataset_root):
+def get_kitti_4_6_config(_dataset_root):
     config = {'train_trajectories': ['00',
                                      '02',
                                      '08',
@@ -124,16 +127,17 @@ def get_kitti_4_6_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_4/6',
               'target_size': (96, 320),
+              'source_size': (384, 1280),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti',
               'train_strides': 1,
               'val_strides': 1,
               'test_strides': 1,
-             }
+              }
     return config
 
 
-def get_kitti_4_6_mixed_config(dataset_root):
+def get_kitti_4_6_mixed_config(_dataset_root):
     config = {'train_trajectories': ['1/00',
                                      '1/02',
                                      '1/08',
@@ -151,9 +155,10 @@ def get_kitti_4_6_mixed_config(dataset_root):
               'test_trajectories': None,
               'exp_name': 'kitti_4/6_mixed',
               'target_size': (96, 320),
+              'source_size': (384, 1280),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti',
-             }
+              }
 
     sub_dirs = ['train', 'val', 'test']
     for d in sub_dirs:
@@ -169,12 +174,13 @@ def get_discoman_v10_config(dataset_root):
               'test_trajectories': list(),
               'exp_name': 'discoman_v10',
               'target_size': (90, 160),
+              'source_size': (360, 640),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
               'train_strides': 1,
               'val_strides': 1,
               'test_strides': 1,
-             }
+              }
 
     sub_dirs = ['train', 'val', 'test']
     for d in sub_dirs:
@@ -192,14 +198,15 @@ def get_mini_discoman_v10_config(dataset_root):
               'test_trajectories': list(),
               'exp_name': 'mini_discoman_v10',
               'target_size': (90, 160),
+              'source_size': (360, 640),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
               'train_strides': 1,
               'val_strides': 1,
               'test_strides': 1,
-             }
+              }
 
-    sub_size = {'train': 33, 'val': 15, 'test': 8} # as in TUM
+    sub_size = {'train': 33, 'val': 15, 'test': 8}  # as in TUM
     sub_dirs = ['train', 'val', 'test']
 
     for d in sub_dirs:
@@ -219,12 +226,13 @@ def get_discoman_v10_mixed_config(dataset_root):
               'test_trajectories': list(),
               'exp_name': 'discoman_v10_mixed',
               'target_size': (90, 160),
+              'source_size': (360, 640),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
               'train_strides': list(),
               'val_strides': list(),
               'test_strides': list(),
-             }
+              }
 
     sub_dirs = ['train', 'val', 'test']
 
@@ -249,12 +257,13 @@ def get_mini_discoman_v10_mixed_config(dataset_root):
               'test_trajectories': list(),
               'exp_name': 'mini_discoman_v10_mixed',
               'target_size': (90, 160),
+              'source_size': (360, 640),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
               'train_strides': list(),
               'val_strides': list(),
               'test_strides': list(),
-             }
+              }
 
     sub_size = {'train': 33, 'val': 15, 'test': 8} # as in TUM
     sub_dirs = ['train', 'val', 'test']
@@ -275,12 +284,13 @@ def get_mini_discoman_v10_mixed_config(dataset_root):
     return config
 
 
-def get_discoman_debug_config(dataset_root):
+def get_discoman_debug_config(_dataset_root):
     config = {'train_trajectories': ['train/000001'],
               'val_trajectories': ['val/000230'],
               'test_trajectories': ['test/000200'],
               'exp_name': 'discoman_debug',
               'target_size': (90, 160),
+              'source_size': (360, 640),
               'depth_multiplicator': 1.0 / 1000,
               'rpe_indices': 'full',
               'train_strides': 1,
@@ -290,12 +300,13 @@ def get_discoman_debug_config(dataset_root):
     return config
 
 
-def get_tum_debug_config(dataset_root):
+def get_tum_debug_config(_dataset_root):
     config = {'train_trajectories': ['rgbd_dataset_freiburg1_desk'],
               'val_trajectories': ['rgbd_dataset_freiburg1_desk'],
               'test_trajectories': ['rgbd_dataset_freiburg1_desk'],
               'exp_name': 'tum_debug',
               'target_size': (120, 160),
+              'source_size': (480, 640),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               'train_strides': 1,
@@ -305,7 +316,7 @@ def get_tum_debug_config(dataset_root):
     return config
 
 
-def get_tum_fr1_config(dataset_root):
+def get_tum_fr1_config(_dataset_root):
     config = {'train_trajectories': ['rgbd_dataset_freiburg1_desk',
                                      'rgbd_dataset_freiburg1_xyz',
                                      'rgbd_dataset_freiburg1_360',
@@ -316,6 +327,7 @@ def get_tum_fr1_config(dataset_root):
               'test_trajectories': ['rgbd_dataset_freiburg1_desk2'],
               'exp_name': 'tum_fr1',
               'target_size': (120, 160),
+              'source_size': (480, 640),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               'train_strides': 1,
@@ -325,7 +337,7 @@ def get_tum_fr1_config(dataset_root):
     return config
 
 
-def get_tum_fr2_config(dataset_root):
+def get_tum_fr2_config(_dataset_root):
     config = {'train_trajectories': ['rgbd_dataset_freiburg2_xyz',
                                      'rgbd_dataset_freiburg2_rpy',
                                      'rgbd_dataset_freiburg2_flowerbouquet_brownbackground',
@@ -338,6 +350,7 @@ def get_tum_fr2_config(dataset_root):
                                     'rgbd_dataset_freiburg2_360_hemisphere'],
               'exp_name': 'tum_fr2',
               'target_size': (120, 160),
+              'source_size': (480, 640),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               'train_strides': 1,
@@ -347,7 +360,7 @@ def get_tum_fr2_config(dataset_root):
     return config
 
 
-def get_tum_fr3_config(dataset_root):
+def get_tum_fr3_config(_dataset_root):
     config = {'train_trajectories': ['rgbd_dataset_freiburg3_checkerboard_large',
                                      'rgbd_dataset_freiburg3_sitting_xyz',
                                      'rgbd_dataset_freiburg3_long_office_household',
@@ -388,6 +401,7 @@ def get_tum_fr3_config(dataset_root):
                                     'rgbd_dataset_freiburg3_walking_halfsphere_validation'],
               'exp_name': 'tum_fr3',
               'target_size': (120, 160),
+              'source_size': (480, 640),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               'train_strides': 1,
