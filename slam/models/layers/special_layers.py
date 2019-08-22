@@ -30,12 +30,22 @@ def construct_outputs(fc_rotation,
 
 class DepthFlow(Layer):
 
+    def __init__(self, **kwargs):
+        self.batch_grid_x = None
+        self.batch_grid_y = None
+
+        super().__init__(*kwargs)
+
     def build(self, input_shape):
         assert input_shape[-1] >= 4
+
         height, width = input_shape[1], input_shape[2]
+
         xx = tf.expand_dims(tf.linspace(-1., 1., width), 1)
         yy = tf.expand_dims(tf.linspace(-1., 1., height), 1)
+
         grid_x, grid_y = tf.meshgrid(xx, yy)
+
         self.batch_grid_x = tf.expand_dims(grid_x, axis=0)
         self.batch_grid_y = tf.expand_dims(grid_y, axis=0)
 
@@ -80,15 +90,15 @@ class AddGrid(Layer):
         self.c_x = c_x
         self.c_y = c_y
 
+        self.grid = None
+
         super().__init__(**kwargs)
 
     def build(self, input_shape):
-        height = input_shape[1]
-        width = input_shape[2]
+        height, width = input_shape[1], input_shape[2]
 
-        dtype = tf.float32
-        xx = tf.cast(tf.range(width), dtype) / width
-        yy = tf.cast(tf.range(height), dtype) / height
+        xx = tf.cast(tf.range(width), tf.float32) / width
+        yy = tf.cast(tf.range(height), tf.float32) / height
 
         xx = (xx - self.c_x) / self.f_x
         yy = (yy - self.c_y) / self.f_y
