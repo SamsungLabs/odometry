@@ -35,25 +35,61 @@ def conv2d_transpose(inputs, filters, kernel_size, activation='linear', batch_no
     return activation
 
 
-def gated_conv2d(inputs, filters, kernel_size, activation='linear', name=None, batch_norm=False, **kwargs):
+def gated_conv2d(inputs,
+                 filters,
+                 kernel_size,
+                 activation='linear',
+                 name=None,
+                 batch_norm=False,
+                 **kwargs):
     if name is None:
         f_name, g_name = None, None
     else:
         f_name, g_name = '{}_feature'.format(name), '{}_gate'.format(name)
 
-    f = conv2d(inputs, filters, kernel_size, activation=activation, name=f_name, batch_norm=batch_norm, **kwargs)
-    g = conv2d(inputs, filters, kernel_size, activation='sigmoid', name=g_name, batch_norm=batch_norm, **kwargs)
+    f = conv2d(inputs,
+               filters,
+               kernel_size,
+               activation=activation,
+               name=f_name,
+               batch_norm=batch_norm,
+               **kwargs)
+    g = conv2d(inputs,
+               filters,
+               kernel_size,
+               activation='sigmoid',
+               name=g_name,
+               batch_norm=batch_norm,
+               **kwargs)
     return multiply([f, g])
 
 
-def gated_conv2d_transpose(inputs, filters, kernel_size, activation='linear', name=None, batch_norm=False, **kwargs):
+def gated_conv2d_transpose(inputs,
+                           filters,
+                           kernel_size,
+                           activation='linear',
+                           name=None,
+                           batch_norm=False,
+                           **kwargs):
     if name is None:
         f_name, g_name = None, None
     else:
         f_name, g_name = '{}_feature'.format(name), '{}_gate'.format(name)
 
-    f = conv2d_transpose(inputs, filters, kernel_size, activation=activation, name=f_name, batch_norm=batch_norm, **kwargs)
-    g = conv2d_transpose(inputs, filters, kernel_size, activation='sigmoid', name=g_name, batch_norm=batch_norm, **kwargs)
+    f = conv2d_transpose(inputs,
+                         filters,
+                         kernel_size,
+                         activation=activation,
+                         name=f_name,
+                         batch_norm=batch_norm,
+                         **kwargs)
+    g = conv2d_transpose(inputs,
+                         filters,
+                         kernel_size,
+                         activation='sigmoid',
+                         name=g_name,
+                         batch_norm=batch_norm,
+                         **kwargs)
     return multiply([f, g])
 
 
