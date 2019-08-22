@@ -53,6 +53,7 @@ class Predict(keras.callbacks.Callback):
         self.save_dir = save_dir
         self.artifact_dir = artifact_dir
         self.prefix = prefix
+        self.add_prefix = lambda k: (self.prefix + '_' + k) if self.prefix else k
 
         self.monitor = monitor
         self.template = ''.join(['{epoch:03d}', '_', self.monitor, '_', '{', self.monitor, ':.6f', '}'])
@@ -211,9 +212,6 @@ class Predict(keras.callbacks.Callback):
             records = [process_single_task(task) for task in tasks]
         return records
 
-    def add_prefix(self, d):
-        return {f'{self.prefix}_{k}' if self.prefix else k: v for k, v in d.items()}
-
     def evaluate_tasks(self, tasks, subset):
         records = self.process_tasks(tasks)
         assert len(records) == len(tasks)
@@ -222,8 +220,7 @@ class Predict(keras.callbacks.Callback):
             tasks[index]['record'] = record
 
         total_metrics = average_metrics(records)
-        total_metrics = {f'{subset}_{k}': float(v) for k, v in total_metrics.items()}
-        total_metrics = self.add_prefix(total_metrics)
+        total_metrics = {self.add_prefix(subset + '_' + k): float(v) for k, v in total_metrics.items()}
         return tasks, total_metrics
 
     def check_exit(self, logs):
