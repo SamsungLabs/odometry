@@ -1,9 +1,10 @@
-from keras.layers import Lambda, Flatten
+from keras.layers import Flatten
 
-from slam.models.layers import (concat,
+from slam.models.layers import (chunk,
+                                concat,
                                 conv2d,
                                 gated_conv2d,
-                                construct_double_fc,
+                                dense,
                                 construct_outputs)
 from slam.utils import mlflow_logging
 
@@ -86,7 +87,7 @@ def construct_multiscale_model(inputs,
                                kernel_sizes=[[7, 5, 3]] * 4,
                                strides=2,
                                dilation_rates=None,
-                               hidden_size=500,
+                               output_size=500,
                                regularization=0,
                                activation='relu',
                                kernel_initializer='glorot_normal',
@@ -95,6 +96,7 @@ def construct_multiscale_model(inputs,
                                return_confidence=False):
 
     inputs = concat(inputs)
+
     features = construct_encoder(inputs,
                                  layers=layers,
                                  filters=filters,
@@ -103,28 +105,28 @@ def construct_multiscale_model(inputs,
                                  dilation_rates=dilation_rates,
                                  kernel_initializer=kernel_initializer,
                                  use_gated_convolutions=use_gated_convolutions)
-    if split:
-        size = features._keras_shape[-1] // 2
-        features_rotation = Lambda(lambda x: x[..., :size])(features)
-        features_translation = Lambda(lambda x: x[..., size:])(features)
-    else:
-        features_rotation = features
-        features_translation = features
 
-    fc_rotation = construct_double_fc(features_rotation,
-                                      hidden_size=hidden_size,
-                                      regularization=regularization,
-                                      activation=activation,
-                                      kernel_initializer=kernel_initializer,
-                                      name='rotation')
-    fc_translation = construct_double_fc(features_translation,
-                                         hidden_size=hidden_size,
-                                         regularization=regularization,
-                                         activation=activation,
-                                         kernel_initializer=kernel_initializer,
-                                         name='translation')
-    outputs = construct_outputs(fc_rotation,
-                                fc_translation,
+    fc_rotation = dense(features,
+                        output_size=output_size,
+                        layers_num=2,
+                        regularization=regularization,
+                        activation=activation,
+                        kernel_initializer=kernel_initializer,
+                        name='rotation')
+    fc_translation = dense(features,
+                           output_size=output_size,
+                           layers_num=2,
+                           regularization=regularization,
+                           activation=activation,
+                           kernel_initializer=kernel_initializer,
+                           name='translation')
+
+    if split:
+        fc = chunk(fc_rotation, n=3) + chunk(fc_translation, n=3)
+    else:
+        fc = [fc_rotation] * 3 + [fc_translation] * 3
+
+    outputs = construct_outputs(fc,
                                 regularization=regularization,
                                 return_confidence=return_confidence)
     return outputs
