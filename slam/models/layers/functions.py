@@ -12,7 +12,7 @@ def concat(inputs, **kwargs):
 
 class Clip(Layer):
 
-    def call(self, inputs):
+    def call(self, inputs, **kwargs):
         outputs = K.clip(K.abs(inputs), K.epsilon(), None) * K.sign(inputs)
         return outputs
 
@@ -26,7 +26,7 @@ def clip(inputs, **kwargs):
 
 class Inverse(Layer):
 
-    def call(self, inputs):
+    def call(self, inputs, **kwargs):
         outputs = 1. / clip(inputs)
         return outputs
 
@@ -46,7 +46,7 @@ class Repeat(Layer):
         self.rep = rep
         self.axis = axis
 
-    def call(self, inputs):
+    def call(self, inputs, **kwargs):
         outputs = K.repeat_elements(inputs, rep=self.rep, axis=self.axis)
         return outputs
 
@@ -68,7 +68,7 @@ def expand_as(inputs, target):
 
 class Affine(Layer):
 
-    def call(self, inputs):
+    def call(self, inputs, **kwargs):
         x, weight, bias = inputs
         outputs = x * expand_as(weight, x) + bias
         return outputs
@@ -83,7 +83,7 @@ def affine(inputs, weight, bias, **kwargs):
 
 class Divide(Layer):
 
-    def call(self, inputs):
+    def call(self, inputs, **kwargs):
         x, divider = inputs
         outputs = x / expand_as(clip(divider), x)
         return outputs
