@@ -97,13 +97,13 @@ class AddGrid(Layer):
 
         super().build(input_shape)
 
-    def call(self, x):
+    def call(self, inputs, **kwargs):
         """
             stack input with [grid along x-axis, grid along y-axis] along channel axis
         """
-        batch_size = tf.shape(x)[0]
+        batch_size = tf.shape(inputs)[0]
         batched_grid = tf.tile(self.grid, [batch_size, 1, 1, 1])
-        return tf.concat([x, batched_grid], axis=3)
+        return tf.concat([inputs, batched_grid], axis=3)
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1], input_shape[2], input_shape[3] + 2)
