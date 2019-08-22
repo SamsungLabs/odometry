@@ -6,7 +6,7 @@ from slam.utils import mlflow_logging
 
 @mlflow_logging(ignore=('inputs',), prefix='model.', name='Rigidity',)
 def construct_rigidity_model(inputs,
-                             batchnorm=True,
+                             batch_norm=True,
                              add_grid_layer=True, 
                              f_x=1,
                              f_y=1,
@@ -18,17 +18,17 @@ def construct_rigidity_model(inputs,
     if add_grid_layer:
         inputs = AddGrid(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y)(inputs)
 
-    conv1 = conv2d(inputs, 32, kernel_size=7, batchnorm=batchnorm, strides=2,
+    conv1 = conv2d(inputs, 32, kernel_size=7, batch_norm=batch_norm, strides=2,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
-    conv2 = conv2d(conv1, 64, kernel_size=7, batchnorm=batchnorm, strides=2,
+    conv2 = conv2d(conv1, 64, kernel_size=7, batch_norm=batch_norm, strides=2,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
-    conv3 = conv2d(conv2, 128, kernel_size=5, batchnorm=batchnorm, strides=2,
+    conv3 = conv2d(conv2, 128, kernel_size=5, batch_norm=batch_norm, strides=2,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
-    conv4 = conv2d(conv3, 256, kernel_size=5, batchnorm=batchnorm, strides=2,
+    conv4 = conv2d(conv3, 256, kernel_size=5, batch_norm=batch_norm, strides=2,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
-    conv5 = conv2d(conv4, 512, kernel_size=3, batchnorm=batchnorm, strides=2,
+    conv5 = conv2d(conv4, 512, kernel_size=3, batch_norm=batch_norm, strides=2,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
-    conv6 = conv2d(conv5, 1024, kernel_size=3, batchnorm=batchnorm,
+    conv6 = conv2d(conv5, 1024, kernel_size=3, batch_norm=batch_norm,
                    padding='same', activation='relu', kernel_initializer=kernel_initializer)
 
     conv7 = Conv2D(6, kernel_size=1, kernel_initializer=kernel_initializer)(conv6)

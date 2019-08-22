@@ -14,7 +14,7 @@ def construct_encoder(inputs,
                       dilation_rates=None,
                       kernel_initializer='glorot_normal',
                       use_gated_convolutions=False,
-                      use_batchnorm=False):
+                      use_batch_norm=False):
     conv = gated_conv2d if use_gated_convolutions else conv2d
 
     layers = len(strides)
@@ -29,7 +29,7 @@ def construct_encoder(inputs,
                       strides=strides[i],
                       dilation_rate=dilation_rates[i],
                       padding='same',
-                      batchnorm=True if use_batchnorm and i == 0 else False,
+                      batch_norm=use_batch_norm and i == 0,
                       activation='relu',
                       kernel_initializer=kernel_initializer)
 
@@ -47,7 +47,7 @@ def construct_flexible_model(inputs,
                              activation='relu',
                              kernel_initializer='glorot_normal',
                              use_gated_convolutions=False,
-                             use_batchnorm=False,
+                             use_batch_norm=False,
                              split=False,
                              return_confidence=False):
 
@@ -58,7 +58,7 @@ def construct_flexible_model(inputs,
                                  dilation_rates=dilation_rates,
                                  kernel_initializer=kernel_initializer,
                                  use_gated_convolutions=use_gated_convolutions,
-                                 use_batchnorm=use_batchnorm)
+                                 use_batch_norm=use_batch_norm)
 
     if split:
         size = features._keras_shape[-1] // 2
