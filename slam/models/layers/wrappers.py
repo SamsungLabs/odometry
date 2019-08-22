@@ -1,12 +1,8 @@
-import tensorflow as tf
-
-from keras import backend as K
 from keras.layers import (Conv2D,
                           Conv2DTranspose,
                           Dense,
                           BatchNormalization,
                           Activation,
-                          ReLU,
                           PReLU,
                           LeakyReLU,
                           multiply)
