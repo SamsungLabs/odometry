@@ -106,7 +106,9 @@ class AddGrid(Layer):
         return tf.concat([inputs, batched_grid], axis=3)
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0], input_shape[1], input_shape[2], input_shape[3] + 2)
+        output_shape = list(input_shape)
+        output_shape[3] += 2
+        return tuple(output_shape)
 
 
 def add_grid(inputs, f_x=1, f_y=1, c_x=0.5, c_y=0.5, **kwargs):
