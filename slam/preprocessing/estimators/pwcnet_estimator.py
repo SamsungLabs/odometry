@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 
 from tensorflow.python.client import device_lib
 
@@ -11,7 +12,8 @@ from slam.utils import resize_image
 
 class PWCNetEstimator(NetworkEstimator):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, batch_size=1, *args, **kwargs):
+        self.batch_size = batch_size
         super(PWCNetEstimator, self).__init__(*args, **kwargs)
         self.name = 'PWCNet'
 
@@ -19,7 +21,7 @@ class PWCNetEstimator(NetworkEstimator):
         nn_opts = copy.deepcopy(_DEFAULT_PWCNET_TEST_OPTIONS)
         nn_opts['verbose'] = True
         nn_opts['ckpt_path'] = self.checkpoint
-        nn_opts['batch_size'] = 1
+        nn_opts['batch_size'] = self.batch_size
 
         devices = device_lib.list_local_devices()
         gpus = [device for device in devices if device.device_type=='GPU']
@@ -38,10 +40,16 @@ class PWCNetEstimator(NetworkEstimator):
         self.model = pwc_net(mode='test', options=nn_opts)
 
     def _convert_model_output_to_prediction(self, optical_flow):
+        if isinstance(optical_flow, list):
+            optical_flow = np.stack(optical_flow)
+
         size = optical_flow.shape
-        optical_flow_small = resize_image(optical_flow, (int(size[1] / 4), int(size[0] / 4)))
-        optical_flow_small[..., 0] /= size[1]
-        optical_flow_small[..., 1] /= size[0]
+        small_size = (size[0], size[1] // 4, size[2] // 4, size[3])
+        optical_flow_small = np.zeros(small_size)
+        for batch in range(optical_flow.shape[0]):
+            optical_flow_small[batch] = resize_image(optical_flow[batch], (small_size[2], small_size[1]))
+        optical_flow_small[..., 0] /= size[2]
+        optical_flow_small[..., 1] /= size[1]
         return optical_flow_small
 
     def _run_model_inference(self, model_input):

@@ -61,13 +61,17 @@ class NetworkEstimator(BaseEstimator):
     def _run_model_inference(self, model_input):
         raise NotImplementedError
 
-    def run(self, row, dataset_root=None):
-        assert dataset_root is not None
+    def run(self, row, dataset_root):
         model_input = self._load_model_input(row, dataset_root)
         model_output = self._run_model_inference(model_input)[0]
         output_path = self._save_model_output(model_output, row, dataset_root)
         row[self.output_col] = output_path
         return row
+
+    def predict(self, batch):
+        model_output = self._run_model_inference(batch)
+        model_output = self._convert_model_output_to_prediction(model_output)
+        return model_output
 
     def __repr__(self):
         return '{}Estimator(dir={}, input_col={}, output_col={}, checkpoint={})'.format(
