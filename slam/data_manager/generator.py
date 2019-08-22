@@ -4,8 +4,6 @@ import numpy as np
 import pandas as pd
 import PIL
 import keras_preprocessing.image as keras_image
-from keras_preprocessing.image import ImageDataGenerator
-
 from slam.utils import (get_channels_count,
                         get_fill_fn,
                         load_image_arr,
@@ -81,7 +79,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             assert len(preprocess_mode) == len(self.image_cols)
             self.preprocess_mode = dict(zip(self.image_cols, preprocess_mode))
 
-        self.image_shapes = {col: self.target_size + (get_channels_count(self.preprocess_mode[col]),) \
+        self.image_shapes = {col: self.target_size + (get_channels_count(self.preprocess_mode[col]),)
                              for col in self.image_cols}
 
         self.fill_flow_fn = get_fill_fn(fill_flow_method, nan_value=np.nan, mean=0, std=1)
@@ -89,6 +87,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.depth_multiplicator = depth_multiplicator
 
+        self.cached_images = None
         self.set_cache(cached_images)
         self.max_memory_consumption = max_memory_consumption
         self.stop_caching = False
@@ -106,13 +105,12 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
     @property
     def channel_counts(self):
-        return [get_channels_count(self.preprocess_mode[col]) \
+        return [get_channels_count(self.preprocess_mode[col])
                 for col in self.x_cols if col in self.image_cols]
 
     @property
     def input_shapes(self):
         return [self.image_shapes.get(col, (1,)) for col in self.x_cols]
-
 
     def _include_last(self):
         index = len(self.df)
@@ -125,7 +123,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
     def _check_stop_caching(self):
         self.stop_caching = False
         if (self.cached_images is not None) and (len(self.cached_images) % 1000 == 0):
-             self.stop_caching = psutil.virtual_memory().percent / 100 > self.max_memory_consumption
+            self.stop_caching = psutil.virtual_memory().percent / 100 > self.max_memory_consumption
 
     def set_cache(self, cached_images):
         if cached_images is not None:
@@ -157,13 +155,13 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             image_arr = np.expand_dims(image_arr, -1)
 
         if load_mode == 'motion_maps':
-            image_arr = image_arr.transpose(1, 2, 0)
+            image_arr = image_arr.transpose((1, 2, 0))
 
         if load_mode == 'motion_maps_z':
-            image_arr = image_arr[[2,5],:,:].transpose(1, 2, 0)
+            image_arr = image_arr[[2, 5], :, :].transpose((1, 2, 0))
 
         if load_mode == 'motion_maps_xy':
-            image_arr = image_arr[[0,1,4,5],:,:].transpose(1, 2, 0)
+            image_arr = image_arr[[0, 1, 4, 5], :, :].transpose((1, 2, 0))
 
         image_arr = resize_image_arr(image_arr,
                                      self.target_size,
@@ -278,10 +276,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         return batch_x, batch_y
 
     def next(self):
-        '''For python 2.x.
+        """For python 2.x.
         # Returns
             The next batch.
-        '''
+        """
         with self.lock:
             index_array = next(self.index_generator)
         # The transformation of images is not under thread lock
