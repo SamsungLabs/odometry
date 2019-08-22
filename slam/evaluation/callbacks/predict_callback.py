@@ -1,4 +1,5 @@
 import os
+import stat
 import mlflow
 import numpy as np
 import pandas as pd
@@ -7,9 +8,7 @@ from multiprocessing import Pool
 import keras
 from keras import backend as K
 
-from slam.evaluation import (calculate_metrics,
-                             average_metrics,
-                             normalize_metrics)
+from slam.evaluation import calculate_metrics, average_metrics, normalize_metrics
 from slam.linalg import RelativeTrajectory
 from slam.utils import (visualize_trajectory_with_gt,
                         visualize_trajectory,
@@ -125,7 +124,7 @@ class Predict(keras.callbacks.Callback):
         predictions['path_to_rgb_next'] = generator.df.path_to_rgb_next
         return predictions
 
-    def create_tasks(self, generator):
+    def create_tasks(self, generator, subset):
         if generator is None:
             return dict()
 
@@ -143,21 +142,20 @@ class Predict(keras.callbacks.Callback):
                           'predicted': predicted_trajectory,
                           'gt': gt_trajectory,
                           'id': trajectory_id,
+                          'subset': subset,
                           'rpe_indices': self.rpe_indices,
                           'backend': self.backend,
                           'cuda': self.cuda})
 
         return tasks
 
-    def save_tasks(self, tasks, subset, prediction_id, max_to_visualize=None):
+    def save_tasks(self, tasks, prediction_id, max_to_visualize=None):
         max_to_visualize = max_to_visualize or len(tasks)
 
         for counter, task in enumerate(tasks):
             predicted_df = task['df']
-            gt_trajectory = task['gt']
-            predicted_trajectory = task['predicted']
             trajectory_id = task['id']
-            record = task.get('record', None)
+            subset = task['subset']
 
             self.save_predictions(predicted_df,
                                   trajectory_id,
@@ -165,6 +163,10 @@ class Predict(keras.callbacks.Callback):
                                   prediction_id)
 
             if counter < max_to_visualize:
+                gt_trajectory = task['gt']
+                predicted_trajectory = task['predicted']
+                record = task.get('record', None)
+
                 self.visualize_trajectory(predicted_trajectory,
                                           gt_trajectory,
                                           trajectory_id,
@@ -180,12 +182,15 @@ class Predict(keras.callbacks.Callback):
             records = [process_single_task(task) for task in tasks]
         return records
 
-    def evaluate_tasks(self, tasks, subset):
+    def evaluate_tasks(self, tasks):
         records = self.process_tasks(tasks)
         assert len(records) == len(tasks)
 
+        subset = None
         for index, record in enumerate(records):
             tasks[index]['record'] = record
+            subset = subset or tasks[index]['subset']
+            assert subset == tasks[index]['subset']
 
         total_metrics = average_metrics(records)
         total_metrics = {self.add_prefix(subset + '_' + k): float(v) for k, v in total_metrics.items()}
@@ -212,26 +217,22 @@ class Predict(keras.callbacks.Callback):
 
             prediction_id = partial_format(self.template, epoch=epoch + 1, **logs)
 
-            val_tasks = self.create_tasks(self.val_generator)
+            val_tasks = self.create_tasks(self.val_generator, 'val')
             if self.evaluate:
-                val_tasks, val_metrics = self.evaluate_tasks(val_tasks, 'val')
+                val_tasks, val_metrics = self.evaluate_tasks(val_tasks)
                 prediction_id = partial_format(prediction_id, **val_metrics)
 
-            if not self.is_best(val_metrics):
-                return logs
+                if not self.is_best(val_metrics):
+                    return logs
 
-            train_tasks = self.create_tasks(self.train_generator)
+            train_tasks = self.create_tasks(self.train_generator, 'train')
             if self.evaluate:
-                train_tasks, train_metrics = self.evaluate_tasks(train_tasks, 'train')
+                train_tasks, train_metrics = self.evaluate_tasks(train_tasks)
                 prediction_id = partial_format(prediction_id, **train_metrics)
 
                 logs = dict(**logs, **train_metrics, **val_metrics)
 
-            self.save_tasks(train_tasks, 'train', prediction_id, self.max_to_visualize)
-            del train_tasks
-
-            self.save_tasks(val_tasks, 'val', prediction_id, self.max_to_visualize)
-            del val_tasks
+            self.save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
 
             if mlflow.active_run():
                 if self.evaluate:
@@ -251,14 +252,11 @@ class Predict(keras.callbacks.Callback):
             self.period = 1
             self.on_epoch_end(self.epoch - 1, logs)
 
-        test_tasks, test_metrics = self.create_tasks(self.test_generator)
+        test_tasks, test_metrics = self.create_tasks(self.test_generator, 'test')
         if self.evaluate:
-            test_tasks, train_metrics = self.evaluate_tasks(test_tasks, 'test')
+            test_tasks, train_metrics = self.evaluate_tasks(test_tasks)
 
-        prediction_id = 'test'
-
-        self.save_tasks(test_tasks, 'test', prediction_id)
-        del test_tasks
+        self.save_tasks(test_tasks, prediction_id='test')
 
         if mlflow.active_run():
             if self.evaluate:
