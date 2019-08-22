@@ -11,7 +11,7 @@ from slam.linalg import (GlobalTrajectory,
 
 
 class GraphOptimizer(BaseAggregator):
-    def __init__(self):
+    def __init__(self, max_iterations=100):
         solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
         solver = g2o.OptimizationAlgorithmLevenberg(solver)
 
@@ -20,7 +20,11 @@ class GraphOptimizer(BaseAggregator):
         self.optimizer.set_algorithm(solver)
 
         self.measurements = pd.DataFrame()
-        self.max_iterations = 100
+        self.max_iterations = max_iterations
+
+    def clear(self):
+        self.optimizer.clear()
+        self.measurements = pd.DataFrame()
 
     def append(self, df):
         self.measurements = self.measurements.append(df).reset_index(drop=True)
