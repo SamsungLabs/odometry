@@ -36,7 +36,6 @@ class BaseTrainer:
         self.project_path = env.PROJECT_PATH
 
         self.config = get_config(dataset_root, dataset_type)
-
         self.dataset_root = dataset_root
         self.dataset_type = dataset_type
         self.run_name = run_name

@@ -24,6 +24,7 @@ from .special_layers import DepthFlow
 from .special_layers import add_grid
 from .special_layers import depth_flow
 from .special_layers import construct_outputs
+from .special_layers import FlowGenerator
 
 
 __all__ = [
@@ -50,14 +51,15 @@ __all__ = [
     'DepthFlow',
     'add_grid',
     'depth_flow',
-    'construct_outputs'
+    'construct_outputs',
+    'FlowGenerator'
 ]
 
 CUSTOM_LAYERS = {
      'Affine': Affine,
      'Clip': Clip,
      'Inverse': Inverse,
-     'Divide': Divide, 
+     'Divide': Divide,
      'Repeat': Repeat,
      'affine': affine,
      'clip': clip,
@@ -77,5 +79,6 @@ CUSTOM_LAYERS = {
      'DepthFlow': DepthFlow,
      'add_grid': add_grid,
      'depth_flow': depth_flow,
-     'construct_outputs': construct_outputs
+     'construct_outputs': construct_outputs,
+     'FlowGenerator': FlowGenerator
 }

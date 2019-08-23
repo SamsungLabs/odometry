@@ -122,3 +122,73 @@ class AddGrid(Layer):
 
 def add_grid(inputs, f_x=1, f_y=1, c_x=0.5, c_y=0.5, **kwargs):
     return AddGrid(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y, **kwargs)(inputs)
+
+
+import numpy as np
+
+def euler_angles_to_rotation_matrix(theta):
+    R_x = np.array([[1, 0, 0],
+                    [0, math.cos(theta[0]), -math.sin(theta[0])],
+                    [0, math.sin(theta[0]), math.cos(theta[0])]
+                    ])
+
+    R_y = np.array([[math.cos(theta[1]), 0, math.sin(theta[1])],
+                    [0, 1, 0],
+                    [-math.sin(theta[1]), 0, math.cos(theta[1])]
+                    ])
+
+    R_z = np.array([[math.cos(theta[2]), -math.sin(theta[2]), 0],
+                    [math.sin(theta[2]), math.cos(theta[2]), 0],
+                    [0, 0, 1]
+                    ])
+
+    R = np.dot(R_z, np.dot(R_y, R_x))
+
+    return R
+
+
+def create_gt_optical_flow_pair(depth, rotation_vector, gt_translation, intrinsics):
+    gt_rotation = euler_angles_to_rotation_matrix(rotation_vector)
+    pixels_grid = np.c_[np.meshgrid(np.arange(0, intrinsics.width),
+                                     np.arange(0, intrinsics.height))]
+    pixels_grid = pixels_grid.astype(np.float64)
+
+    pixels_normalized = intrinsics.forward(pixels_grid)
+    ones = np.expand_dims(np.ones(pixels_normalized.shape[1:]), 0)
+    pixels_normalized = np.concatenate([pixels_normalized, ones], 0)
+
+    R = gt_rotation
+    t = gt_translation.reshape(3,-1)
+    points1 = depth * pixels_normalized
+    points2 = (R.T @ points1.reshape(3, -1)) - R.T @ t
+    points2 = points2.reshape((3, intrinsics.height, intrinsics.width))
+    xy_pixels_from_rt = intrinsics.backward(points2[:2] / points2[2])
+    gt_flow = (xy_pixels_from_rt - pixels_grid)
+    gt_flow = np.transpose(gt_flow, (1, 2, 0))
+    gt_flow[:,:,0] /= gt_flow.shape[1]
+    gt_flow[:,:,1] /= gt_flow.shape[0]
+    return gt_flow
+
+
+class FlowGenerator(Layer):
+    def __init__(self, intrinsics, **kwargs):
+        self.output_size = intrinsics.height, intrinsics.width
+        self.translation = np.array([0., 0., 0.])
+        self.depth = np.ones(self.output_size)
+        self.intrinsics = intrinsics
+        super().__init__(**kwargs)
+
+    def build(self, input_shape):
+        super(FlowGenerator, self).build(input_shape)
+
+    def _generate(self, rotation_vector):
+        out = tf.py_func(create_gt_optical_flow_pair,
+                         [self.depth, rotation_vector, self.translation, self.intrinsics],
+                         [tf.float64])
+        return tf.reshape(tf.to_float(out), [self.output_size])
+
+    def call(self, batch):
+        return tf.map_fn(self._generate, batch, parallel_iterations=1)
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], self.output_size)

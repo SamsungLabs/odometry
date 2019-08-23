@@ -9,6 +9,7 @@ from .ls_vo import construct_ls_vo_rt_model
 from .ls_vo import construct_ls_vo_rt_no_decoder_model
 
 from .flexible import construct_flexible_model
+from .sequential_rt import construct_sequential_rt_model
 
 from .multiscale import construct_multiscale_model
 
@@ -24,6 +25,7 @@ __all__ = [
     'construct_ls_vo_rt_model',
     'construct_ls_vo_rt_no_decoder_model',
     'construct_flexible_model',
+    'construct_sequential_rt_model',
     'construct_multiscale_model',
     'construct_rigidity_model'
 ]
