@@ -63,8 +63,7 @@ class NetworkEstimator(BaseEstimator):
 
     def run(self, row, dataset_root):
         model_input = self._load_model_input(row, dataset_root)
-        model_output = self._run_model_inference(model_input)
-        prediction = self._convert_model_output_to_prediction(model_output)
+        prediction = self.predict(model_input)
         output_path = self._save_model_prediction(prediction[0], row, dataset_root)
         row[self.output_col] = output_path
         return row
