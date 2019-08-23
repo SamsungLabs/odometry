@@ -65,7 +65,7 @@ def convert_chw_to_hwc(image_arr):
     return image_arr.transpose((1, 2, 0))
 
 
-def get_channels_count(preprocess_mode):
+def get_channels_num(preprocess_mode):
     if preprocess_mode == 'rgb':
         return 3
     elif preprocess_mode == 'rgba':
