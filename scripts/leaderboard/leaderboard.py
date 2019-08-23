@@ -44,17 +44,13 @@ class Leaderboard:
             self.leader_boards = ['tum_debug', 'discoman_debug']
         else:
             self.leader_boards = ['kitti_4/6',
-                                  'kitti_4/6_mixed',
                                   'kitti_8/3',
                                   'discoman_v10',
-                                  'mini_discoman_v10',
-                                  'discoman_v10_mixed',
-                                  'mini_discoman_v10_mixed',
                                   'tum',
-                                  'saic_office',
-                                  'retail_bot',
                                   'euroc',
-                                  'zju']
+                                  'zju',
+                                  'saic_office',
+                                  'retail_bot']
 
         self.verbose = verbose
         self.machines = machines.split(' ')
@@ -130,6 +126,8 @@ class Leaderboard:
         elif dataset_type == 'kitti_4/6':
             dataset_root = env.KITTI_PATH
         elif dataset_type == 'kitti_4/6_mixed':
+            dataset_root = env.KITTI_MIXED_PATH
+        elif dataset_type == 'kitti_4/6_mixed_1+2+4':
             dataset_root = env.KITTI_MIXED_PATH
         elif dataset_type == 'kitti_8/3':
             dataset_root = env.KITTI_PATH
