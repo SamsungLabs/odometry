@@ -103,15 +103,17 @@ class BaseSlam:
 
         slam_trajectory = self.aggregator.get_trajectory()
 
-        self.aggregator.clear()
-        is_loop_closure = (frame_history.to_index - frame_history.from_index) > 100
-        adjustment_measurements_with_loop_closure = frame_history[is_loop_closure].reset_index(drop=True)
-        self.aggregator.append(adjustment_measurements_with_loop_closure)
-        odometry_trajectory_with_loop_closures = self.aggregator.get_trajectory()
-
         is_adjustment_measurements = (frame_history.to_index - frame_history.from_index) == 1
         adjustment_measurements = frame_history[is_adjustment_measurements].reset_index(drop=True)
         odometry_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
+
+        self.aggregator.clear()
+        self.aggregator.append(adjustment_measurements)
+        is_loop_closure = (frame_history.to_index - frame_history.from_index) > 100
+        loop_closure = frame_history[is_loop_closure].reset_index(drop=True)
+        self.aggregator.append(loop_closure)
+        odometry_trajectory_with_loop_closures = self.aggregator.get_trajectory()
+
         return {'id': generator.trajectory_id,
                 'slam_trajectory': slam_trajectory,
                 'odometry_trajectory_with_loop_closures': odometry_trajectory_with_loop_closures,
@@ -126,7 +128,6 @@ class BaseSlam:
         for index, row in prediction.iterrows():
             image_pair = self.get_image_pair(row, frame)
             optical_flow = self.optflow_model.predict(image_pair, target_size=self.optical_flow_shape)
-            # optical_flow = np.expand_dims(frame, axis=0)
             pose_mean, pose_std = self.predict_pose(optical_flow)
             prediction.loc[index, self.odometry_mean_columns] = pose_mean
             prediction.loc[index, self.odometry_std_columns] = pose_std

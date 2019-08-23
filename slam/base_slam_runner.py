@@ -68,11 +68,14 @@ class BaseSlamRunner(BaseTrainer):
             visualization_path = self.create_visualization_path(trajectory_id, subset, trajectory_type)
             visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_path=visualization_path)
 
-            mlflow.log_artifacts(self.run_dir) if mlflow.active_run() else None
+            # mlflow.log_artifacts(self.run_dir) if mlflow.active_run() else None
 
         return slam_record
 
     def evaluate_subset(self, slam, generators, df, subset):
+
+        if generators is None or len(generators) == 0:
+            return
 
         records = list()
         for generator in generators:
