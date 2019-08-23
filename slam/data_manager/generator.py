@@ -1,10 +1,11 @@
 import os
 import psutil
 import numpy as np
-import pandas as pd
-import PIL
+
 import keras_preprocessing.image as keras_image
-from slam.utils import (get_channels_count,
+
+
+from slam.utils import (get_channels_num,
                         get_fill_fn,
                         load_image_arr,
                         resize_image_arr)
@@ -37,6 +38,12 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  return_confidence=False,
                  trajectory_id='',
                  include_last=False):
+
+        if target_size == -1:
+            path_to_first_image = os.path.join(directory, dataframe[image_col].iloc[0].values[0])
+            first_image = load_image_arr(path_to_first_image)
+            target_size = first_image.shape[:2]
+
         super().set_processing_attrs(image_data_generator,
                                      target_size,
                                      'rgb',
@@ -79,7 +86,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             assert len(preprocess_mode) == len(self.image_cols)
             self.preprocess_mode = dict(zip(self.image_cols, preprocess_mode))
 
-        self.image_shapes = {col: self.target_size + (get_channels_count(self.preprocess_mode[col]),)
+        self.image_shapes = {col: self.target_size + (get_channels_num(self.preprocess_mode[col]),)
                              for col in self.image_cols}
 
         self.fill_flow_fn = get_fill_fn(fill_flow_method, nan_value=np.nan, mean=0, std=1)
@@ -105,7 +112,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
     @property
     def channel_counts(self):
-        return [get_channels_count(self.preprocess_mode[col])
+        return [get_channels_num(self.preprocess_mode[col])
                 for col in self.x_cols if col in self.image_cols]
 
     @property
