@@ -168,7 +168,7 @@ class BaseTrainer:
                                    cuda=False,
                                    workers=8)
 
-        reduce_lr_callback = ReduceLROnPlateau(monitor=monitor, factor=self.reduce_factor)
+        reduce_lr_callback = ReduceLROnPlateau(monitor='val_loss', factor=self.reduce_factor)
 
         terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
 
