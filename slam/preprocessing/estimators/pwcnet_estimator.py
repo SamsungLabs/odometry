@@ -7,7 +7,7 @@ from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPT
 from submodules.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
 
 from slam.preprocessing.estimators.network_estimator import NetworkEstimator
-from slam.utils import resize_image
+from slam.utils import resize_image, resize_image_arr
 
 
 class PWCNetEstimator(NetworkEstimator):
@@ -39,19 +39,35 @@ class PWCNetEstimator(NetworkEstimator):
         nn_opts = self.get_nn_opts()
         self.model = pwc_net(mode='test', options=nn_opts)
 
-    def _convert_model_output_to_prediction(self, optical_flow):
+    def _convert_model_output_to_prediction(self, optical_flow, target_size=None):
         if not isinstance(optical_flow, np.ndarray):
             optical_flow = np.stack(optical_flow)
 
         batch_size, height, width, channels_num = optical_flow.shape
+
         small_height = height // 4
         small_width = width // 4
-        optical_flow_small = np.zeros((batch_size, small_height, small_width, channels_num))
+
+        small_optical_flow = np.zeros((batch_size, small_height, small_width, channels_num))
         for batch_index in range(optical_flow.shape[0]):
-            optical_flow_small[batch_index] = resize_image(optical_flow[batch_index], (small_width, small_height))
-        optical_flow_small[..., 0] /= width
-        optical_flow_small[..., 1] /= height
-        return optical_flow_small
+            small_optical_flow[batch_index] = resize_image(optical_flow[batch_index], (small_width, small_height))
+
+        if target_size is not None:
+            final_height = target_size[0]
+            final_width = target_size[1]
+
+            final_optical_flow = np.zeros((batch_size, final_height, final_width, channels_num))
+            for batch_index in range(optical_flow.shape[0]):
+                final_optical_flow[batch_index] = resize_image_arr(small_optical_flow[batch_index],
+                                                                   target_size=target_size,
+                                                                   data_format='channels_last',
+                                                                   mode='nearest')
+        else:
+            final_optical_flow = small_optical_flow
+
+        final_optical_flow[..., 0] /= width
+        final_optical_flow[..., 1] /= height
+        return final_optical_flow
 
     def _run_model_inference(self, model_input):
         return self.model.predict_from_img_pairs(model_input, batch_size=1, verbose=False)
