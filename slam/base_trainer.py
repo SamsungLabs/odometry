@@ -28,6 +28,7 @@ class BaseTrainer:
                  save_best_only=False,
                  min_lr=1e-5,
                  reduce_factor=0.5,
+                 per_process_gpu_memory_fraction=0.33,
                  **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
@@ -69,7 +70,7 @@ class BaseTrainer:
         self.set_model_args()
         self.set_dataset_args()
 
-        set_computation(self.seed, per_process_gpu_memory_fraction=kwargs['per_process_gpu_memory_fraction'])
+        set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
         self.start_run(self.config['exp_name'], run_name)
 
