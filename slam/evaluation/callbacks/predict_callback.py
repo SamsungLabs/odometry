@@ -3,6 +3,7 @@ import stat
 import mlflow
 import numpy as np
 import pandas as pd
+from collections import Counter
 from multiprocessing import Pool
 
 import keras
@@ -154,7 +155,8 @@ class Predict(keras.callbacks.Callback):
     def save_tasks(self, tasks, prediction_id, max_to_visualize=None):
         max_to_visualize = max_to_visualize or len(tasks)
 
-        for counter, task in enumerate(tasks):
+        counter = Counter()
+        for task in tasks:
             predicted_df = task['df']
             trajectory_id = task['id']
             subset = task['subset']
@@ -164,7 +166,7 @@ class Predict(keras.callbacks.Callback):
                                   subset,
                                   prediction_id)
 
-            if counter < max_to_visualize:
+            if counter[subset] < max_to_visualize:
                 gt_trajectory = task['gt']
                 predicted_trajectory = task['predicted']
                 record = task.get('record', None)
@@ -175,6 +177,7 @@ class Predict(keras.callbacks.Callback):
                                           subset,
                                           prediction_id,
                                           record)
+            counter[subset] += 1
 
     def process_tasks(self, tasks):
         if self.workers:
