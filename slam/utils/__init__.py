@@ -11,7 +11,7 @@ from .io_utils import resize_image_arr
 from .io_utils import load_image_arr
 from .io_utils import convert_hwc_to_chw
 from .io_utils import convert_chw_to_hwc
-from .io_utils import get_channels_count
+from .io_utils import get_channels_num
 from .io_utils import get_fill_fn
 
 from .visualization_utils import visualize_trajectory_with_gt
