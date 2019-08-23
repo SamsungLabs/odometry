@@ -12,7 +12,7 @@ class MultiscaleTrainer(BaseTrainer):
     def set_model_args(self):
         self.construct_model_fn = construct_multiscale_model
         self.lr = 0.001
-        self.loss = 'huber'
+        self.loss = 'mae'
         self.scale_rotation = 50
 
     def set_dataset_args(self):
