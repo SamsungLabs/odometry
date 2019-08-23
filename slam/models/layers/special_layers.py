@@ -1,5 +1,5 @@
 import tensorflow as tf
-from keras.layers import Layer, Dense, concatenate
+from keras.layers import Layer, Dense, concatenate, multiply
 from keras.regularizers import l2
 
 from .functions import grid_sample
@@ -7,10 +7,20 @@ from .functions import grid_sample
 
 def construct_outputs(inputs,
                       regularization=0,
+                      scale=None,
                       return_confidence=False):
     outputs = []
-    for x, output_name in zip(inputs, ('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z')):
-        output = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(x)
+
+    for i, output_name in enumerate(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z')):
+        x = inputs[i]
+
+        output = Dense(1,
+                       kernel_regularizer=l2(regularization),
+                       name=output_name if scale is None else None)(x)
+
+        if scale is not None:
+            s = scale[i] if isinstance(scale, list) else scale
+            output = multiply([output, s], name=output_name)
 
         if return_confidence:
             confidence = Dense(1,

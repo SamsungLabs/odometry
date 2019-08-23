@@ -1,3 +1,10 @@
+from .basic_ops import Abs
+from .basic_ops import Min
+from .basic_ops import Max
+from .basic_ops import Mean
+from .basic_ops import Std
+from .basic_ops import Percentile
+
 from .functions import Affine
 from .functions import Clip
 from .functions import Inverse
@@ -25,8 +32,16 @@ from .special_layers import add_grid
 from .special_layers import depth_flow
 from .special_layers import construct_outputs
 
+from .transforms import transform_inputs
+
 
 __all__ = [
+    'Abs',
+    'Min',
+    'Max',
+    'Mean',
+    'Std',
+    'Percentile',
     'Affine',
     'Clip',
     'Inverse',
@@ -50,10 +65,17 @@ __all__ = [
     'DepthFlow',
     'add_grid',
     'depth_flow',
-    'construct_outputs'
+    'construct_outputs',
+    'transform_inputs'
 ]
 
 CUSTOM_LAYERS = {
+     'Abs': Abs,
+     'Min': Min,
+     'Max': Max,
+     'Mean': Mean,
+     'Std': Std,
+     'Percentile': Percentile,
      'Affine': Affine,
      'Clip': Clip,
      'Inverse': Inverse,
@@ -77,5 +99,6 @@ CUSTOM_LAYERS = {
      'DepthFlow': DepthFlow,
      'add_grid': add_grid,
      'depth_flow': depth_flow,
-     'construct_outputs': construct_outputs
+     'construct_outputs': construct_outputs,
+     'transform_inputs': transform_inputs
 }
