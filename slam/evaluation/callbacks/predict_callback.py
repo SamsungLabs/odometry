@@ -128,13 +128,13 @@ class Predict(keras.callbacks.Callback):
         return predictions
 
     def create_tasks(self, generator, subset):
+        tasks = []
+
         if generator is None:
-            return dict()
+            return tasks
 
         gt = generator.df
         predictions = self.predict_generator(generator)
-
-        tasks = []
 
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
             predicted_df = predictions.iloc[indices]

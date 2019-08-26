@@ -231,7 +231,7 @@ def normalize_metrics(metrics):
 
 def average_metrics(records):
     if len(records) == 0:
-        return []
+        return dict()
 
     averaged_metrics = OrderedDict()
     for metric_name in ('ATE', 'RMSE_t', 'RMSE_r'):
