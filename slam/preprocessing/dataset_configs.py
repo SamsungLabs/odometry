@@ -6,6 +6,7 @@ from pathlib import Path
 DATASET_TYPES = ['kitti_8/3',
                  'kitti_4/6',
                  'kitti_4/6_mixed',
+                 'kitti_4/6_mixed_1+2+4',
                  'discoman_v10',
                  'discoman_v10_mixed',
                  'mini_discoman_v10',
@@ -33,7 +34,7 @@ def get_config(dataset_root: str, dataset_type: str) -> Dict:
     assert dataset_type in DATASET_TYPES
 
     this_module = sys.modules[__name__]
-    dataset_type = dataset_type.replace('/', '_')
+    dataset_type = dataset_type.replace('/', '_').replace('+', '_')
     config = getattr(this_module, f'get_{dataset_type}_config')(dataset_root)
 
     return config
@@ -154,6 +155,46 @@ def get_kitti_4_6_mixed_config(_dataset_root):
                                    '1/10'],
               'test_trajectories': None,
               'exp_name': 'kitti_4/6_mixed',
+              'target_size': (96, 320),
+              'source_size': (384, 1280),
+              'depth_multiplicator': 1.0,
+              'rpe_indices': 'kitti',
+              }
+
+    sub_dirs = ['train', 'val', 'test']
+    for d in sub_dirs:
+        trajectories = config[f'{d}_trajectories']
+        config[f'{d}_strides'] = [int(Path(t).parent.name) for t in trajectories] if trajectories else None
+
+    return config
+
+
+def get_kitti_4_6_mixed_1_2_4_config(dataset_root):
+    config = {'train_trajectories': ['1/00',
+                                     '1/02',
+                                     '1/08',
+                                     '1/09',
+                                     '2/00',
+                                     '2/02',
+                                     '2/08',
+                                     '2/09',
+                                     '4/00',
+                                     '4/02',
+                                     '4/08',
+                                     '4/09'],
+              'val_trajectories': ['1/03',
+                                   '1/04',
+                                   '1/05',
+                                   '1/06',
+                                   '1/07',
+                                   '1/10'],
+              'test_trajectories': ['2/03',
+                                    '2/04',
+                                    '2/05',
+                                    '2/06',
+                                    '2/07',
+                                    '2/10'],
+              'exp_name': 'kitti_4/6_mixed_1+2+4',
               'target_size': (96, 320),
               'source_size': (384, 1280),
               'depth_multiplicator': 1.0,
