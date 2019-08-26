@@ -66,6 +66,8 @@ def split_se3(se3):
 
 
 def euler_to_quaternion(euler_angles_xyz):
+    '''euler_x,euler_y,euler_z in 
+       q_w, w_x, q_y, q_z out'''
     yaw   = euler_angles_xyz[2]
     pitch = euler_angles_xyz[1]
     roll  = euler_angles_xyz[0]
@@ -86,6 +88,8 @@ def euler_to_quaternion(euler_angles_xyz):
 
 
 def quaternion_to_euler(quaternion):
+    '''q_w, w_x, q_y, q_z in,
+       euler_x,euler_y,euler_z out'''
     q_w, q_x, q_y, q_z = quaternion
 
     t0 = 2.0 * (q_w * q_x + q_y * q_z)
@@ -101,6 +105,12 @@ def quaternion_to_euler(quaternion):
     yaw = np.arctan2(t3, t4)
 
     return roll, pitch, yaw
+
+def get_covariance_matrix_from_euler_uncertainty(euler_angles_xyz):
+    ''' get euler_x,euler_y,euler_z,
+        output matrix 6x6 with t_x, t_y, t_z, euler_z, euler_y, euler_x (yaw, pitch, roll)'''
+    return np.diag(np.hstack([np.zeros(3), euler_angles_xyz[::-1]]))
+    
 
 
 def convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles_xyz, covariance_matrix_euler=np.eye(6)):
