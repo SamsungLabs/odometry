@@ -78,7 +78,8 @@ class MetricAverager:
         metrics, model_name = self.load_metrics(experiment_name, run_name)
         aggregated_metrics = self.aggregate_metrics(metrics)
         metrics_mean = self.calculate_stat(aggregated_metrics, np.mean, ignore=self.ignore)
-        metrics_std = self.calculate_stat(aggregated_metrics, np.std, ignore=self.ignore + self.save_once)
+        metrics_std = self.calculate_stat(aggregated_metrics, np.std, ignore=self.ignore + self.save_once,
+                                          suffix='std')
 
         num_of_runs = len(next(iter(aggregated_metrics.values())))
         run_name = run_name + '_avg'
@@ -118,8 +119,9 @@ class MetricAverager:
         return aggregated_metrics
 
     @staticmethod
-    def calculate_stat(metrics, stat_fn, ignore):
-        return {k: stat_fn(v) for k, v in metrics.items() if k not in ignore}
+    def calculate_stat(metrics, stat_fn, ignore, suffix=None):
+        return {(k + '_' + suffix) if suffix else k: stat_fn(v)
+                for k, v in metrics.items() if k not in ignore}
 
 
 if __name__ == '__main__':

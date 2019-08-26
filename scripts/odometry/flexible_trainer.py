@@ -12,7 +12,7 @@ class FlexibleTrainer(BaseTrainer):
     def set_model_args(self):
         self.construct_model_fn = construct_flexible_model
         self.lr = 0.001
-        self.loss = 'huber'
+        self.loss = 'mae'
         self.scale_rotation = 50
 
     def set_dataset_args(self):
@@ -21,7 +21,6 @@ class FlexibleTrainer(BaseTrainer):
         self.image_col = ['path_to_optical_flow']
         self.load_mode = ['flow_xy']
         self.preprocess_mode = ['flow_xy']
-        self.batch_size = 128
 
     def get_dataset(self, train_trajectories=None, val_trajectories=None):
         return super().get_dataset(train_trajectories=train_trajectories,
