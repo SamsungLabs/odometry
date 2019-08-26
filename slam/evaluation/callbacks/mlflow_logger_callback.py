@@ -19,5 +19,6 @@ class MlflowLogger(keras.callbacks.Callback):
 
             mlflow.log_metric(self.add_prefix('train_loss'), float(train_loss), step=epoch)
             mlflow.log_metric(self.add_prefix('val_loss'), float(val_loss), step=epoch)
+            mlflow.log_metric(self.add_prefix('epoch'), epoch + 1)
 
         return logs
