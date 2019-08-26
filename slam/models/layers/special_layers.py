@@ -16,19 +16,20 @@ def construct_outputs(inputs,
 
         output = Dense(1,
                        kernel_regularizer=l2(regularization),
-                       name=output_name if scale is None else None)(x)
+                       name=output_name if scale is None and not return_confidence else None)(x)
 
         if scale is not None:
             s = scale[i] if isinstance(scale, list) else scale
-            output = multiply([output, s], name=output_name)
+            output = multiply([output, s])
+            output = concatenate([output, s],
+                                 name=output_name if not return_confidence else None)
 
         if return_confidence:
             confidence = Dense(1,
                                kernel_regularizer=l2(regularization),
                                kernel_initializer='glorot_normal',
-                               trainable=False,
-                               name=output_name + '_confidence')(x)
-            output = concatenate([output, confidence], name=output_name + '_with_confidence')
+                               trainable=False)(x)
+            output = concatenate([output, confidence], name=output_name)
 
         outputs.append(output)
 
