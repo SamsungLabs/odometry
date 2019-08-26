@@ -117,12 +117,10 @@ class Predict(keras.callbacks.Callback):
         model_output = self.model.predict_generator(generator, steps=len(generator))
         data = np.stack(model_output).transpose(1, 2, 0)
         data = data.reshape((len(data), -1))
-        columns = self.y_cols[:]
-        assert data.shape[1] in (len(columns), 2 * len(columns))
-        if data.shape[1] == 2 * len(columns):
-            columns.extend([col + '_confidence' for col in columns])
 
-        predictions = pd.DataFrame(data=data, index=generator.df.index, columns=columns).astype(float)
+        predictions = pd.DataFrame(data=data,
+                                   index=generator.df.index,
+                                   columns=generator.return_cols).astype(float)
         predictions['path_to_rgb'] = generator.df.path_to_rgb
         predictions['path_to_rgb_next'] = generator.df.path_to_rgb_next
         return predictions
