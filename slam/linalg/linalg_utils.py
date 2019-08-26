@@ -51,7 +51,7 @@ def get_relative_se3_matrix(global_se3_matrix, next_global_se3_matrix):
 
 
 def form_se3(rotation_matrix, translation):
-    '''create SE3 matrix from rotation matrix and translation vector'''
+    """create SE3 matrix from rotation matrix and translation vector"""
     se3 = np.eye(4)
     se3[:3, :3] = rotation_matrix
     se3[:3, 3:4] = np.reshape(translation, (3, 1))
@@ -59,15 +59,15 @@ def form_se3(rotation_matrix, translation):
 
 
 def split_se3(se3):
-    '''split SE3 matrix into rotation matrix and translation vector'''
+    """split SE3 matrix into rotation matrix and translation vector"""
     rotation_matrix = se3[:3, :3]
     translation = se3[:3, 3:4].ravel()
     return rotation_matrix, translation
 
 
 def euler_to_quaternion(euler_angles_xyz):
-    '''euler_x,euler_y,euler_z in 
-       q_w, q_x, q_y, q_z out'''
+    """euler_x,euler_y,euler_z in 
+       q_w, q_x, q_y, q_z out"""
     yaw   = euler_angles_xyz[2]
     pitch = euler_angles_xyz[1]
     roll  = euler_angles_xyz[0]
@@ -88,8 +88,8 @@ def euler_to_quaternion(euler_angles_xyz):
 
 
 def quaternion_to_euler(quaternion):
-    '''q_w, q_x, q_y, q_z in,
-       euler_x,euler_y,euler_z out'''
+    """q_w, q_x, q_y, q_z in,
+       euler_x,euler_y,euler_z out"""
     q_w, q_x, q_y, q_z = quaternion
 
     t0 = 2.0 * (q_w * q_x + q_y * q_z)
@@ -107,15 +107,15 @@ def quaternion_to_euler(quaternion):
     return roll, pitch, yaw
 
 def get_covariance_matrix_from_euler_uncertainty(euler_angles_xyz):
-    ''' get euler_x,euler_y,euler_z,
-        output matrix 6x6 with t_x, t_y, t_z, euler_z, euler_y, euler_x (yaw, pitch, roll)'''
+    """get euler_x,euler_y,euler_z,
+        output matrix 6x6 with t_x, t_y, t_z, euler_z, euler_y, euler_x (yaw, pitch, roll)"""
     return np.diag(np.hstack([np.zeros(3), euler_angles_xyz[::-1]]))
     
 
 
 def convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles_xyz, covariance_matrix_euler=np.eye(6)):
-    ''' get  matrix 6x6 with t_x, t_y, t_z, euler_z, euler_y, euler_x (yaw, pitch, roll),
-        output matrix 7x7 with t_x, t_y, t_z, q_w, q_x, q_y, q_z'''
+    """get  matrix 6x6 with t_x, t_y, t_z, euler_z, euler_y, euler_x (yaw, pitch, roll),
+        output matrix 7x7 with t_x, t_y, t_z, q_w, q_x, q_y, q_z"""
     yaw   = euler_angles_xyz[2]
     pitch = euler_angles_xyz[1]
     roll  = euler_angles_xyz[0]
