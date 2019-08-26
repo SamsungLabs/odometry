@@ -19,7 +19,6 @@ class GraphOptimizer(BaseAggregator):
         self.optimizer.set_verbose(True)
         self.optimizer.set_algorithm(solver)
 
-        self.measurements = None
         self.current_pose = None
         self.clear()
         self.max_iterations = max_iterations
@@ -28,39 +27,42 @@ class GraphOptimizer(BaseAggregator):
         self.optimizer.clear()
         vertex = self.create_vertex(np.eye(3), np.zeros(3), index=0)
         self.optimizer.add_vertex(vertex)
-
-        self.measurements = pd.DataFrame()
         self.current_pose = np.identity(6)
 
     def append(self, df):
-        self.measurements = self.measurements.append(df).reset_index(drop=True)
-
         is_adjustment_measurements = (df.to_index - df.from_index) == 1
         adjustment_measurements = df[is_adjustment_measurements].reset_index(drop=True)
 
-        index = len(self.optimizer.vertices())
-        previous_vertex = self.optimizer.vertex(index - 1)
-        previous_estimate = previous_vertex.estimate()
-        position = previous_estimate.position()
-        quaternion_g2o = previous_estimate.Quaternion()
-        quaternion = Quaternion(matrix=quaternion_g2o.rotation_matrix())
-        previous_transformation_matrix = QuaternionWithTranslation(quaternion, position).to_transformation_matrix()
-
-        relative_pose = QuaternionWithTranslation.from_euler_angles(adjustment_measurements.to_dict(orient='records')[0])
-        relative_transformation_matrix = relative_pose.to_transformation_matrix()
-        current_pose = previous_transformation_matrix @ relative_transformation_matrix
-        current_quat = QuaternionWithTranslation().from_transformation_matrix(current_pose)
-
-        # trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
-
-        vertex = self.create_vertex(current_quat.quaternion.rotation_matrix, current_quat.translation, index)
-        self.optimizer.add_vertex(vertex)
+        for _, row in adjustment_measurements.iterrows():
+            current_pose = self.get_current_pose(row)
+            index = len(self.optimizer.vertices())
+            vertex = self.create_vertex(current_pose.quaternion.rotation_matrix, current_pose.translation, index)
+            self.optimizer.add_vertex(vertex)
 
         for index, row in df.iterrows():
             edge = self.create_edge(row)
             self.optimizer.add_edge(edge)
 
         self.optimize()
+
+    def get_previous_pose(self) -> np.ndarray:
+        index = len(self.optimizer.vertices())
+        previous_vertex = self.optimizer.vertex(index - 1)
+        previous_estimate = previous_vertex.estimate()
+        position = previous_estimate.position()
+        quaternion_g2o = previous_estimate.Quaternion()
+        quaternion = Quaternion(matrix=quaternion_g2o.rotation_matrix())
+        transformation_matrix = QuaternionWithTranslation(quaternion, position).to_transformation_matrix()
+        return transformation_matrix
+
+    def get_current_pose(self, row):
+        previous_transformation_matrix = self.get_previous_pose()
+
+        relative_pose = QuaternionWithTranslation.from_euler_angles(row.to_dict())
+        relative_transformation_matrix = relative_pose.to_transformation_matrix()
+        current_pose = previous_transformation_matrix @ relative_transformation_matrix
+        current_pose = QuaternionWithTranslation().from_transformation_matrix(current_pose)
+        return current_pose
 
     @staticmethod
     def create_pose(orientation: np.ndarray, translation: np.ndarray) -> g2o.Isometry3d:
@@ -95,8 +97,6 @@ class GraphOptimizer(BaseAggregator):
         return edge
 
     def optimize(self):
-
-
         self.optimizer.initialize_optimization()
         self.optimizer.optimize(self.max_iterations)
 
