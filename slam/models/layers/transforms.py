@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+from functools import partial
 from keras import backend as K
 from keras.layers import Layer, Lambda, subtract, concatenate
 
@@ -109,12 +109,14 @@ class Transform:
         elif transform == 'normalize':
             return normalize
         elif transform == 'divide':
-            return lambda inputs, scale, axis: divide(inputs, scale), scale
+            def _divide(inputs, scale, axis):
+                return divide(inputs, scale), scale
+            return _divide
         else:
             raise ValueError(f'Unknown transform option: "{transform}"')
 
     def __call__(self, inputs):
-        if not self.transform or self.agnostic:
+        if (not self.transform) or self.agnostic:
             inputs, scale = concat(inputs), None
         else:
             inputs, scale = concat(inputs[:-1]), inputs[-1]
