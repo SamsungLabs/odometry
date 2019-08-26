@@ -32,7 +32,7 @@ class Struct2DepthEstimator(NetworkEstimator):
         self.sess = tf.get_default_session() or tf.Session()
         saver.restore(self.sess, self.checkpoint)
 
-    def _convert_image_to_model_input(self, image):
+    def _convert_image_to_model_input(self, image, _target_size=None):
         image = resize_image(image, target_size=(self.width, self.height))
         return np.array(image, dtype=np.float32) / 255.
 
