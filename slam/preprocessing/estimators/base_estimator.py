@@ -24,7 +24,7 @@ class BaseEstimator:
             del row[key]
         return row
 
-    def run(self, row, dataset_root=None):
+    def run(self, row, dataset_root):
         pass
 
     def __repr__(self):

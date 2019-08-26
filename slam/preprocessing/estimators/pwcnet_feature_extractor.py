@@ -25,7 +25,7 @@ class PWCNetFeatureExtractor(PWCNetEstimator):
         nn_opts['ret_feat'] = True
         return nn_opts
     
-    def _convert_model_output_to_prediction(self, output):
+    def _convert_model_output_to_prediction(self, output, target_size=None):
         return output
     
     def _run_model_inference(self, model_input):

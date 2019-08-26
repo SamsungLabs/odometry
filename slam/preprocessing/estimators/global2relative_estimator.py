@@ -17,7 +17,7 @@ class Global2RelativeEstimator(BaseEstimator):
         super(Global2RelativeEstimator, self).__init__(*args, **kwargs)
         self.name = 'Global2Relative'
 
-    def run(self, row, dataset_root=None):
+    def run(self, row, dataset_root):
 
         if not set(self.input_col) <= set(dict(row).keys()):
             return row
