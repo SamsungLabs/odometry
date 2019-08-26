@@ -41,6 +41,7 @@ class TestDatasets(unittest.TestCase):
                         dataset_root=os.path.join(env.DATASET_PATH, 'tum_rgbd_flow'),
                         output_root=self.output_dir.as_posix(),
                         target_size=(120, 160),
+
                         optical_flow_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/pwcnet.ckpt-595000'),
                         depth_checkpoint=os.path.join(env.PROJECT_PATH, 'weights/model-199160'),
                         pwc_features=True)
