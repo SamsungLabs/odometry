@@ -59,13 +59,14 @@ class ConfidenceTrainer(BaseTrainer):
                                 y_col=self.y_col,
                                 image_col=self.image_col,
                                 load_mode=self.load_mode,
+                                batch_size=self.batch_size,
                                 preprocess_mode=self.preprocess_mode,
                                 depth_multiplicator=self.config['depth_multiplicator'],
                                 cached_images={} if self.cache else None,
                                 train_strides=self.config['train_strides'],
                                 val_strides=self.config['val_strides'],
                                 test_strides=self.config['test_strides'],
-                                return_confidence=True)
+                                placeholder=['confidence'])
 
     def get_model_factory(self, input_shapes):
         return ModelWithConfidenceFactory(self.construct_model_fn,
@@ -124,7 +125,7 @@ class ConfidenceTrainer(BaseTrainer):
 
     @staticmethod
     def get_parser():
-        parser = super(ConfidenceTrainer, ConfidenceTrainer).get_parser()
+        parser = super().get_parser()
         parser.add_argument('--holdout', type=float, default=0.1,
                             help='Ratio of dataset to train confidence')
         parser.add_argument('--epochs_confidence', type=int, default=100,
