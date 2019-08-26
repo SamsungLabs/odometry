@@ -8,8 +8,7 @@ from keras.layers import (Flatten,
 from slam.models.layers import (concat,
                                 conv2d,
                                 conv2d_transpose,
-                                construct_fc,
-                                construct_double_fc,
+                                dense,
                                 construct_outputs)
 from slam.utils import mlflow_logging
 
@@ -65,15 +64,15 @@ def construct_st_vo_model(inputs, kernel_initializer='glorot_normal'):
     flatten2 = Flatten(name='flatten2')(pool2)
     merged = concatenate([flatten1, flatten2], axis=1)
     activation = Activation('relu')(merged)
-    fc = construct_fc(activation, kernel_initializer=kernel_initializer, name='fc')
-    outputs = construct_outputs(fc, fc)
+    fc = dense(activation, kernel_initializer=kernel_initializer, name='fc')
+    outputs = construct_outputs([fc] * 6)
     return outputs
 
 
 @mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO')
 def construct_ls_vo_model(inputs,
                           cropping=((0, 0), (0, 0)),
-                          hidden_size=1000,
+                          output_size=1000,
                           regularization=0,
                           kernel_initializer='glorot_normal'):
 
@@ -83,18 +82,20 @@ def construct_ls_vo_model(inputs,
     reconstructed_flow = construct_flow_decoder(bottleneck,
                                                 cropping=cropping,
                                                 output_channels=inputs.shape[-1].value)
-    fc2 = construct_double_fc(features,
-                              hidden_size=hidden_size,
-                              regularization=regularization,
-                              kernel_initializer=kernel_initializer)
-    outputs = construct_outputs(fc2, fc2, regularization=regularization) + [reconstructed_flow]
+    fc = dense(features,
+               output_size=output_size,
+               layers_num=2,
+               regularization=regularization,
+               kernel_initializer=kernel_initializer)
+
+    outputs = construct_outputs([fc] * 6, regularization=regularization) + [reconstructed_flow]
     return outputs
 
 
 @mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO_rt')
 def construct_ls_vo_rt_model(inputs,
                              cropping=((0, 0), (0, 0)),
-                             hidden_size=500,
+                             output_size=500,
                              regularization=0,
                              kernel_initializer='glorot_normal'):
 
@@ -104,37 +105,44 @@ def construct_ls_vo_rt_model(inputs,
     reconstructed_flow = construct_flow_decoder(bottleneck,
                                                 cropping=cropping,
                                                 output_channels=inputs.shape[-1].value)
-    fc2_rotation = construct_double_fc(features,
-                                       hidden_size=hidden_size,
-                                       regularization=regularization,
-                                       kernel_initializer=kernel_initializer,
-                                       name='rotation')
-    fc2_translation = construct_double_fc(features, 
-                                          hidden_size=hidden_size,
-                                          regularization=regularization,
-                                          kernel_initializer=kernel_initializer,
-                                          name='translation')
-    outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization) + [reconstructed_flow]
+    fc_rotation = dense(features,
+                        output_size=output_size,
+                        layers_num=2,
+                        regularization=regularization,
+                        kernel_initializer=kernel_initializer,
+                        name='rotation')
+    fc_translation = dense(features,
+                           output_size=output_size,
+                           layers_num=2,
+                           regularization=regularization,
+                           kernel_initializer=kernel_initializer,
+                           name='translation')
+
+    outputs = construct_outputs([fc_rotation] * 3 + [fc_translation] * 3,
+                                regularization=regularization) + [reconstructed_flow]
     return outputs
 
 
 @mlflow_logging(ignore=('inputs',), prefix='model.', name='LS-VO_rt_no_decoder')
 def construct_ls_vo_rt_no_decoder_model(inputs,
-                                        hidden_size=500,
+                                        output_size=500,
                                         regularization=0,
                                         kernel_initializer='glorot_normal'):
     inputs = concat(inputs)
-    features, _ = construct_encoder(inputs,
-                                    kernel_initializer=kernel_initializer)
-    fc2_rotation = construct_double_fc(features,
-                                       hidden_size=hidden_size,
-                                       regularization=regularization,
-                                       kernel_initializer=kernel_initializer,
-                                       name='rotation')
-    fc2_translation = construct_double_fc(features,
-                                          hidden_size=hidden_size,
-                                          regularization=regularization,
-                                          kernel_initializer=kernel_initializer,
-                                          name='translation')
-    outputs = construct_outputs(fc2_rotation, fc2_translation, regularization=regularization)
+    features, _ = construct_encoder(inputs, kernel_initializer=kernel_initializer)
+    fc_rotation = dense(features,
+                        output_size=output_size,
+                        layers_num=2,
+                        regularization=regularization,
+                        kernel_initializer=kernel_initializer,
+                        name='rotation')
+    fc_translation = dense(features,
+                           output_size=output_size,
+                           layers_num=2,
+                           regularization=regularization,
+                           kernel_initializer=kernel_initializer,
+                           name='translation')
+
+    outputs = construct_outputs([fc_rotation] * 3 + [fc_translation] * 3,
+                                regularization=regularization)
     return outputs

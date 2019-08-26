@@ -2,11 +2,7 @@ from keras.applications.resnet50 import ResNet50
 from keras.layers import Flatten, Dense, Conv2D, concatenate
 from keras.regularizers import l2
 
-from slam.models.layers import (concat,
-                                conv2d,
-                                construct_fc,
-                                construct_double_fc,
-                                construct_outputs)
+from slam.models.layers import concat, conv2d, dense, construct_outputs
 from slam.utils import mlflow_logging
 
 
@@ -26,11 +22,13 @@ def construct_resnet50_model(inputs,
     features = ResNet50(weights=weights, include_top=False, pooling=None)(conv0)
     flatten = Flatten()(features)
 
-    fc2 = construct_double_fc(flatten,
-                              hidden_size=500,
-                              activation='relu',
-                              kernel_initializer=kernel_initializer)
-    outputs = construct_outputs(fc2, fc2)
+    fc = dense(flatten,
+               output_size=500,
+               num_layers=2,
+               activation='relu',
+               kernel_initializer=kernel_initializer)
+
+    outputs = construct_outputs([fc] * 6)
     return outputs
 
 
@@ -42,7 +40,7 @@ def construct_simple_model(inputs,
                            strides=1,
                            paddings='same',
                            fc_layers=2,
-                           hidden_sizes=500,
+                           output_sizes=500,
                            activations='elu',
                            regularizations=0,
                            batch_norms=True):
@@ -54,8 +52,8 @@ def construct_simple_model(inputs,
         strides = [strides] * conv_layers
     if type(paddings) != list:
         paddings = [paddings] * conv_layers
-    if type(hidden_sizes) != list:
-        hidden_sizes = [hidden_sizes] * fc_layers
+    if type(output_sizes) != list:
+        output_sizes = [output_sizes] * fc_layers
     if type(activations) != list:
         activations = [activations] * (conv_layers + fc_layers)
     if type(regularizations) != list:
@@ -81,10 +79,10 @@ def construct_simple_model(inputs,
 
     fc = flatten
     for i in range(fc_layers):
-        fc = Dense(hidden_sizes[i],
+        fc = Dense(output_sizes[i],
                    kernel_initializer='glorot_normal',
                    activation=activations[i + conv_layers],
                    activity_regularizer=l2(regularizations[i]))(fc)
 
-    outputs = construct_outputs(fc, fc)
+    outputs = construct_outputs([fc] * 6)
     return outputs

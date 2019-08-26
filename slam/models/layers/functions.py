@@ -96,7 +96,7 @@ def divide(inputs, scale, **kwargs):
     return Divide(**kwargs)([inputs, scale])
 
 
-def chunk(inputs, n=None, size=None):
+def chunk(inputs, n=None, size=None, names=None):
     assert n or size
 
     dim = K.int_shape(inputs)[-1]
@@ -108,11 +108,15 @@ def chunk(inputs, n=None, size=None):
     else:
         indices = np.cumsum(size)
 
+    names = names or [None] * len(indices)
+
+    assert len(names) == len(indices)
+
     chunks = []
     first_index = 0
-    for last_index in indices:
+    for last_index, name in zip(indices, names):
         print(f'chunk [{first_index}, {last_index}]')
-        chunks.append(Lambda(lambda x: x[..., first_index:last_index])(inputs))
+        chunks.append(Lambda(lambda x: x[..., first_index:last_index], name=name)(inputs))
         first_index = last_index
 
     return chunks
