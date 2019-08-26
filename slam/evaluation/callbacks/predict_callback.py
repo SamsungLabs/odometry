@@ -126,13 +126,13 @@ class Predict(keras.callbacks.Callback):
         return predictions
 
     def create_tasks(self, generator, subset):
+        tasks = []
+
         if generator is None:
-            return dict()
+            return tasks
 
         gt = generator.df
         predictions = self.predict_generator(generator)
-
-        tasks = []
 
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
             predicted_df = predictions.iloc[indices]
@@ -255,9 +255,9 @@ class Predict(keras.callbacks.Callback):
             self.period = 1
             self.on_epoch_end(self.epoch - 1, logs)
 
-        test_tasks, test_metrics = self.create_tasks(self.test_generator, 'test')
+        test_tasks = self.create_tasks(self.test_generator, 'test')
         if self.evaluate:
-            test_tasks, train_metrics = self.evaluate_tasks(test_tasks)
+            test_tasks, test_metrics = self.evaluate_tasks(test_tasks)
 
         self.save_tasks(test_tasks, prediction_id='test')
 

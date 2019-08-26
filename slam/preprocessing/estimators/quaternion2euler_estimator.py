@@ -15,7 +15,7 @@ class Quaternion2EulerEstimator(BaseEstimator):
         super(Quaternion2EulerEstimator, self).__init__(*args, **kwargs)
         self.name = 'Quaternion2Euler'
 
-    def run(self, row, dataset_root=None):
+    def run(self, row, dataset_root):
         if not set(self.input_col) <= set(dict(row).keys()):
             return row
         quaternion = Quaternion(row[self.input_col].values)
