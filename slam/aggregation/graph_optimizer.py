@@ -6,7 +6,6 @@ from pyquaternion import Quaternion
 from slam.aggregation.base_aggregator import BaseAggregator
 from slam.linalg import (GlobalTrajectory,
                          QuaternionWithTranslation,
-                         RelativeTrajectory,
                          convert_euler_angles_to_rotation_matrix)
 
 
@@ -36,7 +35,7 @@ class GraphOptimizer(BaseAggregator):
         adjustment_measurements = df[is_adjustment_measurements].reset_index(drop=True)
 
         for _, row in adjustment_measurements.iterrows():
-            current_pose = self.get_current_pose(row)
+            current_pose = self.update_current_pose(row)
             index = len(self.optimizer.vertices())
             vertex = self.create_vertex(current_pose.quaternion.rotation_matrix, current_pose.translation, index)
             self.optimizer.add_vertex(vertex)
@@ -57,13 +56,13 @@ class GraphOptimizer(BaseAggregator):
         transformation_matrix = QuaternionWithTranslation(quaternion, position).to_transformation_matrix()
         return transformation_matrix
 
-    def get_current_pose(self, row):
+    def update_current_pose(self, row):
         previous_transformation_matrix = self.get_previous_pose()
 
         relative_pose = QuaternionWithTranslation.from_euler_angles(row.to_dict())
         relative_transformation_matrix = relative_pose.to_transformation_matrix()
-        current_pose = previous_transformation_matrix @ relative_transformation_matrix
-        current_pose = QuaternionWithTranslation().from_transformation_matrix(current_pose)
+        current_transformation_matrix = previous_transformation_matrix @ relative_transformation_matrix
+        current_pose = QuaternionWithTranslation().from_transformation_matrix(current_transformation_matrix)
         return current_pose
 
     @staticmethod
