@@ -26,6 +26,8 @@ class GraphSlamRunner(BaseSlamRunner):
         p = BaseSlamRunner.get_parser()
         p.add_argument('--keyframe_period', type=int, default=10, help='Period of keyframe selection')
         p.add_argument('--matches_threshold', type=int, default=100, help='Parameter for BoVW')
+        p.add_argument('--verbose', action='store_true')
+        p.add_argument('--online', action='store_true', help='Optimize trajectory online')
         return p
 
 
