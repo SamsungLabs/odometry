@@ -11,7 +11,7 @@ from slam.linalg import (GlobalTrajectory,
 
 
 class GraphOptimizer(BaseAggregator):
-    def __init__(self, max_iterations=100):
+    def __init__(self, max_iterations=100, verbose=False):
         solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
         solver = g2o.OptimizationAlgorithmLevenberg(solver)
 
@@ -20,11 +20,13 @@ class GraphOptimizer(BaseAggregator):
         self.optimizer.set_algorithm(solver)
 
         self.current_pose = None
-        self.clear()
         self.max_iterations = max_iterations
+        self.verbose = verbose
+        self.clear()
 
     def clear(self):
         self.optimizer.clear()
+        self.optimizer.set_verbose(self.verbose)
         vertex = self.create_vertex(np.eye(3), np.zeros(3), index=0)
         self.optimizer.add_vertex(vertex)
         self.current_pose = np.identity(6)
