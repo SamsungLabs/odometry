@@ -8,9 +8,12 @@ from slam.linalg import (GlobalTrajectory,
                          QuaternionWithTranslation,
                          convert_euler_angles_to_rotation_matrix)
 
+from slam.utils import mlflow_logging
 
+
+@mlflow_logging(prefix='aggregator', name='GraphOptimizer')
 class GraphOptimizer(BaseAggregator):
-    def __init__(self, max_iterations=100, verbose=False):
+    def __init__(self, max_iterations=100, verbose=False, online=False):
         solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
         solver = g2o.OptimizationAlgorithmLevenberg(solver)
 
@@ -21,6 +24,7 @@ class GraphOptimizer(BaseAggregator):
         self.current_pose = None
         self.max_iterations = max_iterations
         self.verbose = verbose
+        self.online = online
         self.clear()
 
     def clear(self):
@@ -40,11 +44,11 @@ class GraphOptimizer(BaseAggregator):
             vertex = self.create_vertex(current_pose.quaternion.rotation_matrix, current_pose.translation, index)
             self.optimizer.add_vertex(vertex)
 
-        for index, row in df.iterrows():
             edge = self.create_edge(row)
             self.optimizer.add_edge(edge)
 
-        self.optimize()
+            if self.online:
+                self.optimize()
 
     def get_previous_pose(self) -> np.ndarray:
         index = len(self.optimizer.vertices())
@@ -102,6 +106,10 @@ class GraphOptimizer(BaseAggregator):
         self.optimizer.optimize(self.max_iterations)
 
     def get_trajectory(self):
+
+        if not self.online:
+            self.optimize()
+
         optimized_trajectory = GlobalTrajectory()
         for index in range(len(self.optimizer.vertices())):
             estimate = self.optimizer.vertex(index).estimate()
