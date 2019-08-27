@@ -30,7 +30,7 @@ class GraphOptimizer(BaseAggregator):
     def clear(self):
         self.optimizer.clear()
         self.optimizer.set_verbose(self.verbose)
-        vertex = self.create_vertex(np.eye(3), np.zeros(3), index=0)
+        vertex = GraphOptimizer.create_vertex(np.eye(3), np.zeros(3), index=0)
         self.optimizer.add_vertex(vertex)
         self.current_pose = np.identity(6)
 
@@ -41,7 +41,7 @@ class GraphOptimizer(BaseAggregator):
         for _, row in adjustment_measurements.iterrows():
             current_pose = self.update_current_pose(row)
             index = len(self.optimizer.vertices())
-            vertex = self.create_vertex(current_pose.quaternion.rotation_matrix, current_pose.translation, index)
+            vertex = GraphOptimizer.create_vertex(current_pose.quaternion.rotation_matrix, current_pose.translation, index)
             self.optimizer.add_vertex(vertex)
 
             edge = self.create_edge(row)
@@ -91,7 +91,7 @@ class GraphOptimizer(BaseAggregator):
         translation = row[['t_x', 't_y', 't_z']].values
         rotation_matrix = convert_euler_angles_to_rotation_matrix(euler_angles)
 
-        measurement = self.create_pose(rotation_matrix, translation)
+        measurement = GraphOptimizer.create_pose(rotation_matrix, translation)
 
         edge = g2o.EdgeSE3()
         edge.set_measurement(measurement)
