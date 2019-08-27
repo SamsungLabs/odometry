@@ -78,7 +78,7 @@ class BaseTest(object):
             df[mean_col] = np.random.normal(df[mean_col], df[std_col])
         return df
 
-    def test_1(self):
+    def test_gt_df(self):
         csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv']
 
         gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
@@ -87,7 +87,7 @@ class BaseTest(object):
         record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_1')
         self.assert_almost_zero(record)
 
-    def test_2(self):
+    def test_gt_df_with_strides_1(self):
 
         csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_1.csv',
                      'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/03_stride_2.csv']
@@ -98,7 +98,7 @@ class BaseTest(object):
         record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
         self.assert_almost_zero(record)
 
-    def test_3(self):
+    def test_gt_df_with_strides_2(self):
         csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv',
                      'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_2.csv']
 
@@ -108,7 +108,7 @@ class BaseTest(object):
         record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_3')
         self.assert_almost_zero(record)
 
-    def test_4(self):
+    def test_gt_df_with_all_matches(self):
         csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
         csv_paths = ['tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed.csv']
 
@@ -118,7 +118,7 @@ class BaseTest(object):
         record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_4')
         self.assert_almost_zero(record)
 
-    def test_5(self):
+    def test_noised_df_with_all_matches(self):
         csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
         gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_path_gt)).to_global()
 
@@ -147,29 +147,34 @@ class BaseTest(object):
 
         self.assert_greater(record_noised, record_optimized)
 
-    def test_real_predict_with_loops_only(self):
+    def test_real_predict_with_gt_loops_only(self):
         csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
         gt_df = self.read_csv(csv_path_gt)
-        gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
+
+        csv_path_gt_predict = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed.csv'
+        gt_pred = self.df2slam_predict(self.read_csv(csv_path_gt_predict))
 
         csv_path_real_predict = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed_real_predict.csv'
         real_predict = self.read_csv(csv_path_real_predict)
 
         is_adjustment_measurements = (real_predict.to_index - real_predict.from_index) <= 1
         adjustment_measurements = real_predict[is_adjustment_measurements].reset_index(drop=True)
-        noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
-        record_noised = self.evaluate(gt_trajectory, noised_trajectory, 'test_real_predict_with_loops_only_odometry')
 
-        is_loop_closure = (real_predict.to_index - real_predict.from_index) > 100
-        adjustment_measurements_with_loop_closure = real_predict[is_adjustment_measurements | is_loop_closure].reset_index(drop=True)
+        is_loop = (real_predict.to_index - real_predict.from_index) > 100
+        gt_loops = gt_pred[is_loop]
+        real_predict.loc[gt_loops.index] = gt_loops
 
+        adjustment_measurements_with_loops = real_predict[is_adjustment_measurements | is_loop].reset_index(drop=True)
+
+        record_noised = None
+        record_optimized = None
         for index in range(1, len(adjustment_measurements)):
-            matches = adjustment_measurements_with_loop_closure[adjustment_measurements_with_loop_closure.to_index == index]
+            matches = adjustment_measurements_with_loops[adjustment_measurements_with_loops.to_index == index]
             self.algorithm.append(matches)
 
-            is_loop_closure = np.any((matches.to_index - matches.from_index) > 100)
+            # is_loop = np.any((matches.to_index - matches.from_index) > 100)
 
-            if index % 100 == 0 or is_loop_closure:
+            if index % 100 == 0:  # or is_loop:
                 gt_trajectory = RelativeTrajectory.from_dataframe(gt_df[:index]).to_global()
 
                 noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements[:index]).to_global()
@@ -182,8 +187,45 @@ class BaseTest(object):
 
                 print(f'Saved. Index={index}')
 
-                if is_loop_closure:
-                    break
+        print(' ')
+        print('metrics before optimization', record_noised)
+        print('metrics after optimization ', record_optimized)
+
+        self.assert_greater(record_noised, record_optimized)
+
+    def test_real_predict_with_predicted_loops_only(self):
+        # Data for testing is not ready yet
+        return
+        csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
+        gt_df = self.read_csv(csv_path_gt)
+
+        csv_path_real_predict = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed_real_predict.csv'
+        real_predict = self.read_csv(csv_path_real_predict)
+
+        is_adjustment_measurements = (real_predict.to_index - real_predict.from_index) <= 1
+        adjustment_measurements = real_predict[is_adjustment_measurements].reset_index(drop=True)
+
+        is_loop = (real_predict.to_index - real_predict.from_index) > 100
+        adjustment_measurements_with_loops = real_predict[is_adjustment_measurements | is_loop].reset_index(drop=True)
+
+        record_noised = None
+        record_optimized = None
+        for index in range(1, len(adjustment_measurements)):
+            matches = adjustment_measurements_with_loops[adjustment_measurements_with_loops.to_index == index]
+            self.algorithm.append(matches)
+
+            if index % 100 == 0:
+                gt_trajectory = RelativeTrajectory.from_dataframe(gt_df[:index]).to_global()
+
+                noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements[:index]).to_global()
+                record_noised = self.evaluate(gt_trajectory, noised_trajectory,
+                                              f'test_real_predict_with_loops_only_slam_noised_i_{index}')
+
+                predicted_trajectory = self.algorithm.get_trajectory()
+                record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
+                                                 f'test_real_predict_with_loops_only_slam_optimized_i_{index}')
+
+                print(f'Saved. Index={index}')
 
         print(' ')
         print('metrics before optimization', record_noised)
@@ -191,21 +233,36 @@ class BaseTest(object):
 
         self.assert_greater(record_noised, record_optimized)
 
-    def test_real_predict(self):
+    def test_real_predict_with_all_matches(self):
+        # Data for testing is not ready
+        return
         csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
-        gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_path_gt)).to_global()
+        gt_df = self.read_csv(csv_path_gt)
 
-        csv_path_noised = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed_real_predict.csv'
-        pred = self.read_csv(csv_path_noised)
+        csv_path_real_predict = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_mixed_real_predict.csv'
+        real_predict = self.read_csv(csv_path_real_predict)
 
-        is_adjustment_measurements = (pred.to_index - pred.from_index) == 1
-        adjustment_measurements = pred[is_adjustment_measurements].reset_index(drop=True)
-        noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
-        record_noised = self.evaluate(gt_trajectory, noised_trajectory, 'test_real_predict')
+        is_adjustment_measurements = (real_predict.to_index - real_predict.from_index) <= 1
+        adjustment_measurements = real_predict[is_adjustment_measurements].reset_index(drop=True)
 
-        self.algorithm.append(pred)
-        predicted_trajectory = self.algorithm.get_trajectory()
-        record_optimized = self.evaluate(gt_trajectory, predicted_trajectory, 'test_real_predict')
+        record_noised = None
+        record_optimized = None
+        for index in range(1, len(adjustment_measurements)):
+            matches = real_predict[real_predict.to_index == index]
+            self.algorithm.append(matches)
+
+            if index % 100 == 0:
+                gt_trajectory = RelativeTrajectory.from_dataframe(gt_df[:index]).to_global()
+
+                noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements[:index]).to_global()
+                record_noised = self.evaluate(gt_trajectory, noised_trajectory,
+                                              f'test_real_predict_with_all_matches_noised_i_{index}')
+
+                predicted_trajectory = self.algorithm.get_trajectory()
+                record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
+                                                 f'test_gt_predict_with_all_matches_optimized_i_{index}')
+
+                print(f'Saved. Index={index}')
 
         print(' ')
         print('metrics before optimization', record_noised)
@@ -223,4 +280,4 @@ class TestDummyAverager(unittest.TestCase, BaseTest):
 class TestGraphOptimizer(unittest.TestCase, BaseTest):
     def setUp(self) -> None:
         super().set_up()
-        self.algorithm = GraphOptimizer(2000)
+        self.algorithm = GraphOptimizer(max_iterations=2000, verbose=True)
