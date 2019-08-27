@@ -8,7 +8,9 @@ from slam.evaluation import (calculate_metrics,
                              normalize_metrics)
 
 from slam.linalg import RelativeTrajectory
-from slam.utils import visualize_trajectory_with_gt
+from slam.utils import (visualize_trajectory_with_gt,
+                        create_vis_file_path,
+                        create_prediction_file_path)
 
 
 class BaseSlamRunner(BaseTrainer):
@@ -48,7 +50,8 @@ class BaseSlamRunner(BaseTrainer):
 
         trajectory_id = prediction['id']
 
-        prediction_path = self.create_prediction_path(trajectory_id)
+        prediction_path = create_prediction_file_path(save_dir=self.run_dir,
+                                                      )
         prediction['frame_history'].to_csv(prediction_path, index=False)
 
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
