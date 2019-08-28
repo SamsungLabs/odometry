@@ -62,11 +62,13 @@ class PWCNetEstimator(NetworkEstimator):
                                                                    target_size=target_size,
                                                                    data_format='channels_last',
                                                                    mode='nearest')
+            final_optical_flow[..., 0] /= width * width / final_width
+            final_optical_flow[..., 1] /= height * height / final_height
         else:
             final_optical_flow = optical_flow
-
-        final_optical_flow[..., 0] /= width * width / final_width
-        final_optical_flow[..., 1] /= height * height / final_height
+            final_optical_flow[..., 0] /= width
+            final_optical_flow[..., 1] /= height
+        
         return final_optical_flow
 
     def _run_model_inference(self, model_input):
