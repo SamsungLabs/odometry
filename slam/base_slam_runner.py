@@ -1,12 +1,9 @@
-import os
 import mlflow
 
 from slam.base_trainer import BaseTrainer
-
 from slam.evaluation import (calculate_metrics,
                              average_metrics,
                              normalize_metrics)
-
 from slam.linalg import RelativeTrajectory
 from slam.utils import (visualize_trajectory_with_gt,
                         create_vis_file_path,
@@ -34,24 +31,11 @@ class BaseSlamRunner(BaseTrainer):
         self.batch_size = 1
         self.target_size = -1
 
-    def create_visualization_path(self, trajectory_id, subset, trajectory_type):
-        trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(self.run_dir, 'visuals', trajectory_type, subset, trajectory_name)
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        return file_path
-
-    def create_prediction_path(self, trajectory_id):
-        trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(self.run_dir, 'predictions', trajectory_name, 'df.csv')
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        return file_path
-
     def evaluate_trajectory(self, prediction, gt, subset):
 
         trajectory_id = prediction['id']
 
-        prediction_path = create_prediction_file_path(save_dir=self.run_dir,
-                                                      )
+        prediction_path = create_prediction_file_path(save_dir=self.run_dir, trajectory_id=trajectory_id)
         prediction['frame_history'].to_csv(prediction_path, index=False)
 
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
@@ -68,7 +52,11 @@ class BaseSlamRunner(BaseTrainer):
             normalized_record = normalize_metrics(record)
             trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}' for key, value in normalized_record.items()])
             title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
-            visualization_path = self.create_visualization_path(trajectory_id, subset, trajectory_type)
+            visualization_path = create_vis_file_path(save_dir=self.run_dir,
+                                                      trajectory_id=trajectory_id,
+                                                      subset=subset,
+                                                      sub_dir=trajectory_type)
+
             visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_path=visualization_path)
 
             mlflow.log_artifacts(self.run_dir) if mlflow.active_run() else None
