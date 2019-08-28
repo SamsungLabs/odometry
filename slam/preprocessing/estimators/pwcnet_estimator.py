@@ -33,6 +33,7 @@ class PWCNetEstimator(NetworkEstimator):
         nn_opts['use_res_cx'] = True
         nn_opts['pyr_lvls'] = 6
         nn_opts['flow_pred_lvl'] = 2
+        nn_opts['resize'] = False
         return nn_opts 
 
     def _load_model(self):
@@ -45,27 +46,27 @@ class PWCNetEstimator(NetworkEstimator):
 
         batch_size, height, width, channels_num = optical_flow.shape
 
-        small_height = height // 4
-        small_width = width // 4
+#         small_height = height // 4
+#         small_width = width // 4
 
-        small_optical_flow = np.zeros((batch_size, small_height, small_width, channels_num))
-        for batch_index in range(batch_size):
-            small_optical_flow[batch_index] = resize_image(optical_flow[batch_index], (small_width, small_height))
+#         small_optical_flow = np.zeros((batch_size, small_height, small_width, channels_num))
+#         for batch_index in range(batch_size):
+#             small_optical_flow[batch_index] = resize_image(optical_flow[batch_index], (small_width, small_height))
 
         if target_size is not None:
             final_height, final_width = target_size
 
             final_optical_flow = np.zeros((batch_size, final_height, final_width, channels_num))
             for batch_index in range(batch_size):
-                final_optical_flow[batch_index] = resize_image_arr(small_optical_flow[batch_index],
+                final_optical_flow[batch_index] = resize_image_arr(optical_flow[batch_index],
                                                                    target_size=target_size,
                                                                    data_format='channels_last',
                                                                    mode='nearest')
         else:
-            final_optical_flow = small_optical_flow
+            final_optical_flow = optical_flow
 
-        final_optical_flow[..., 0] /= width
-        final_optical_flow[..., 1] /= height
+        final_optical_flow[..., 0] /= width * width / final_width
+        final_optical_flow[..., 1] /= height * height / final_height
         return final_optical_flow
 
     def _run_model_inference(self, model_input):
