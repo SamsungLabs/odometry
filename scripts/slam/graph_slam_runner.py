@@ -7,10 +7,20 @@ from slam.models import GraphSlam
 
 class GraphSlamRunner(BaseSlamRunner):
 
-    def __init__(self, knn=20, keyframe_period=10, matches_threshold=100, *args, **kwargs):
+    def __init__(self, knn=20,
+                 keyframe_period=10,
+                 matches_threshold=100,
+                 max_iterations=1000,
+                 online=False,
+                 verbose=False,
+                 *args,
+                 **kwargs):
         super().__init__(knn=knn, *args, **kwargs)
         self.keyframe_period = keyframe_period
         self.matches_threshold = matches_threshold
+        self.max_iterations = max_iterations
+        self.online = online
+        self.verbose = verbose
 
     def get_slam(self):
         return GraphSlam(reloc_weights_path=self.reloc_weights,
@@ -19,7 +29,10 @@ class GraphSlamRunner(BaseSlamRunner):
                          knn=self.knn,
                          optical_flow_shape=self.config['target_size'],
                          keyframe_period=self.keyframe_period,
-                         matches_threshold=self.matches_threshold)
+                         matches_threshold=self.matches_threshold,
+                         max_iterations=self.max_iterations,
+                         online=self.online,
+                         verbose=self.verbose)
 
     @staticmethod
     def get_parser():
@@ -28,6 +41,7 @@ class GraphSlamRunner(BaseSlamRunner):
         p.add_argument('--matches_threshold', type=int, default=100, help='Parameter for BoVW')
         p.add_argument('--verbose', action='store_true')
         p.add_argument('--online', action='store_true', help='Optimize trajectory online')
+        p.add_argument('--max_iterations', type=int, default=1000, help='Parameter for GrapOptimizer')
         return p
 
 
