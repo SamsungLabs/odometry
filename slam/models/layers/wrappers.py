@@ -19,107 +19,131 @@ def activ(inputs, activation='relu'):
     return activation
 
 
-def conv2d(inputs, filters, kernel_size, activation='linear', batch_norm=False, **kwargs):
-    conv = Conv2D(filters=filters, kernel_size=kernel_size, **kwargs)(inputs)
+def _conv2d(conv_layer,
+            inputs,
+            filters,
+            kernel_size,
+            activation='linear',
+            batch_norm=False,
+            **kwargs):
+    conv = conv_layer(filters=filters, kernel_size=kernel_size, **kwargs)(inputs)
     if batch_norm:
         conv = BatchNormalization()(conv)
     activation = activ(conv, activation)
     return activation
 
 
-def conv2d_transpose(inputs, filters, kernel_size, activation='linear', batch_norm=False, **kwargs):
-    conv = Conv2DTranspose(filters=filters, kernel_size=kernel_size, **kwargs)(inputs)
-    if batch_norm:
-        conv = BatchNormalization()(conv)
-    activation = activ(conv, activation)
-    return activation
+def conv2d(inputs,
+           filters,
+           kernel_size,
+           activation='linear',
+           batch_norm=False,
+           **kwargs):
+    return _conv2d(Conv2D,
+                   inputs=inputs,
+                   filters=filters,
+                   kernel_size=kernel_size,
+                   activation=activation,
+                   batch_norm=batch_norm,
+                   **kwargs)
+
+
+def conv2d_transpose(inputs,
+                     filters,
+                     kernel_size,
+                     activation='linear',
+                     batch_norm=False,
+                     **kwargs):
+    return _conv2d(Conv2DTranspose,
+                   inputs=inputs,
+                   filters=filters,
+                   kernel_size=kernel_size,
+                   activation=activation,
+                   batch_norm=batch_norm,
+                   **kwargs)
+
+
+def _gated_conv2d(conv_layer,
+                  inputs,
+                  filters,
+                  kernel_size,
+                  activation='linear',
+                  batch_norm=False,
+                  name=None,
+                  **kwargs):
+    feature = conv_layer(inputs,
+                         filters=filters,
+                         kernel_size=kernel_size,
+                         activation=activation,
+                         name=(name + '_feature') if name else None,
+                         batch_norm=batch_norm,
+                         **kwargs)
+    gate = conv_layer(inputs,
+                      filters=filters,
+                      kernel_size=kernel_size,
+                      activation='sigmoid',
+                      name=(name + '_gate') if name else None,
+                      batch_norm=batch_norm,
+                      **kwargs)
+    return multiply([feature, gate])
 
 
 def gated_conv2d(inputs,
                  filters,
                  kernel_size,
                  activation='linear',
-                 name=None,
                  batch_norm=False,
+                 name=None,
                  **kwargs):
-    if name is None:
-        f_name, g_name = None, None
-    else:
-        f_name, g_name = '{}_feature'.format(name), '{}_gate'.format(name)
-
-    f = conv2d(inputs,
-               filters,
-               kernel_size,
-               activation=activation,
-               name=f_name,
-               batch_norm=batch_norm,
-               **kwargs)
-    g = conv2d(inputs,
-               filters,
-               kernel_size,
-               activation='sigmoid',
-               name=g_name,
-               batch_norm=batch_norm,
-               **kwargs)
-    return multiply([f, g])
+    return _gated_conv2d(conv2d,
+                         inputs=inputs,
+                         filters=filters,
+                         kernel_size=kernel_size,
+                         activation=activation,
+                         batch_norm=batch_norm,
+                         name=name,
+                         **kwargs)
 
 
 def gated_conv2d_transpose(inputs,
                            filters,
                            kernel_size,
                            activation='linear',
-                           name=None,
                            batch_norm=False,
+                           name=None,
                            **kwargs):
-    if name is None:
-        f_name, g_name = None, None
-    else:
-        f_name, g_name = '{}_feature'.format(name), '{}_gate'.format(name)
-
-    f = conv2d_transpose(inputs,
-                         filters,
-                         kernel_size,
+    return _gated_conv2d(conv2d_transpose,
+                         inputs=inputs,
+                         filters=filters,
+                         kernel_size=kernel_size,
                          activation=activation,
-                         name=f_name,
                          batch_norm=batch_norm,
+                         name=name,
                          **kwargs)
-    g = conv2d_transpose(inputs,
-                         filters,
-                         kernel_size,
-                         activation='sigmoid',
-                         name=g_name,
-                         batch_norm=batch_norm,
-                         **kwargs)
-    return multiply([f, g])
 
 
-def construct_fc(inputs,
-                 hidden_size=1000,
-                 regularization=0,
-                 activation='relu',
-                 kernel_initializer='glorot_normal',
-                 name=None):
-    fc = Dense(hidden_size, kernel_initializer=kernel_initializer,
-               kernel_regularizer=l2(regularization),
-               bias_regularizer=l2(regularization), name=name)(inputs)
-    activation = activ(fc, activation)
-    return activation
+def dense(inputs,
+          output_size,
+          layers_num=1,
+          regularization=0,
+          activation='relu',
+          kernel_initializer='glorot_normal',
+          name=None):
 
+    if isinstance(output_size, int):
+        output_size = [output_size] * layers_num
 
-def construct_double_fc(inputs,
-                        hidden_size,
-                        regularization=0,
-                        activation='relu',
-                        kernel_initializer='glorot_normal',
-                        name=None):
-    names = ['fc1', 'fc2']
-    if name is not None:
-        names = [fc_name + '_' + name for fc_name in names]
+    assert len(output_size) == layers_num
 
-    fc1 = construct_fc(inputs, hidden_size=hidden_size,
-                       regularization=regularization, activation=activation,
-                       kernel_initializer=kernel_initializer, name=names[0])
-    fc2 = construct_fc(fc1, hidden_size=hidden_size,
-                       regularization=regularization, activation=activation,
-                       kernel_initializer=kernel_initializer, name=names[1])
-    return fc2
+    x = inputs
+    for i in range(layers_num):
+        suffix = f'_{i}' if layers_num > 1 else ''
+        x = Dense(output_size[i],
+                  kernel_initializer=kernel_initializer,
+                  kernel_regularizer=l2(regularization),
+                  bias_regularizer=l2(regularization),
+                  name=(name + suffix) if name else None)(x)
+        x = activ(x, activation)
+
+    outputs = x
+    return outputs
