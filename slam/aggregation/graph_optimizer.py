@@ -6,7 +6,8 @@ from pyquaternion import Quaternion
 from slam.aggregation.base_aggregator import BaseAggregator
 from slam.linalg import (GlobalTrajectory,
                          QuaternionWithTranslation,
-                         convert_euler_angles_to_rotation_matrix)
+                         convert_euler_angles_to_rotation_matrix,
+                         )
 
 from slam.utils import mlflow_logging
 
@@ -14,7 +15,7 @@ from slam.utils import mlflow_logging
 @mlflow_logging(prefix='aggregator', name='GraphOptimizer')
 class GraphOptimizer(BaseAggregator):
     def __init__(self, max_iterations=100, verbose=False, online=False):
-        solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
+        solver = g2o.BlockSolverSE3(g2o.Sol)
         solver = g2o.OptimizationAlgorithmLevenberg(solver)
 
         self.optimizer = g2o.SparseOptimizer()
@@ -35,20 +36,22 @@ class GraphOptimizer(BaseAggregator):
         self.current_pose = np.identity(6)
 
     def append(self, df):
-        is_adjustment_measurements = (df.to_index - df.from_index) == 1
-        adjustment_measurements = df[is_adjustment_measurements].reset_index(drop=True)
 
-        for _, row in adjustment_measurements.iterrows():
-            current_pose = self.update_current_pose(row)
-            index = len(self.optimizer.vertices())
-            vertex = self.create_vertex(current_pose.quaternion.rotation_matrix, current_pose.translation, index)
-            self.optimizer.add_vertex(vertex)
+        for _, row in df.iterrows():
+
+            is_adjustment_measurements = (row.to_index - row.from_index) == 1
+
+            if is_adjustment_measurements:
+                current_pose = self.update_current_pose(row)
+                index = len(self.optimizer.vertices())
+                vertex = self.create_vertex(current_pose.quaternion.rotation_matrix, current_pose.translation, index)
+                self.optimizer.add_vertex(vertex)
 
             edge = self.create_edge(row)
             self.optimizer.add_edge(edge)
 
-            if self.online:
-                self.optimize()
+        if self.online:
+            self.optimize()
 
     def get_previous_pose(self) -> np.ndarray:
         index = len(self.optimizer.vertices())
