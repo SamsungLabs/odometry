@@ -5,6 +5,7 @@ import os
 import unittest
 import numpy as np
 import pandas as pd
+from tqdm import trange
 from pathlib import Path
 
 import env
@@ -22,12 +23,13 @@ class BaseTest(object):
         self.algorithm = None
         self.mean_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         self.std_cols = [c + '_confidence' for c in self.mean_cols]
+        self.draw_intermediate = False
 
     def read_csv(self, csv_path):
         return pd.read_csv(os.path.join(env.PROJECT_PATH, csv_path))
 
     def assert_almost_zero(self, record):
-        translation_precision = 10
+        translation_precision = 8
         rotation_precision = 4
         self.assertAlmostEqual(record['ATE'], 0, places=translation_precision)
         self.assertAlmostEqual(record['RPE_r'], 0, places=rotation_precision)
@@ -74,7 +76,7 @@ class BaseTest(object):
 
     def generate_noised_trajectory(self, df):
         for mean_col, std_col in zip(self.mean_cols, self.std_cols):
-            df[std_col] = 0.001
+            df[std_col] = 0.1
             df[mean_col] = np.random.normal(df[mean_col], df[std_col])
         return df
 
@@ -84,7 +86,7 @@ class BaseTest(object):
         gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
         predicted_trajectory = self.predict(csv_paths)
 
-        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_1')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_gt_df')
         self.assert_almost_zero(record)
 
     def test_gt_df_with_strides_1(self):
@@ -95,7 +97,7 @@ class BaseTest(object):
         gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
         predicted_trajectory = self.predict(csv_paths)
 
-        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_2')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_gt_df_with_strides_1')
         self.assert_almost_zero(record)
 
     def test_gt_df_with_strides_2(self):
@@ -105,7 +107,7 @@ class BaseTest(object):
         gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_paths[0])).to_global()
         predicted_trajectory = self.predict(csv_paths)
 
-        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_3')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_gt_df_with_strides_2')
         self.assert_almost_zero(record)
 
     def test_gt_df_with_all_matches(self):
@@ -115,7 +117,7 @@ class BaseTest(object):
         gt_trajectory = RelativeTrajectory.from_dataframe(self.read_csv(csv_path_gt)).to_global()
         predicted_trajectory = self.predict(csv_paths)
 
-        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_4')
+        record = self.evaluate(gt_trajectory, predicted_trajectory, 'test_gt_df_with_all_matches')
         self.assert_almost_zero(record)
 
     def test_noised_df_with_all_matches(self):
@@ -136,12 +138,105 @@ class BaseTest(object):
         is_adjustment_measurements = (pred.to_index - pred.from_index) == 1
         adjustment_measurements = pred[is_adjustment_measurements].reset_index(drop=True)
         noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
-        record_noised = self.evaluate(gt_trajectory, noised_trajectory, 'test_5_noised')
+        record_noised = self.evaluate(gt_trajectory, noised_trajectory, 'test_noised_df_with_all_matches_noised')
 
         self.algorithm.append(pred)
         predicted_trajectory = self.algorithm.get_trajectory()
-        record_optimized = self.evaluate(gt_trajectory, predicted_trajectory, 'test_5_optimized')
+        record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
+                                         'test_noised_df_with_all_matches_optimized')
 
+        print('metrics before optimization', record_noised)
+        print('metrics after optimization ', record_optimized)
+
+        self.assert_greater(record_noised, record_optimized)
+
+    def test_square(self):
+        gt_df = pd.DataFrame()
+        for i in range(299):
+            gt_df = gt_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [0], 'euler_z': [0],
+                                               't_x': [1], 't_y': [0], 't_z': [0],
+                                               'from_index': [i], 'to_index': [i + 1]}))
+
+        gt_df = gt_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [-np.pi/2], 'euler_z': [0],
+                                           't_x': [1], 't_y': [0], 't_z': [0],
+                                           'from_index': [299], 'to_index': [300]}))
+
+        for i in range(300, 599):
+            gt_df = gt_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [00], 'euler_z': [0],
+                                               't_x': [1], 't_y': [0], 't_z': [0],
+                                               'from_index': [i], 'to_index': [i + 1]}))
+
+        gt_df = gt_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [-np.pi/2], 'euler_z': [0],
+                                           't_x': [1], 't_y': [0], 't_z': [0],
+                                           'from_index': [599], 'to_index': [600]}))
+
+        for i in range(600, 899):
+            gt_df = gt_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [0], 'euler_z': [0],
+                                               't_x': [1], 't_y': [0], 't_z': [0],
+                                               'from_index': [i], 'to_index': [i + 1]}))
+
+        gt_df = gt_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [-np.pi/2], 'euler_z': [0],
+                                           't_x': [1], 't_y': [0], 't_z': [0],
+                                           'from_index': [899], 'to_index': [900]}))
+
+        for i in range(900, 1199):
+            gt_df = gt_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [0], 'euler_z': [0],
+                                               't_x': [1], 't_y': [0], 't_z': [0],
+                                               'from_index': [i], 'to_index': [i + 1]}))
+
+        gt_df = gt_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [-np.pi/2], 'euler_z': [0],
+                                           't_x': [1], 't_y': [0], 't_z': [0],
+                                           'from_index': [1199], 'to_index': [1200]}))
+
+        noised_df = pd.DataFrame()
+        for i in range(299):
+            noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [0], 'euler_z': [0],
+                                                       't_x': [1], 't_y': [0], 't_z': [0],
+                                                       'from_index': [i], 'to_index': [i + 1]}))
+
+        noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [-np.pi/2], 'euler_z': [0],
+                                                   't_x': [1], 't_y': [0], 't_z': [0],
+                                                   'from_index': [299], 'to_index': [300]}))
+
+        for i in range(300, 599):
+            noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [0], 'euler_z': [0],
+                                                       't_x': [1], 't_y': [0], 't_z': [0.1],
+                                                       'from_index': [i], 'to_index': [i + 1]}))
+
+        noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [-np.pi/2], 'euler_z': [0],
+                                                   't_x': [1], 't_y': [0], 't_z': [0],
+                                                   'from_index': [599], 'to_index': [600]}))
+
+        for i in range(600, 899):
+            noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [0], 'euler_z': [0],
+                                                       't_x': [1], 't_y': [0], 't_z': [0],
+                                                       'from_index': [i], 'to_index': [i + 1]}))
+
+        noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [-np.pi/2], 'euler_z': [0],
+                                                   't_x': [1], 't_y': [0], 't_z': [0],
+                                                   'from_index': [899], 'to_index': [900]}))
+
+        for i in range(900, 1199):
+            noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [0], 'euler_z': [0],
+                                                       't_x': [1], 't_y': [0], 't_z': [0],
+                                                       'from_index': [i], 'to_index': [i + 1]}))
+
+        noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [-np.pi/2], 'euler_z': [0],
+                                                   't_x': [1], 't_y': [0], 't_z': [0],
+                                                   'from_index': [1199], 'to_index': [1200]}))
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
+        noised_trajectory = RelativeTrajectory().from_dataframe(noised_df).to_global()
+        record_noised = self.evaluate(gt_trajectory, noised_trajectory, f'test_square_noised')
+
+        noised_df = noised_df.append(pd.DataFrame({'euler_x': [0], 'euler_y': [0], 'euler_z': [0],
+                                                   't_x': [0], 't_y': [0], 't_z': [0],
+                                                   'from_index': [1200], 'to_index': [0]}))
+        self.algorithm.append(noised_df)
+        predicted_trajectory = self.algorithm.get_trajectory()
+        record_optimized = self.evaluate(gt_trajectory, predicted_trajectory, f'test_square_optimized')
+
+        print(' ')
         print('metrics before optimization', record_noised)
         print('metrics after optimization ', record_optimized)
 
@@ -166,26 +261,35 @@ class BaseTest(object):
 
         adjustment_measurements_with_loops = real_predict[is_adjustment_measurements | is_loop].reset_index(drop=True)
 
-        record_noised = None
-        record_optimized = None
-        for index in range(1, len(adjustment_measurements)):
+        for index in trange(1, len(adjustment_measurements) + 1):
             matches = adjustment_measurements_with_loops[adjustment_measurements_with_loops.to_index == index]
             self.algorithm.append(matches)
 
-            # is_loop = np.any((matches.to_index - matches.from_index) > 100)
+            if not self.draw_intermediate:
+                continue
 
-            if index % 100 == 0:  # or is_loop:
+            if index % 100 == 0:
                 gt_trajectory = RelativeTrajectory.from_dataframe(gt_df[:index]).to_global()
 
                 noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements[:index]).to_global()
-                record_noised = self.evaluate(gt_trajectory, noised_trajectory,
-                                              f'test_real_predict_with_loops_only_slam_noised_i_{index}')
+                self.evaluate(gt_trajectory, noised_trajectory,
+                              f'test_real_predict_with_gt_loops_only_noised_i_{index}')
 
                 predicted_trajectory = self.algorithm.get_trajectory()
-                record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
-                                                 f'test_real_predict_with_loops_only_slam_optimized_i_{index}')
+                self.evaluate(gt_trajectory, predicted_trajectory,
+                              f'test_real_predict_with_gt_loops_only_slam_optimized_i_{index}')
 
                 print(f'Saved. Index={index}')
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
+
+        noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
+        record_noised = self.evaluate(gt_trajectory, noised_trajectory,
+                                      f'test_real_predict_with_gt_loops_only_noised')
+
+        predicted_trajectory = self.algorithm.get_trajectory()
+        record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
+                                         f'test_real_predict_with_gt_loops_only_slam_optimized')
 
         print(' ')
         print('metrics before optimization', record_noised)
@@ -195,7 +299,6 @@ class BaseTest(object):
 
     def test_real_predict_with_predicted_loops_only(self):
         # Data for testing is not ready yet
-        return
         csv_path_gt = 'tests/minidataset/KITTI_odometry_2012/dataset/dataframes/00_stride_1.csv'
         gt_df = self.read_csv(csv_path_gt)
 
@@ -208,24 +311,35 @@ class BaseTest(object):
         is_loop = (real_predict.to_index - real_predict.from_index) > 100
         adjustment_measurements_with_loops = real_predict[is_adjustment_measurements | is_loop].reset_index(drop=True)
 
-        record_noised = None
-        record_optimized = None
-        for index in range(1, len(adjustment_measurements)):
+        for index in range(1, len(adjustment_measurements) + 1):
             matches = adjustment_measurements_with_loops[adjustment_measurements_with_loops.to_index == index]
             self.algorithm.append(matches)
+
+            if not self.draw_intermediate:
+                continue
 
             if index % 100 == 0:
                 gt_trajectory = RelativeTrajectory.from_dataframe(gt_df[:index]).to_global()
 
                 noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements[:index]).to_global()
-                record_noised = self.evaluate(gt_trajectory, noised_trajectory,
-                                              f'test_real_predict_with_loops_only_slam_noised_i_{index}')
+                self.evaluate(gt_trajectory, noised_trajectory,
+                              f'test_real_predict_with_real_loops_only_noised_i_{index}')
 
                 predicted_trajectory = self.algorithm.get_trajectory()
-                record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
-                                                 f'test_real_predict_with_loops_only_slam_optimized_i_{index}')
+                self.evaluate(gt_trajectory, predicted_trajectory,
+                              f'test_real_predict_with_real_loops_only_optimized_i_{index}')
 
                 print(f'Saved. Index={index}')
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
+
+        noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
+        record_noised = self.evaluate(gt_trajectory, noised_trajectory,
+                                      f'test_real_predict_with_real_loops_only_noised')
+
+        predicted_trajectory = self.algorithm.get_trajectory()
+        record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
+                                         f'test_real_predict_with_real_loops_only_slam_optimized')
 
         print(' ')
         print('metrics before optimization', record_noised)
@@ -245,24 +359,35 @@ class BaseTest(object):
         is_adjustment_measurements = (real_predict.to_index - real_predict.from_index) <= 1
         adjustment_measurements = real_predict[is_adjustment_measurements].reset_index(drop=True)
 
-        record_noised = None
-        record_optimized = None
-        for index in range(1, len(adjustment_measurements)):
+        for index in range(len(adjustment_measurements)):
             matches = real_predict[real_predict.to_index == index]
             self.algorithm.append(matches)
+
+            if not self.draw_intermediate:
+                continue
 
             if index % 100 == 0:
                 gt_trajectory = RelativeTrajectory.from_dataframe(gt_df[:index]).to_global()
 
                 noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements[:index]).to_global()
-                record_noised = self.evaluate(gt_trajectory, noised_trajectory,
-                                              f'test_real_predict_with_all_matches_noised_i_{index}')
+                self.evaluate(gt_trajectory, noised_trajectory,
+                              f'test_real_predict_with_all_matches_noised_i_{index}')
 
                 predicted_trajectory = self.algorithm.get_trajectory()
-                record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
-                                                 f'test_gt_predict_with_all_matches_optimized_i_{index}')
+                self.evaluate(gt_trajectory, predicted_trajectory,
+                              f'test_gt_predict_with_all_matches_optimized_i_{index}')
 
                 print(f'Saved. Index={index}')
+
+        gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
+
+        noised_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
+        record_noised = self.evaluate(gt_trajectory, noised_trajectory,
+                                      f'test_real_predict_with_real_loops_only_noised')
+
+        predicted_trajectory = self.algorithm.get_trajectory()
+        record_optimized = self.evaluate(gt_trajectory, predicted_trajectory,
+                                         f'test_real_predict_with_real_loops_only_slam_optimized')
 
         print(' ')
         print('metrics before optimization', record_noised)
@@ -275,9 +400,11 @@ class TestDummyAverager(unittest.TestCase, BaseTest):
     def setUp(self) -> None:
         super().set_up()
         self.algorithm = DummyAverager()
+        self.draw_intermediate = False
 
 
 class TestGraphOptimizer(unittest.TestCase, BaseTest):
     def setUp(self) -> None:
         super().set_up()
-        self.algorithm = GraphOptimizer(max_iterations=2000, verbose=True)
+        self.algorithm = GraphOptimizer(max_iterations=5000, online=False, verbose=True)
+        self.draw_intermediate = False
