@@ -76,12 +76,15 @@ class MetricAverager:
         mlflow.set_experiment(experiment_name)
 
         metrics, model_name = self.load_metrics(experiment_name, run_name)
+        if not metrics:
+            raise ValueError(f'    No successfully finished runs were found for {run_name}')
         aggregated_metrics = self.aggregate_metrics(metrics)
         metrics_mean = self.calculate_stat(aggregated_metrics, np.mean, ignore=self.ignore)
         metrics_std = self.calculate_stat(aggregated_metrics, np.std, ignore=self.ignore + self.save_once,
                                           suffix='std')
 
         num_of_runs = len(next(iter(aggregated_metrics.values())))
+
         run_name = run_name + '_avg'
         with mlflow.start_run(run_name=run_name):
             mlflow.log_param('run_name', run_name)
@@ -103,7 +106,8 @@ class MetricAverager:
             data = self.client.get_run(run_info.run_id).data
             current_base_name = self.get_base_name(data.params['run_name'])
             if base_name == current_base_name:
-                metrics.append(data.metrics)
+                if data.metrics['successfully_finished']:
+                    metrics.append(data.metrics)
                 model_name = model_name or data.params.get('model.name', 'Unknown')
 
         return metrics, model_name
