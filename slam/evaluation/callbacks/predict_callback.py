@@ -1,5 +1,5 @@
 import os
-import stat
+import shutil
 import mlflow
 import numpy as np
 import pandas as pd
@@ -43,7 +43,7 @@ class Predict(keras.callbacks.Callback):
                  monitor='val_loss',
                  period=10,
                  save_best_only=True,
-                 max_to_visualize=5,
+                 max_to_visualize=None,
                  evaluate=False,
                  rpe_indices='full',
                  backend='numpy',
@@ -58,18 +58,24 @@ class Predict(keras.callbacks.Callback):
         self.add_prefix = lambda k: (self.prefix + '_' + k) if self.prefix else k
 
         self.monitor = monitor
-        self.template = ''.join(['{epoch:03d}', '_', self.monitor, '_', '{', self.monitor, ':.6f', '}'])
         self.period = period
         self.epoch = 0
         self.epochs_since_last_predict = 0
         self.best_loss = np.inf
         self.save_best_only = save_best_only
+        if self.save_best_only:
+            self.template = '{epoch}'
+        else:
+            self.template = '_'.join(['{epoch:03d}', self.monitor, '{' + self.monitor + ':.6f}'])
         self.max_to_visualize = max_to_visualize
         self.evaluate = evaluate
         self.rpe_indices = rpe_indices
         self.backend = backend
         self.cuda = cuda
         self.workers = workers if backend == 'numpy' else 0
+
+        self.last_prediction_id = None
+        self.last_logs = None
 
         self.train_generator = dataset.get_train_generator(as_is=self.evaluate)
         self.val_generator = dataset.get_val_generator()
@@ -85,6 +91,37 @@ class Predict(keras.callbacks.Callback):
 
     def create_trajectory(self, df):
         return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
+
+    @staticmethod
+    def copy(src_dir, dst_dir):
+        os.makedirs(os.path.dirname(dst_dir), exist_ok=True)
+        shutil.copyfile(src_dir, dst_dir)
+        os.chmod(dst_dir, 0o777)
+
+    def create_prediction_file_path(self, trajectory_id, subset, prediction_id):
+        return create_prediction_file_path(trajectory_id=trajectory_id,
+                                           subset=subset,
+                                           prediction_id=prediction_id,
+                                           save_dir=self.save_dir)
+
+    def _get_dir(self, prediction_id, create_file_path):
+        file_path = create_file_path('.', '.', prediction_id)
+        path, file_name = os.path.split(file_path)
+        path = os.path.abspath(path)
+        print(prediction_id, '->', path)
+        return path
+
+    def get_vis_dir(self, prediction_id):
+        return self._get_dir(prediction_id, self.create_vis_file_path)
+
+    def get_prediction_dir(self, prediction_id):
+        return self._get_dir(prediction_id, self.create_prediction_file_path)
+
+    def create_vis_file_path(self, trajectory_id, subset, prediction_id):
+        return create_vis_file_path(trajectory_id=trajectory_id,
+                                    subset=subset,
+                                    prediction_id=prediction_id,
+                                    save_dir=self.save_dir)
 
     def save_predictions(self, predictions, trajectory_id, subset, prediction_id):
         file_path = create_prediction_file_path(save_dir=self.save_dir,
@@ -105,6 +142,7 @@ class Predict(keras.callbacks.Callback):
                                          trajectory_id=trajectory_id,
                                          prediction_id=prediction_id,
                                          subset=subset)
+
         if gt_trajectory is None:
             title = trajectory_id.upper()
             visualize_trajectory(predicted_trajectory, title=title, file_path=file_path)
@@ -207,11 +245,14 @@ class Predict(keras.callbacks.Callback):
 
     def is_best(self, logs):
         loss = logs.get(self.monitor, np.inf)
-        if self.save_best_only and self.best_loss < loss:
-            return False
-        else:
-            self.best_loss = min(loss, self.best_loss)
-            return True
+        is_best = loss < self.best_loss
+        self.best_loss = min(loss, self.best_loss)
+        return is_best
+
+    def get_prediction_id(self, epoch, **logs):
+        if self.save_best_only:
+            epoch = 'best'
+        return partial_format(self.template, epoch=epoch, **logs)
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
@@ -221,27 +262,23 @@ class Predict(keras.callbacks.Callback):
 
         if self.period and self.epochs_since_last_predict % self.period == 0:
 
-            if not self.is_best(logs):
-                return logs
-
-            prediction_id = partial_format(self.template, epoch=epoch + 1, **logs)
-
-            val_tasks = self.create_tasks(self.val_generator, 'val')
-            if self.evaluate:
-                val_tasks, val_metrics = self.evaluate_tasks(val_tasks)
-                prediction_id = partial_format(prediction_id, **val_metrics)
-
-                if not self.is_best(val_metrics):
-                    return logs
-
             train_tasks = self.create_tasks(self.train_generator, 'train')
+            val_tasks = self.create_tasks(self.val_generator, 'val')
+
             if self.evaluate:
                 train_tasks, train_metrics = self.evaluate_tasks(train_tasks)
-                prediction_id = partial_format(prediction_id, **train_metrics)
+                val_tasks, val_metrics = self.evaluate_tasks(val_tasks)
 
                 logs = dict(**logs, **train_metrics, **val_metrics)
 
-            self.save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
+            prediction_id = self.get_prediction_id(epoch + 1, **logs)
+
+            if not self.save_best_only or self.is_best(logs):
+                print('save')
+                self.save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
+                self.epochs_since_last_predict = 0
+                self.last_prediction_id = prediction_id
+                print('set prediction id =', self.last_prediction_id)
 
             if mlflow.active_run():
                 if self.evaluate:
@@ -251,15 +288,24 @@ class Predict(keras.callbacks.Callback):
                 if self.save_artifacts:
                     mlflow.log_artifacts(self.run_dir, self.artifact_dir)
 
-            self.epochs_since_last_predict = 0
+        self.last_logs = logs
 
         return logs
 
     def on_train_end(self, logs=None):
         # Check to not calculate metrics twice on_train_end
-        if self.epochs_since_last_predict:
+        if not self.save_best_only:
+            self.template = self.template.replace('{epoch:03d}', '{epoch}')
+
+        if self.epochs_since_last_predict or self.epoch == 0:
             self.period = 1
             self.on_epoch_end(self.epoch - 1, logs)
+        else:
+            final_prediction_id = self.get_prediction_id(epoch='final', **logs)
+            self.copy(get_vis_dir(self.last_prediction_id), get_vis_dir(final_prediction_id))
+            self.copy(get_prediction_dir(self.last_prediction_id), get_prediction_dir(final_prediction_id))
+
+        logs = self.last_logs
 
         test_tasks = self.create_tasks(self.test_generator, 'test')
         if self.evaluate:
@@ -273,3 +319,5 @@ class Predict(keras.callbacks.Callback):
 
             if self.save_artifacts:
                 mlflow.log_artifacts(self.run_dir, self.artifact_dir)
+
+        return logs
