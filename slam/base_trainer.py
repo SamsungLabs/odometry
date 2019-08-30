@@ -28,6 +28,8 @@ class BaseTrainer:
                  save_best_only=False,
                  min_lr=1e-5,
                  reduce_factor=0.5,
+                 backend='numpy',
+                 cuda=False,
                  per_process_gpu_memory_fraction=0.33,
                  **kwargs):
 
@@ -49,6 +51,8 @@ class BaseTrainer:
         self.save_best_only = save_best_only
         self.min_lr = min_lr
         self.reduce_factor = reduce_factor
+        self.backend = backend
+        self.cuda = cuda
         self.max_to_visualize = 5
 
         self.construct_model_fn = None
@@ -164,8 +168,8 @@ class BaseTrainer:
                                    evaluate=evaluate,
                                    rpe_indices=self.config['rpe_indices'],
                                    max_to_visualize=self.max_to_visualize,
-                                   backend='numpy',
-                                   cuda=False,
+                                   backend=self.backend,
+                                   cuda=self.cuda,
                                    workers=8)
 
         reduce_lr_callback = ReduceLROnPlateau(monitor='val_loss', factor=self.reduce_factor)
@@ -214,6 +218,7 @@ class BaseTrainer:
 
         model_factory = self.get_model_factory(dataset.input_shapes)
         model = model_factory.construct()
+        print(model.summary())
 
         self.fit_generator(model=model,
                            dataset=dataset,
@@ -248,5 +253,8 @@ class BaseTrainer:
                             help='Threshold value for learning rate in stopping criterion')
         parser.add_argument('--reduce_factor', type=int, default=0.5,
                             help='Reduce factor for learning rate')
-
+        parser.add_argument('--backend', type=str, default='numpy', choices=['numpy', 'torch'],
+                            help='Backend used for evaluation')
+        parser.add_argument('--cuda', action='store_true',
+                            help='Use GPU for evaluation (only for backend=="torch")')
         return parser
