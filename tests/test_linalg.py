@@ -7,7 +7,7 @@ class TestCovarianceConverter(unittest.TestCase):
 
     def generate_data(self, non_zero_angle_ind):
         euler_angles = np.zeros(3)
-        translations = np.ones(3)
+        translations = np.zeros(3)
         euler_angles[non_zero_angle_ind] = 1
         covariance_matrix = linalg.get_covariance_matrix_from_euler_uncertainty(translations, euler_angles)
         covariance_matrix = linalg.convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles, covariance_matrix)
