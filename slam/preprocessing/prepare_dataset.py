@@ -124,7 +124,7 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
             trajectory_name = trajectory[len(dataset_root) + int(dataset_root[-1] != '/'):]
             output_dir = output_root.joinpath(trajectory_name)
 
-            indices_path = os.path.join(indices_root, trajectory_name, 'df.csv') if indices_root else ''
+            indices_path = os.path.join(indices_root, trajectory_name + '.csv') if indices_root else ''
 
             if not os.path.exists(indices_path):
                 logger.info(f'Indices file {indices_path} not found')
