@@ -7,6 +7,7 @@ from pathlib import Path
 from tqdm import trange
 
 from slam.utils import mlflow_logging
+from slam.utils import resize_image
 
 
 class BoVW:
@@ -119,7 +120,10 @@ class BoVW:
     def predict(self, image: np.ndarray, index: int, robust: bool = True):
 
         assert self.counter > 0
-
+        height, width, channels_num = image.shape
+        small_height = height // 4
+        small_width = width // 4
+        image = resize_image(image, (small_width, small_height))
         hist, des = self.add(image, index)
 
         match = self.knn_matcher.knnMatch(hist, np.vstack(self.histograms[:-1]), min(self.counter - 1, self.knn))
