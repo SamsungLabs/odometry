@@ -4,6 +4,7 @@ import pandas as pd
 from slam.utils import mlflow_logging
 from slam.models.slam.base_slam import BaseSlam
 from slam.models.relocalization import BoVW
+from slam.aggregation import GraphOptimizer
 from slam.keyframe_selector import CounterKeyFrameSelector
 
 
@@ -21,7 +22,7 @@ class RSlam(BaseSlam):
         return reloc_model
 
     def get_aggregator(self):
-        return None
+        return GraphOptimizer()
 
     def get_keyframe_selector(self):
         return CounterKeyFrameSelector(self.keyframe_period)
