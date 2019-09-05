@@ -94,6 +94,9 @@ class BaseSlamRunner(BaseTrainer):
 
         generators = dataset.get_test_generator(as_list=True, include_last=True)
         self.evaluate_subset(slam, generators, dataset.df_test, 'test')
+        
+        mlflow.log_metric('successfully_finished', 1)
+        mlflow.end_run()
 
     @staticmethod
     def get_parser():
