@@ -3,6 +3,10 @@ import sys
 from typing import Dict
 from pathlib import Path
 
+import __init_path__
+import env
+
+
 DATASET_TYPES = ['kitti_8/3',
                  'kitti_4/6',
                  'kitti_4/6_mixed',
@@ -30,6 +34,47 @@ def is_int(string: str):
         return True
     except:
         return False
+
+
+def get_dataset_root(dataset_type):
+    if dataset_type == 'discoman_v10':
+        dataset_root = env.DISCOMAN_V10_PATH
+    elif dataset_type == 'mini_discoman_v10':
+        dataset_root = env.DISCOMAN_V10_PATH
+    elif dataset_type == 'discoman_v10_mixed':
+        dataset_root = env.DISCOMAN_V10_MIXED_PATH
+    elif dataset_type == 'mini_discoman_v10_mixed':
+        dataset_root = env.DISCOMAN_V10_MIXED_PATH
+    elif dataset_type == 'discoman_debug':
+        dataset_root = env.DISCOMAN_V10_PATH
+    elif dataset_type == 'kitti_4/6':
+        dataset_root = env.KITTI_PATH
+    elif dataset_type == 'kitti_4/6_mixed':
+        dataset_root = env.KITTI_MIXED_PATH
+    elif dataset_type == 'kitti_4/6_mixed_1+2+4':
+        dataset_root = env.KITTI_MIXED_PATH
+    elif dataset_type == 'kitti_4/6_stride2':
+        dataset_root = env.KITTI_MIXED_PATH
+    elif dataset_type == 'kitti_4/6_stride4':
+        dataset_root = env.KITTI_MIXED_PATH
+    elif dataset_type == 'kitti_8/3':
+        dataset_root = env.KITTI_PATH
+    elif dataset_type == 'tum':
+        dataset_root = env.TUM_PATH
+    elif dataset_type == 'tum_debug':
+        dataset_root = env.TUM_PATH
+    elif dataset_type == 'saic_office':
+        dataset_root = env.SAIC_OFFICE_PATH
+    elif dataset_type == 'retail_bot':
+        dataset_root = env.RETAIL_BOT_PATH
+    elif dataset_type == 'euroc':
+        dataset_root = env.EUROC_PATH
+    elif dataset_type == 'zju':
+        dataset_root = env.ZJU_PATH
+    else:
+        raise RuntimeError('Unknown dataset_type')
+
+    return dataset_root
 
 
 def get_config(dataset_root: str, dataset_type: str) -> Dict:

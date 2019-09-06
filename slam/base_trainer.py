@@ -9,16 +9,22 @@ import env
 
 from slam.data_manager import GeneratorFactory
 from slam.models import ModelFactory
+<<<<<<< HEAD
 from slam.evaluation import MlflowLogger, Predict, TerminateOnLR, ModelCheckpoint
 from slam.preprocessing import get_config, DATASET_TYPES
 from slam.utils import set_computation, chmod
+=======
+from slam.evaluation import MlflowLogger, Predict, TerminateOnLR
+from slam.preprocessing import get_config, get_dataset_root, DATASET_TYPES
+from slam.utils import set_computation
+>>>>>>> Refactored training scripts
 
 
 class BaseTrainer:
     def __init__(self,
-                 dataset_root,
-                 dataset_type,
+                 experiment_name,
                  run_name,
+                 bundle_name,
                  seed=42,
                  cache=False,
                  batch=1,
@@ -37,10 +43,13 @@ class BaseTrainer:
         self.artifact_path = env.ARTIFACT_PATH
         self.project_path = env.PROJECT_PATH
 
-        self.config = get_config(dataset_root, dataset_type)
+        dataset_root = get_dataset_root(experiment_name)
+        self.config = get_config(dataset_root, experiment_name)
+
         self.dataset_root = dataset_root
-        self.dataset_type = dataset_type
+        self.experiment_name = experiment_name
         self.run_name = run_name
+        self.bundle_name = bundle_name
         self.seed = seed
         self.cache = cache
         self.batch = batch
@@ -51,6 +60,7 @@ class BaseTrainer:
         self.reduce_factor = reduce_factor
         self.backend = backend
         self.cuda = cuda
+        self.mlflow = mlflow
         self.max_to_visualize = 5
 
         self.construct_model_fn = None
@@ -72,15 +82,24 @@ class BaseTrainer:
 
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
-        exp_dir = self.config['exp_name'].replace('/', '_')
-        self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
+        experiment_name = self.config['exp_name']
+        experiment_dir = experiment_name.replace('/', '_')
+        
+        if self.mlflow:
+            self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
+            self.start_run(experiment_name, experiment_dir, run_name)
+
+            mlflow.log_param('run_name', run_name)
+            mlflow.log_param('bundle_name', bundle_name)
+            mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
+            mlflow.log_param('epochs', epochs)
+            mlflow.log_param('seed', seed)
+
+        self.run_dir = os.path.join(self.project_path, 'experiments', experiment_dir, run_name)
+
         if os.path.exists(self.run_dir):
             shutil.rmtree(self.run_dir)
         os.makedirs(self.run_dir)
-
-        self.use_mlflow = use_mlflow
-        if self.use_mlflow:
-            self.start_run(self.config['exp_name'], run_name, exp_dir)
 
     def set_model_args(self):
         pass
@@ -88,27 +107,31 @@ class BaseTrainer:
     def set_dataset_args(self):
         pass
 
-    def start_run(self, exp_name, run_name, exp_dir):
-        client = mlflow.tracking.MlflowClient(self.tracking_uri)
-        exp = client.get_experiment_by_name(exp_name)
+    def get_run(self, experiment_name, run_name):
+        experiment = self.client.get_experiment_by_name(experiment_name)
 
-        if exp is None:
-            exp_path = os.path.join(self.artifact_path, exp_dir)
-            os.makedirs(exp_path)
-            chmod(exp_path)
-            mlflow.create_experiment(exp_name, exp_path)
-            exp = client.get_experiment_by_name(exp_name)
+        for info in self.client.list_run_infos(experiment.experiment_id):
+            run = self.client.get_run(info.run_id)
+            current_run_name = run.data.params.get('run_name', None)
+            if current_run_name == run_name:
+                return run
 
-        run_names = list()
-        for info in client.list_run_infos(exp.experiment_id):
-            run_names.append(client.get_run(info.run_id).data.params.get('run_name', ''))
+        return None
 
-        if run_name in run_names:
-            raise RuntimeError('run_name must be unique')
+    def start_run(self, experiment_name, experiment_dir, run_name):
+        experiment = self.client.get_experiment_by_name(experiment_name)
+
+        if experiment is None:
+            experiment_path = os.path.join(self.artifact_path, experiment_dir)
+            os.makedirs(experiment_path)
+            os.chmod(experiment_path, 0o777)
+            mlflow.create_experiment(experiment_name, experiment_path)
+
+        if self.get_run(experiment_name, run_name) is not None:
+            raise RuntimeError(f'Run {run_name} already exists')
 
         mlflow.set_tracking_uri(self.tracking_uri)
-        mlflow.set_experiment(exp_name)
-
+        mlflow.set_experiment(experiment_name)
         mlflow.start_run(run_name=run_name)
         mlflow.log_param('run_name', run_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
@@ -233,12 +256,12 @@ class BaseTrainer:
     def get_parser():
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--dataset_root', '-r', type=str, required=True,
-                            help='Directory with trajectories')
-        parser.add_argument('--dataset_type', '-t', type=str,
+        parser.add_argument('--experiment_name', '-exp', type=str,
                             choices=DATASET_TYPES, required=True)
         parser.add_argument('--run_name', '-n', type=str, required=True,
                             help='Name of the run. Must be unique and specific')
+        parser.add_argument('--bundle_name', '-bn', type=str, required=True,
+                            help='Name of the bundle. Must be unique and specific')
         parser.add_argument('--cache', action='store_true',
                             help='Cache inputs in RAM')
         parser.add_argument('--seed', type=int, default=42,

@@ -4,11 +4,10 @@ import datetime
 import numpy as np
 import argparse
 from collections import defaultdict
+from typing import List, Set, Union, Iterator
 
 import __init_path__
 import env
-
-from typing import List, Set, Union, Iterator
 
 
 class MetricAverager:
@@ -29,13 +28,13 @@ class MetricAverager:
         self._run_infos = None
         run_infos = self.get_run_infos(experiment_name)
         run_names = self.get_run_names(run_infos)
-        base_names = self.get_base_names(run_names)
-        base_names = filter(lambda x: x + '_avg' not in run_names, base_names)
+        bundle_names = self.get_bundle_names(run_names)
+        bundle_names = filter(lambda x: x + '_avg' not in run_names, bundle_names)
 
         counter = 0
-        for counter, base_name in enumerate(base_names):
-            print(f'    Averaging {base_name} run.')
-            self.average_run(experiment_name, base_name)
+        for counter, bundle_name in enumerate(bundle_names):
+            print(f'    Averaging {bundle_name} run.')
+            self.average_run(experiment_name, bundle_name)
         print(f'    Averaged {counter} runs in {experiment_name} experiment.')
 
     def get_run_infos(self, experiment_name):
@@ -53,18 +52,18 @@ class MetricAverager:
             run_names.append(run.data.params['run_name'])
         return run_names
 
-    def get_base_names(self, run_names: List[str]) -> Set[str]:
-        base_names = set()
+    def get_bundle_names(self, run_names: List[str]) -> Set[str]:
+        bundle_names = set()
         for run_name in run_names:
-            base_name = self.get_base_name(run_name)
-            if base_name is None:
+            bundle_name = self.get_bundle_name(run_name)
+            if bundle_name is None:
                 print(f'    It seems like {run_name} does not belong to any bundle')
             else:
-                base_names.add(base_name)
-        return base_names
+                bundle_names.add(bundle_name)
+        return bundle_names
 
     @staticmethod
-    def get_base_name(run_name: str) -> Union[str, None]:
+    def get_bundle_name(run_name: str) -> Union[str, None]:
         run_name_split = run_name.split('_')
 
         if len(run_name_split) < 2 or (run_name_split[-2] != 'b'):
@@ -98,14 +97,14 @@ class MetricAverager:
             mlflow.log_metrics(metrics_std)
             mlflow.log_metric('successfully_finished', 1)
 
-    def load_metrics(self, experiment_name, base_name):
+    def load_metrics(self, experiment_name, bundle_name):
         metrics = list()
         model_name = None
         run_infos = self.get_run_infos(experiment_name)
         for run_info in run_infos:
             data = self.client.get_run(run_info.run_id).data
-            current_base_name = self.get_base_name(data.params['run_name'])
-            if base_name == current_base_name:
+            current_bundle_name = self.get_bundle_name(data.params['run_name'])
+            if bundle_name == current_bundle_name:
                 if data.metrics.get('successfully_finished', 0):
                     metrics.append(data.metrics)
                 model_name = model_name or data.params.get('model.name', 'Unknown')
@@ -132,7 +131,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', '-t', type=str, default=None,
-                        help='You can find available exp names in slam.preprocessing.dataset_configs.py')
+                        help='You can find available experiment names in slam.preprocessing.dataset_configs.py')
 
     parser.add_argument('--run_name', '-n', type=str, default=None,
                         help='Name of the run. Must be unique and specific')
