@@ -1,11 +1,70 @@
 import pandas as pd
+from statistics import mean, median
 from pathlib import Path
+import numpy as np
+from pyquaternion import Quaternion
+from slam.linalg import (convert_euler_angles_to_rotation_matrix, 
+                         GlobalTrajectory,
+                         RelativeTrajectory,
+                         euler_to_quaternion,
+                         shortest_path_with_normalization)
 
 mean_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
 std_cols = [c + '_confidence' for c in mean_cols]
 
 def get_pair_frame_stat(df):
-    return df
+    relative_gt = df2slam_predict(df)
+    is_adjustment = (relative_gt.to_index - relative_gt.from_index) <= 1
+    adjustment_measurements = relative_gt[is_adjustment].reset_index(drop=True)
+    gt_trajectory = RelativeTrajectory.from_dataframe(adjustment_measurements[['euler_x', 'euler_y',
+                                                                               'euler_z', 't_x', 't_y',
+                                                                               't_z']]).to_global()
+    global_gt = gt_trajectory.to_dataframe()
+    distances=[] 
+    euclid_euler =[]
+    components =[]
+    abs_distance = []
+    symetric_distance =[]
+    intrinsic_distance =[]
+    euclid_quaternion=[]
+    translation_columns = ['t_x','t_y','t_z']
+
+    rotation_columns = ['euler_x', 'euler_y', 'euler_z']
+    for ind, values in relative_gt[['to_index', 'from_index']].iterrows():
+        to_translation = global_gt.iloc[values.to_index][translation_columns]
+        from_translation = global_gt.iloc[values.from_index][translation_columns]
+        distances.append(np.linalg.norm(to_translation - from_translation)) 
+        to_rotation = global_gt.iloc[values.to_index][rotation_columns]
+        from_rotation = global_gt.iloc[values.from_index][rotation_columns]
+        euler_x, euler_y, euler_z = shortest_path_with_normalization(to_rotation,from_rotation)
+        euclid_euler_distance = np.sqrt(euler_x**2 + euler_y**2 + euler_z**2)
+        euclid_euler.append(euclid_euler_distance)
+        quaternion_from = Quaternion(euler_to_quaternion(from_rotation))
+        quaternion_to = Quaternion(euler_to_quaternion(to_rotation))
+
+        abs_distance.append(Quaternion.absolute_distance(quaternion_to.unit ,quaternion_from.unit))
+        intrinsic_distance.append(Quaternion.distance(quaternion_to.unit ,quaternion_from.unit))
+        symetric_distance.append(Quaternion.sym_distance(quaternion_to.unit ,quaternion_from.unit))
+        euclid_quaternion.append(min((quaternion_to.unit - quaternion_from.unit).norm, 
+                                     (quaternion_to.unit + quaternion_from.unit).norm))
+#     relative_gt['euclidian_distances'] = distances
+#     relative_gt['euclid_euler_distance'] = euclid_euler
+#     relative_gt['abs_distance'] = abs_distance
+#     relative_gt['symetric_distance'] = symetric_distance
+#     relative_gt['intrinsic_distance'] = intrinsic_distance
+#     relative_gt['euclid_quaternion'] = euclid_quaternion
+    maxmin_dict={}
+    for name, l in zip(('distances','euclid_euler', 'abs_distance', 
+                  'symetric_distance',' intrinsic_distance', 'euclid_quaternion'),
+                 (distances, euclid_euler, abs_distance, 
+                  symetric_distance, intrinsic_distance, euclid_quaternion)):
+        relative_gt[name] = l
+
+        maxmin_dict.update({name :{'maximum':max(l), 'minimum' : min(l),
+                            'mean': mean(l), 'median' :median(l)}})
+    
+    return relative_gt, maxmin_dict
+        #return distances
 
 def df2slam_predict(gt):
     predict = gt[mean_cols]
