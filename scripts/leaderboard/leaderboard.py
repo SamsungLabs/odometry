@@ -66,7 +66,6 @@ class Leaderboard:
         self.other_args = other_args or []
 
     def submit(self):
-
         if self.leader_board == 'leaderboard':
             self.submit_on_all_leader_boards()
         else:
@@ -158,6 +157,7 @@ class Leaderboard:
             still_running_jobs = started_jobs_id.intersection(job_ids)
             sorted_jobs = list(still_running_jobs)
             sorted_jobs.sort()
+
             self.log(f'Running {sorted_jobs}', leader_board)
 
             if still_running_jobs:
