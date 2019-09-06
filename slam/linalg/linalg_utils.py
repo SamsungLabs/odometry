@@ -20,6 +20,12 @@ def convert_rotation_matrix_to_euler_angles(R):
     return np.array([x, y, z])
 
 
+def shortest_path_with_normalization(angle1, angle2):
+    phases = angle1 - angle2
+    phases = (phases + np.pi) % (2 * np.pi) - np.pi
+    return phases
+
+
 def convert_euler_angles_to_rotation_matrix(euler_angles_xyz):
     yaw   = euler_angles_xyz[2]
     pitch = euler_angles_xyz[1]

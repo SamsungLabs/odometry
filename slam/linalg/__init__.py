@@ -6,6 +6,7 @@ from .linalg_utils import split_se3
 from .linalg_utils import convert_euler_uncertainty_to_quaternion_uncertainty
 from .linalg_utils import get_covariance_matrix_from_euler_uncertainty
 from .linalg_utils import euler_to_quaternion
+from .linalg_utils import shortest_path_with_normalization
 
 from .trajectory import GlobalTrajectory
 from .trajectory import RelativeTrajectory
@@ -23,5 +24,6 @@ __all__ = [
     'convert_euler_uncertainty_to_quaternion_uncertainty',
     'get_covariance_matrix_from_euler_uncertainty',
     'euler_to_quaternion',
+    'shortest_path_with_normalization',
     'QuaternionWithTranslation'
 ]
