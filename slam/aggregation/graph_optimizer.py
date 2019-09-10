@@ -15,7 +15,7 @@ from slam.utils import mlflow_logging
 @mlflow_logging(prefix='aggregator', name='GraphOptimizer')
 class GraphOptimizer(BaseAggregator):
     def __init__(self, max_iterations=100, verbose=False, online=False):
-        solver = g2o.BlockSolverSE3(g2o.Sol)
+        solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
         solver = g2o.OptimizationAlgorithmLevenberg(solver)
 
         self.optimizer = g2o.SparseOptimizer()
