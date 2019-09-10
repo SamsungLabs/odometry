@@ -20,7 +20,6 @@ class BaseTrainer:
                  dataset_type,
                  run_name,
                  seed=42,
-                 lsf=False,
                  cache=False,
                  batch=1,
                  epochs=100,
@@ -43,7 +42,6 @@ class BaseTrainer:
         self.dataset_type = dataset_type
         self.run_name = run_name
         self.seed = seed
-        self.lsf = lsf
         self.cache = cache
         self.batch = batch
         self.epochs = epochs
