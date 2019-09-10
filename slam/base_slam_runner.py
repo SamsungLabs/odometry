@@ -37,6 +37,7 @@ class BaseSlamRunner(BaseTrainer):
 
         prediction_path = create_prediction_file_path(save_dir=self.run_dir, trajectory_id=trajectory_id)
         prediction['frame_history'].to_csv(prediction_path, index=False)
+        mlflow.log_artifacts(self.run_dir) if mlflow.active_run() else None
 
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
 
