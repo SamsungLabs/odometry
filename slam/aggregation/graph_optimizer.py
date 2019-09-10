@@ -41,12 +41,12 @@ class GraphOptimizer(BaseAggregator):
         print(f'Loaded {len(optimizer.vertices())} vertices')
         print(f'Loaded {len(optimizer.edges())} edges', end='\n\n')
 
-        raw_trajetory = self.get_trajectory(raw)
+        raw_trajectory = self.get_trajectory(raw)
 
         if self.online:
             self.optimize()
         
-        return raw_trajecotry
+        return raw_trajectory
 
     def append(self, df):
 
