@@ -119,7 +119,7 @@ class Leaderboard:
             dataset_root = env.DISCOMAN_V10_PATH
         elif dataset_type == 'discoman_v10_mixed':
             dataset_root = env.DISCOMAN_V10_MIXED_PATH
-        elif dataset_type == 'mini_discoman_v10_mixed':
+        elif dataset_type == 'discoman_v10_relocalization':
             dataset_root = env.DISCOMAN_V10_MIXED_PATH
         elif dataset_type == 'discoman_debug':
             dataset_root = env.DISCOMAN_V10_PATH
@@ -129,6 +129,8 @@ class Leaderboard:
             dataset_root = env.KITTI_MIXED_PATH
         elif dataset_type == 'kitti_4/6_mixed_1+2+4':
             dataset_root = env.KITTI_MIXED_PATH
+        elif dataset_type == 'kitti_4/6_bovw':
+            dataset_root = env.KITTI_BOVW_PATH
         elif dataset_type == 'kitti_8/3':
             dataset_root = env.KITTI_PATH
         elif dataset_type == 'tum':
