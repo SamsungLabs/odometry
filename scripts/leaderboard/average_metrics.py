@@ -106,7 +106,7 @@ class MetricAverager:
             data = self.client.get_run(run_info.run_id).data
             current_base_name = self.get_base_name(data.params['run_name'])
             if base_name == current_base_name:
-                if data.metrics.get('successfully_finished', False):
+                if data.metrics.get('successfully_finished', 0):
                     metrics.append(data.metrics)
                 model_name = model_name or data.params.get('model.name', 'Unknown')
 
