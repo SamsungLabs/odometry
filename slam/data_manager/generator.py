@@ -19,6 +19,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  x_col='x_col',
                  y_col='y_col',
                  image_col=None,
+                 weight_col=None,
                  target_size=(256, 256),
                  load_mode='rgb',
                  preprocess_mode=None,
@@ -56,15 +57,17 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.df = dataframe
         self._include_last() if include_last else None
-        self.df[image_col] = self.df[image_col].astype(str)
 
         self.directory = directory
         self.dtype = dtype
         self.samples = len(self.df)
-        self.df_images = self.df[image_col]
 
         self.x_cols = [x_col] if isinstance(x_col, str) else x_col
         self.y_cols = [y_col] if isinstance(y_col, str) else y_col
+
+        weight_col = weight_col or []
+        self.w_cols = [weight_col] if isinstance(weight_col, str) else weight_col
+
         image_col = image_col or []
         self.image_cols = [image_col] if isinstance(image_col, str) else image_col
 
@@ -72,6 +75,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
 
         self.df[self.image_cols] = self.df[self.image_cols].astype(str)
+        self.df_images = self.df[self.image_cols]
 
         if isinstance(load_mode, str):
             self.load_mode = {col: load_mode for col in self.image_cols}
@@ -256,6 +260,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
     def _get_batches_of_transformed_samples(self, index_array):
         batch_x = self._init_batch(self.x_cols, index_array)
         batch_y = self._init_batch(self.y_cols, index_array)
+        batch_w = self._init_batch(self.w_cols, index_array)
 
         # build batch of image data
         valid_samples = np.ones(len(index_array)).astype(bool)
@@ -279,7 +284,12 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         if np.sum(valid_samples) < 0.5 * len(index_array):
             print('Batch is too small: {} samples'.format(np.sum(valid_samples)))
-        return batch_x, batch_y
+
+        if batch_w:
+            batch_w = [batch_w[0][valid_samples] for target in batch_y]
+            return batch_x, batch_y, batch_w
+        else:
+            return batch_x, batch_y
 
     def next(self):
         """For python 2.x.

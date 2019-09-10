@@ -18,13 +18,14 @@ class TerminateOnLR(keras.callbacks.Callback):
         super(TerminateOnLR, self).__init__()
         self.min_lr = min_lr
         self.prefix = prefix
+        self.add_prefix = lambda k: (self.prefix + '_' + k) if self.prefix else k
         self.verbose = verbose
         self.stopped_epoch = 0
 
     def on_epoch_end(self, epoch, logs=None):
         lr = K.get_value(self.model.optimizer.lr)
         if mlflow.active_run():
-            mlflow.log_metric(f'{self.prefix}_lr' if self.prefix else 'lr', float(lr), step=epoch)
+            mlflow.log_metric(self.add_prefix('lr'), float(lr), step=epoch)
 
         if lr < self.min_lr:
             self.stopped_epoch = epoch
