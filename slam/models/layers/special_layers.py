@@ -3,6 +3,7 @@ from keras.layers import Layer, Dense, concatenate, multiply
 from keras.regularizers import l2
 
 from .functions import grid_sample
+from .functions import concat
 
 
 def construct_outputs(inputs,
@@ -14,23 +15,25 @@ def construct_outputs(inputs,
     for i, output_name in enumerate(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z')):
         x = inputs[i]
 
-        output = Dense(1,
-                       kernel_regularizer=l2(regularization),
-                       name=output_name if scale is None and not return_confidence else None)(x)
+        output = Dense(1, kernel_regularizer=l2(regularization))(x)
 
         if scale is not None:
             s = scale[i] if isinstance(scale, list) else scale
             output = multiply([output, s])
-            output = concatenate([output, s],
-                                 name=output_name if not return_confidence else None)
+
+        returned_values = [output]
+
+        if scale is not None:
+            returned_values.append(s)
 
         if return_confidence:
             confidence = Dense(1,
                                kernel_regularizer=l2(regularization),
                                kernel_initializer='glorot_normal',
                                trainable=False)(x)
-            output = concatenate([output, confidence], name=output_name)
+            returned_values.append(confidence)
 
+        output = concat(returned_values, name=output_name)
         outputs.append(output)
 
     return outputs
