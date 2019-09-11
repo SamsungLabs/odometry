@@ -1,4 +1,5 @@
 import os
+from functools import partial
 
 import __init_path__
 import env
@@ -8,9 +9,22 @@ from slam.models import construct_sequential_rt_model
 
 
 class SequentialRTTrainer(BaseTrainer):
+    def __init__(self,
+                 dataset_root,
+                 dataset_type,
+                 run_name,
+                 intrinsics,
+                 **kwargs):
+        self.intrinsics = intrinsics
+        super().__init__(dataset_root,
+                         dataset_type,
+                         run_name,
+                         **kwargs)
+
 
     def set_model_args(self):
-        self.construct_model_fn = construct_sequential_rt_model
+        self.construct_model_fn = partial(construct_sequential_rt_model,
+                                          intrinsics=self.intrinsics)
         self.lr = 0.001
         self.loss = 'mae'
         self.scale_rotation = 50

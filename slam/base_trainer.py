@@ -29,6 +29,7 @@ class BaseTrainer:
                  min_lr=1e-5,
                  reduce_factor=0.5,
                  per_process_gpu_memory_fraction=0.33,
+                 mlflow=True,
                  **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
@@ -71,12 +72,23 @@ class BaseTrainer:
 
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
-        self.start_run(self.config['exp_name'], run_name)
+        self.mlflow = mlflow
+        if self.mlflow:
+            self.start_run(self.config['exp_name'], run_name)
 
-        mlflow.log_param('run_name', run_name)
-        mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
-        mlflow.log_param('epochs', epochs)
-        mlflow.log_param('seed', seed)
+            mlflow.log_param('run_name', run_name)
+            mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
+            mlflow.log_param('epochs', epochs)
+            mlflow.log_param('seed', seed)
+        else:
+            exp_dir = self.config['exp_name'].replace('/', '_')
+
+        self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
+        if os.path.exists(self.run_dir):
+            shutil.rmtree(self.run_dir)
+
+        self.save_dir = self.run_dir
+
 
     def set_model_args(self):
         pass
@@ -102,11 +114,6 @@ class BaseTrainer:
 
         if run_name in run_names:
             raise RuntimeError('run_name must be unique')
-
-        self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
-        if os.path.exists(self.run_dir):
-            shutil.rmtree(self.run_dir)
-        self.save_dir = self.run_dir
 
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(exp_name)
@@ -219,8 +226,9 @@ class BaseTrainer:
                            epochs=self.epochs,
                            evaluate=True)
 
-        mlflow.log_metric('successfully_finished', 1)
-        mlflow.end_run()
+        if self.mlflow:
+            mlflow.log_metric('successfully_finished', 1)
+            mlflow.end_run()
 
     @staticmethod
     def get_parser():
