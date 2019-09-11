@@ -14,17 +14,26 @@ class SequentialRTTrainer(BaseTrainer):
                  dataset_type,
                  run_name,
                  intrinsics,
+                 use_input_flow_for_translation=True,
+                 use_cleaned_flow_for_translation=True,
+                 use_rotation_flow_for_translation=False,
                  **kwargs):
         self.intrinsics = intrinsics
+        self.use_input_flow_for_translation=use_input_flow_for_translation
+        self.use_cleaned_flow_for_translation=use_cleaned_flow_for_translation
+        self.use_rotation_flow_for_translation=use_rotation_flow_for_translation
         super().__init__(dataset_root,
                          dataset_type,
                          run_name,
                          **kwargs)
 
-
     def set_model_args(self):
-        self.construct_model_fn = partial(construct_sequential_rt_model,
-                                          intrinsics=self.intrinsics)
+        self.construct_model_fn = partial(
+            construct_sequential_rt_model,
+            intrinsics=self.intrinsics,
+            use_input_flow_for_translation=self.use_input_flow_for_translation,
+            use_cleaned_flow_for_translation=self.use_cleaned_flow_for_translation,
+            use_rotation_flow_for_translation=self.use_rotation_flow_for_translation)
         self.lr = 0.001
         self.loss = 'mae'
         self.scale_rotation = 50

@@ -7,7 +7,7 @@ from slam.models.layers import (concat,
                                 FlowGenerator)
 from slam.utils import mlflow_logging
 
-from keras.layers import Layer, Dense, concatenate
+from keras.layers import Layer, Dense, concatenate, Subtract
 from keras.regularizers import l2
 
 
@@ -60,6 +60,9 @@ def construct_encoder(inputs,
 @mlflow_logging(ignore=('inputs',), prefix='model.', name='SequentialRT')
 def construct_sequential_rt_model(inputs,
                                   intrinsics,
+                                  use_input_flow_for_translation=True,
+                                  use_cleaned_flow_for_translation=True,
+                                  use_rotation_flow_for_translation=False,
                                   kernel_sizes=[7, 5, 3, 3, 3, 3],
                                   strides=[2, 1, 4, 1 ,2, 1],
                                   dilation_rates=None,
@@ -89,14 +92,19 @@ def construct_sequential_rt_model(inputs,
                         name='rotation')
 
     output_rotation = construct_output(fc_rotation,
-                                        name='rotation',
-                                        regularization=regularization)
+                                       name='rotation',
+                                       regularization=regularization)
 
     rotation_flow = FlowGenerator(intrinsics)(output_rotation)
+    inputs_for_translation = []
+    if use_input_flow_for_translation:
+        inputs_for_translation.append(inputs)
+    if use_cleaned_flow_for_translation:
+        inputs_for_translation.append(Subtract()([inputs, rotation_flow]))
+    if use_rotation_flow_for_translation:
+        inputs_for_translation.append(rotation_flow)
 
-    inputs = concat([inputs, rotation_flow])
-
-    features_translation = construct_encoder(inputs,
+    features_translation = construct_encoder(concat(inputs_for_translation),
                                              kernel_sizes=kernel_sizes,
                                              strides=strides,
                                              dilation_rates=dilation_rates,

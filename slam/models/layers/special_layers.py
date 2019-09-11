@@ -137,10 +137,8 @@ class FlowGenerator(Layer):
         self.intrinsics = intrinsics
         super().__init__(**kwargs)
 
-    def build(self, input_shape):
-        super(FlowGenerator, self).build(input_shape)
-
     def _create_gt_optical_flow_pair(depth, rotation_vector, gt_translation):
+        print(rotation_vector)
         gt_rotation = convert_euler_angles_to_rotation_matrix(rotation_vector)
         pixels_grid = np.c_[np.meshgrid(np.arange(0, self.intrinsics.width),
                                         np.arange(0, self.intrinsics.height))]
@@ -163,12 +161,13 @@ class FlowGenerator(Layer):
         return gt_flow
 
     def _generate(self, rotation_vector):
-        return tf.py_func(self._create_gt_optical_flow_pair,
+        out = tf.py_func(self._create_gt_optical_flow_pair,
                           [self.depth, rotation_vector, self.translation],
                           tf.float32)
+        return tf.reshape(out, [self.output_size[0], self.output_size[1], 2])
 
     def call(self, batch):
         return tf.map_fn(self._generate, batch, parallel_iterations=1, dtype=tf.float32)
 
     def compute_output_shape(self, input_shape):
-        return (None, self.output_size[0], self.output_size[1], 2)
+        return (input_shape[0][0], self.output_size[0], self.output_size[1], 2)
