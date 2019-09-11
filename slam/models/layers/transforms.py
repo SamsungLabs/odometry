@@ -85,7 +85,7 @@ def normalize(inputs, axis=None, use_bias=True):
 
 class Transform:
 
-    def __init__(self, transform=None, agnostic=False, channel_wise=False):
+    def __init__(self, transform=None, agnostic=True, channel_wise=False):
 
         self.transform = transform
         self.agnostic = agnostic
@@ -116,7 +116,7 @@ class Transform:
             raise ValueError(f'Unknown transform option: "{transform}"')
 
     def __call__(self, inputs):
-        if (not self.transform) or self.agnostic:
+        if self.transform is None or self.agnostic:
             inputs, scale = concat(inputs), None
         else:
             inputs, scale = concat(inputs[:-1]), inputs[-1]
@@ -129,7 +129,7 @@ class Transform:
         return inputs, scale
 
 
-def transform_inputs(inputs, transform=None, agnostic=False, channel_wise=False):
+def transform_inputs(inputs, transform=None, agnostic=True, channel_wise=False):
     return Transform(transform=transform,
                      agnostic=agnostic,
                      channel_wise=channel_wise)(inputs)

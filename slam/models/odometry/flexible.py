@@ -52,7 +52,7 @@ def construct_flexible_model(inputs,
                              use_batch_norm=False,
                              split=False,
                              transform=None,
-                             agnostic=False,
+                             agnostic=True,
                              channel_wise=False,
                              return_confidence=False):
 
