@@ -6,8 +6,8 @@ from keras.layers import Layer
 
 class BasicOp(Layer):
 
-    def __init__(self, axis=None):
-        super().__init__()
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(**kwargs)
 
         self.axis = axis
         self.op = None
@@ -30,36 +30,36 @@ class BasicOp(Layer):
 
 class Min(BasicOp):
 
-    def __init__(self, axis=None):
-        super().__init__(axis)
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
         self.op = K.min        
 
 
 class Max(BasicOp):
 
-    def __init__(self, axis=None):
-        super().__init__(axis)
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
         self.op = K.max
 
 
 class Mean(BasicOp):
 
-    def __init__(self, axis=None):
-        super().__init__(axis)
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
         self.op = K.mean
 
 
 class Std(BasicOp):
 
-    def __init__(self, axis=None):
-        super().__init__(axis)
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
         self.op = K.std
 
 
 class Percentile(BasicOp):
 
-    def __init__(self, q=90, axis=None):
-        super().__init__(axis)
+    def __init__(self, q=90, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
         
         self.q = q
 
