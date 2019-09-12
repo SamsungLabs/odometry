@@ -24,7 +24,7 @@ from .special_layers import DepthFlow
 from .special_layers import add_grid
 from .special_layers import depth_flow
 from .special_layers import construct_outputs
-from .special_layers import FlowGenerator
+from .special_layers import FlowComposer
 
 
 __all__ = [
@@ -52,7 +52,7 @@ __all__ = [
     'add_grid',
     'depth_flow',
     'construct_outputs',
-    'FlowGenerator'
+    'FlowComposer'
 ]
 
 CUSTOM_LAYERS = {
@@ -80,5 +80,5 @@ CUSTOM_LAYERS = {
      'add_grid': add_grid,
      'depth_flow': depth_flow,
      'construct_outputs': construct_outputs,
-     'FlowGenerator': FlowGenerator
+     'FlowComposer': FlowComposer
 }

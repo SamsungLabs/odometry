@@ -4,7 +4,7 @@ from slam.models.layers import (concat,
                                 conv2d,
                                 dense,
                                 gated_conv2d,
-                                FlowGenerator)
+                                FlowComposer)
 from slam.utils import mlflow_logging
 
 from keras.layers import Layer, Dense, concatenate, Subtract
@@ -95,7 +95,7 @@ def construct_sequential_rt_model(inputs,
                                        name='rotation',
                                        regularization=regularization)
 
-    rotation_flow = FlowGenerator(intrinsics)(output_rotation)
+    rotation_flow = FlowComposer(intrinsics)(output_rotation)
     inputs_for_translation = []
     if use_input_flow_for_translation:
         inputs_for_translation.append(inputs)
