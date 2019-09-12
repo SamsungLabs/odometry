@@ -6,8 +6,7 @@ from pyquaternion import Quaternion
 from slam.aggregation.base_aggregator import BaseAggregator
 from slam.linalg import (GlobalTrajectory,
                          QuaternionWithTranslation,
-                         convert_euler_angles_to_rotation_matrix,
-                         )
+                         convert_euler_angles_to_rotation_matrix)
 
 from slam.utils import mlflow_logging
 
