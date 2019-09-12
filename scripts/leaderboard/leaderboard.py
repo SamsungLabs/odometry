@@ -20,7 +20,6 @@ class Leaderboard:
                  trainer_path,
                  dataset_type,
                  run_name,
-                 exp_name,
                  machines,
                  bundle_size=1,
                  core=8,
@@ -38,7 +37,6 @@ class Leaderboard:
         self.trainer_path = trainer_path
         self.dataset_type = dataset_type
         self.run_name = run_name
-        self.exp_name = exp_name
         self.bundle_size = bundle_size
         self.core = core
 
@@ -66,7 +64,7 @@ class Leaderboard:
         if self.dataset_type == 'leaderboard':
             self.submit_on_all_datasets()
         else:
-            self.submit_bundle(self.exp_name)
+            self.submit_bundle(self.dataset_type)
 
     def submit_on_all_datasets(self):
 
@@ -225,8 +223,6 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', '-n', type=str, required=True,
                         help='Name of the run. Must be unique and specific')
     parser.add_argument('--bundle_size', '-b', type=int, required=True, help='Number runs in evaluate')
-    parser.add_argument('--exp_name', '-exp', type=str, default=None,
-                       help='Name of experiment (actual leaderboard). May differ from dataset_type')
     parser.add_argument('--core', '-c', type=int, default=3, help='Number of cpu core')
 
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console')
@@ -246,7 +242,6 @@ if __name__ == '__main__':
     leaderboard = Leaderboard(trainer_path=args.trainer_path,
                               dataset_type=args.dataset_type,
                               run_name=args.run_name,
-                              exp_name=args.exp_name or args.dataset_type,
                               bundle_size=args.bundle_size,
                               core=args.core,
                               verbose=args.verbose,
