@@ -87,7 +87,10 @@ class Predict(keras.callbacks.Callback):
         return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
 
     def save_predictions(self, predictions, trajectory_id, subset, prediction_id):
-        file_path = create_prediction_file_path(trajectory_id, subset, prediction_id, self.save_dir)
+        file_path = create_prediction_file_path(save_dir=self.save_dir,
+                                                trajectory_id=trajectory_id,
+                                                prediction_id=prediction_id,
+                                                subset=subset)
         predictions.to_csv(file_path)
         os.chmod(file_path, 0o777)
 
@@ -98,7 +101,10 @@ class Predict(keras.callbacks.Callback):
                              subset,
                              prediction_id,
                              record=None):
-        file_path = create_vis_file_path(trajectory_id, subset, prediction_id, self.save_dir)
+        file_path = create_vis_file_path(save_dir=self.save_dir,
+                                         trajectory_id=trajectory_id,
+                                         prediction_id=prediction_id,
+                                         subset=subset)
         if gt_trajectory is None:
             title = trajectory_id.upper()
             visualize_trajectory(predicted_trajectory, title=title, file_path=file_path)

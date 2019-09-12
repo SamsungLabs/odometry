@@ -17,7 +17,7 @@ class DummySlamRunner(BaseSlamRunner):
                          optflow_weights_path=self.optflow_weights,
                          odometry_model_path=self.odometry_model,
                          knn=self.knn,
-                         input_shapes=self.config['target_size'],
+                         input_shapes=self.config['source_size'],
                          keyframe_period=self.keyframe_period,
                          matches_threshold=self.matches_threshold)
 

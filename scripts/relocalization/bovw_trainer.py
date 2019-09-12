@@ -39,7 +39,7 @@ class BoVWTrainer(BaseTrainer):
                                 image_col=self.image_col,
                                 load_mode=self.load_mode,
                                 preprocess_mode=self.preprocess_mode,
-                                train_sampling_step=self.train_sampling_step,
+                                train_strides=self.train_sampling_step,
                                 cached_images={})
 
     def get_model(self):
