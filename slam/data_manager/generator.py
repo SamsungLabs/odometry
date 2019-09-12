@@ -35,7 +35,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  cached_images=None,
                  filter_invalid=True,
                  max_memory_consumption=0.8,
-                 placeholder=None,
+                 return_confidence=False,
                  trajectory_id='',
                  include_last=False):
 
@@ -100,11 +100,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.filter_invalid = filter_invalid
 
-        self.return_cols = self.y_cols[:]
-
-        self.placeholder = placeholder or []
-        for p in self.placeholder:
-            self.return_cols.extend([col + '_' + p for col in self.y_cols])
+        self.return_confidence = return_confidence
 
         self.trajectory_id = trajectory_id
 
@@ -251,11 +247,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                     np.zeros((len(index_array),) + self.image_shapes[col], dtype=self.dtype))
             else:
                 values = self.df[col].values[index_array]
-
-                if col in self.y_cols and self.placeholder:
-                    ones = np.ones((len(values), len(self.placeholder)))
-                    values = np.concatenate((np.expand_dims(values, -1), ones), axis=1)
-
+                if self.return_confidence:
+                    values = np.stack((values, np.ones_like(values)), axis=1)
                 batch.append(values)
 
         return batch
