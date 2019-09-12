@@ -302,8 +302,10 @@ class Predict(keras.callbacks.Callback):
             self.on_epoch_end(self.epoch - 1, logs)
         else:
             final_prediction_id = self.get_prediction_id(epoch='final', **logs)
-            self.copy(get_vis_dir(self.last_prediction_id), get_vis_dir(final_prediction_id))
-            self.copy(get_prediction_dir(self.last_prediction_id), get_prediction_dir(final_prediction_id))
+            self.copy(self.get_vis_dir(self.last_prediction_id),
+                      self.get_vis_dir(final_prediction_id))
+            self.copy(self.get_prediction_dir(self.last_prediction_id),
+                      self.get_prediction_dir(final_prediction_id))
 
         logs = self.last_logs
 
