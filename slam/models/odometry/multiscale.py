@@ -95,7 +95,7 @@ def construct_multiscale_model(inputs,
                                use_gated_convolutions=False,
                                split=False,
                                transform=None,
-                               agnostic=False,
+                               agnostic=True,
                                channel_wise=False,
                                return_confidence=False):
 
