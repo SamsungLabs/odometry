@@ -106,12 +106,12 @@ def quaternion_to_euler(quaternion):
 
     return roll, pitch, yaw
 
-def get_covariance_matrix_from_euler_uncertainty(euler_angles_xyz):
-    """get euler_x,euler_y,euler_z,
-        output matrix 6x6 with t_x, t_y, t_z, euler_z, euler_y, euler_x (yaw, pitch, roll)"""
-    return np.diag(np.hstack([np.zeros(3), euler_angles_xyz[::-1]]))
-    
 
+def get_covariance_matrix_from_euler_uncertainty(translation_xyz, euler_angles_xyz):
+    """get euler_x,euler_y,euler_z,
+        output matrix 6x6 with t_x, t_y, t_z, euler_z (yaw), euler_y (pitch), euler_x (roll)"""
+    return np.diag(np.hstack([translation_xyz, euler_angles_xyz[::-1]]))
+    
 
 def convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles_xyz, covariance_matrix_euler=np.eye(6)):
     """get  matrix 6x6 with t_x, t_y, t_z, euler_z, euler_y, euler_x (yaw, pitch, roll),

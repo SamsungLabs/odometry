@@ -14,6 +14,7 @@ def construct_encoder(inputs,
                       kernel_sizes=[7, 5, 3, 3, 3, 3],
                       strides=[2, 1, 4, 1, 2, 1],
                       dilation_rates=None,
+                      activation='relu',
                       kernel_initializer='glorot_normal',
                       use_gated_convolutions=False,
                       use_batch_norm=False):
@@ -32,7 +33,7 @@ def construct_encoder(inputs,
                       dilation_rate=dilation_rates[i],
                       padding='same',
                       batch_norm=use_batch_norm and i == 0,
-                      activation='relu',
+                      activation=activation,
                       kernel_initializer=kernel_initializer)
 
     flatten = Flatten()(inputs)
@@ -65,6 +66,7 @@ def construct_flexible_model(inputs,
                                  kernel_sizes=kernel_sizes,
                                  strides=strides,
                                  dilation_rates=dilation_rates,
+                                 activation=activation,
                                  kernel_initializer=kernel_initializer,
                                  use_gated_convolutions=use_gated_convolutions,
                                  use_batch_norm=use_batch_norm)

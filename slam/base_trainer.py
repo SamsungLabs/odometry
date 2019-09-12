@@ -20,7 +20,6 @@ class BaseTrainer:
                  dataset_type,
                  run_name,
                  seed=42,
-                 lsf=False,
                  cache=False,
                  batch=1,
                  epochs=100,
@@ -28,7 +27,10 @@ class BaseTrainer:
                  save_best_only=False,
                  min_lr=1e-5,
                  reduce_factor=0.5,
+                 backend='numpy',
+                 cuda=False,
                  per_process_gpu_memory_fraction=0.33,
+                 mlflow=True,
                  **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
@@ -36,12 +38,10 @@ class BaseTrainer:
         self.project_path = env.PROJECT_PATH
 
         self.config = get_config(dataset_root, dataset_type)
-
         self.dataset_root = dataset_root
         self.dataset_type = dataset_type
         self.run_name = run_name
         self.seed = seed
-        self.lsf = lsf
         self.cache = cache
         self.batch = batch
         self.epochs = epochs
@@ -49,6 +49,8 @@ class BaseTrainer:
         self.save_best_only = save_best_only
         self.min_lr = min_lr
         self.reduce_factor = reduce_factor
+        self.backend = backend
+        self.cuda = cuda
         self.max_to_visualize = 5
 
         self.construct_model_fn = None
@@ -72,12 +74,23 @@ class BaseTrainer:
 
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
-        self.start_run(self.config['exp_name'], run_name)
+        self.mlflow = mlflow
+        if self.mlflow:
+            self.start_run(self.config['exp_name'], run_name)
 
-        mlflow.log_param('run_name', run_name)
-        mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
-        mlflow.log_param('epochs', epochs)
-        mlflow.log_param('seed', seed)
+            mlflow.log_param('run_name', run_name)
+            mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
+            mlflow.log_param('epochs', epochs)
+            mlflow.log_param('seed', seed)
+        else:
+            exp_dir = self.config['exp_name'].replace('/', '_')
+
+        self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
+        if os.path.exists(self.run_dir):
+            shutil.rmtree(self.run_dir)
+
+        self.save_dir = self.run_dir
+
 
     def set_model_args(self):
         pass
@@ -103,11 +116,6 @@ class BaseTrainer:
 
         if run_name in run_names:
             raise RuntimeError('run_name must be unique')
-
-        self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
-        if os.path.exists(self.run_dir):
-            shutil.rmtree(self.run_dir)
-        self.save_dir = self.run_dir
 
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(exp_name)
@@ -164,8 +172,8 @@ class BaseTrainer:
                                    evaluate=evaluate,
                                    rpe_indices=self.config['rpe_indices'],
                                    max_to_visualize=self.max_to_visualize,
-                                   backend='numpy',
-                                   cuda=False,
+                                   backend=self.backend,
+                                   cuda=self.cuda,
                                    workers=8)
 
         reduce_lr_callback = ReduceLROnPlateau(monitor='val_loss', factor=self.reduce_factor)
@@ -214,14 +222,16 @@ class BaseTrainer:
 
         model_factory = self.get_model_factory(dataset.input_shapes)
         model = model_factory.construct()
+        print(model.summary())
 
         self.fit_generator(model=model,
                            dataset=dataset,
                            epochs=self.epochs,
                            evaluate=True)
 
-        mlflow.log_metric('successfully_finished', 1)
-        mlflow.end_run()
+        if self.mlflow:
+            mlflow.log_metric('successfully_finished', 1)
+            mlflow.end_run()
 
     @staticmethod
     def get_parser():
@@ -248,5 +258,8 @@ class BaseTrainer:
                             help='Threshold value for learning rate in stopping criterion')
         parser.add_argument('--reduce_factor', type=int, default=0.5,
                             help='Reduce factor for learning rate')
-
+        parser.add_argument('--backend', type=str, default='numpy', choices=['numpy', 'torch'],
+                            help='Backend used for evaluation')
+        parser.add_argument('--cuda', action='store_true',
+                            help='Use GPU for evaluation (only for backend=="torch")')
         return parser

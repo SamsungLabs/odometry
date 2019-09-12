@@ -31,6 +31,7 @@ from .special_layers import DepthFlow
 from .special_layers import add_grid
 from .special_layers import depth_flow
 from .special_layers import construct_outputs
+from .special_layers import FlowComposer
 
 from .transforms import transform_inputs
 
@@ -66,7 +67,8 @@ __all__ = [
     'add_grid',
     'depth_flow',
     'construct_outputs',
-    'transform_inputs'
+    'transform_inputs',
+    'FlowComposer'
 ]
 
 CUSTOM_LAYERS = {
@@ -79,7 +81,7 @@ CUSTOM_LAYERS = {
      'Affine': Affine,
      'Clip': Clip,
      'Inverse': Inverse,
-     'Divide': Divide, 
+     'Divide': Divide,
      'Repeat': Repeat,
      'affine': affine,
      'clip': clip,
@@ -100,5 +102,6 @@ CUSTOM_LAYERS = {
      'add_grid': add_grid,
      'depth_flow': depth_flow,
      'construct_outputs': construct_outputs,
-     'transform_inputs': transform_inputs
+     'transform_inputs': transform_inputs,
+     'FlowComposer': FlowComposer
 }

@@ -1,20 +1,19 @@
-import os
 import mlflow
 
 from slam.base_trainer import BaseTrainer
-
 from slam.evaluation import (calculate_metrics,
                              average_metrics,
                              normalize_metrics)
-
 from slam.linalg import RelativeTrajectory
-from slam.utils import visualize_trajectory_with_gt
+from slam.utils import (visualize_trajectory_with_gt,
+                        create_vis_file_path,
+                        create_prediction_file_path)
 
 
 class BaseSlamRunner(BaseTrainer):
 
     def __init__(self, reloc_weights, optflow_weights, odometry_model, knn=20, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(per_process_gpu_memory_fraction=1, *args, **kwargs)
         self.reloc_weights = reloc_weights
         self.optflow_weights = optflow_weights
         self.odometry_model = odometry_model
@@ -30,43 +29,44 @@ class BaseSlamRunner(BaseTrainer):
         self.load_mode = 'rgb'
         self.preprocess_mode = 'rgb'
         self.batch_size = 1
-
-    def create_visualization_path(self, trajectory_id, subset):
-        trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(self.run_dir, 'visuals', subset, trajectory_name)
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        return file_path
-
-    def create_prediction_path(self, trajectory_id):
-        trajectory_name = trajectory_id.replace('/', '_')
-        file_path = os.path.join(self.run_dir, 'predictions', trajectory_name, 'df.csv')
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        return file_path
+        self.target_size = -1
 
     def evaluate_trajectory(self, prediction, gt, subset):
 
         trajectory_id = prediction['id']
 
-        prediction_path = self.create_prediction_path(trajectory_id)
+        prediction_path = create_prediction_file_path(save_dir=self.run_dir, trajectory_id=trajectory_id)
         prediction['frame_history'].to_csv(prediction_path, index=False)
 
-        predicted_trajectory = prediction['trajectory']
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
-        record = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices=self.config['rpe_indices'])
-        normalized_record = normalize_metrics(record)
-        trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}' for key, value in normalized_record.items()])
-        title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
-        visualization_path = self.create_visualization_path(trajectory_id, subset)
-        visualize_trajectory_with_gt(gt_trajectory,
-                                     predicted_trajectory,
-                                     title=title,
-                                     file_path=visualization_path)
 
-        mlflow.log_artifacts(self.run_dir, subset) if mlflow.active_run() else None
+        trajectory_types = ['slam_trajectory', 'odometry_trajectory', 'odometry_trajectory_with_loop_closures']
+        slam_record = None
+        for trajectory_type in trajectory_types:
+            predicted_trajectory = prediction[trajectory_type]
+            record = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices=self.config['rpe_indices'])
 
-        return record
+            if trajectory_type == 'slam_trajectory':
+                slam_record = record
+
+            normalized_record = normalize_metrics(record)
+            trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}' for key, value in normalized_record.items()])
+            title = f'{trajectory_id.upper()}: {trajectory_metrics_as_str}'
+            visualization_path = create_vis_file_path(save_dir=self.run_dir,
+                                                      trajectory_id=trajectory_id,
+                                                      subset=subset,
+                                                      sub_dir=trajectory_type)
+
+            visualize_trajectory_with_gt(gt_trajectory, predicted_trajectory, title=title, file_path=visualization_path)
+
+            mlflow.log_artifacts(self.run_dir) if mlflow.active_run() else None
+
+        return slam_record
 
     def evaluate_subset(self, slam, generators, df, subset):
+
+        if generators is None or len(generators) == 0:
+            return
 
         records = list()
         for generator in generators:
@@ -94,6 +94,9 @@ class BaseSlamRunner(BaseTrainer):
 
         generators = dataset.get_test_generator(as_list=True, include_last=True)
         self.evaluate_subset(slam, generators, dataset.df_test, 'test')
+        
+        mlflow.log_metric('successfully_finished', 1)
+        mlflow.end_run()
 
     @staticmethod
     def get_parser():
