@@ -1,7 +1,11 @@
+from functools import partial
+
+import numpy as np
 import tensorflow as tf
 from keras.layers import Layer, Dense, concatenate
 from keras.regularizers import l2
 
+from slam.linalg import convert_euler_angles_to_rotation_matrix
 from .functions import grid_sample
 
 
@@ -122,3 +126,45 @@ class AddGrid(Layer):
 
 def add_grid(inputs, f_x=1, f_y=1, c_x=0.5, c_y=0.5, **kwargs):
     return AddGrid(f_x=f_x, f_y=f_y, c_x=c_x, c_y=c_y, **kwargs)(inputs)
+
+
+class FlowComposer(Layer):
+
+    def __init__(self, intrinsics, **kwargs):
+        self.translation = np.array([0., 0., 0.])
+        self.depth = np.ones((intrinsics.height, intrinsics.width))
+        self.intrinsics = intrinsics
+
+        self.pixels_grid = np.c_[np.meshgrid(np.arange(0, self.intrinsics.width),
+                                 np.arange(0, self.intrinsics.height))]
+        self.pixels_grid = self.pixels_grid.astype(np.float64)
+
+        self.pixels_normalized = self.intrinsics.forward(self.pixels_grid)
+        ones = np.ones((1, ) + self.pixels_normalized.shape[1:])
+        self.pixels_normalized = np.concatenate([self.pixels_normalized, ones], 0)
+        super().__init__(**kwargs)
+
+    def _create_gt_optical_flow_pair(depth, rotation_vector, gt_translation):
+        R = convert_euler_angles_to_rotation_matrix(rotation_vector)
+        t = gt_translation.reshape(3, -1)
+        points1 = depth * self.pixels_normalized
+        points2 = R.T @ (points1.reshape(3, -1) - t)
+        points2 = points2.reshape((3, self.intrinsics.height, self.intrinsics.width))
+        xy_pixels_from_rt = self.intrinsics.backward(points2[:2] / points2[2])
+        gt_flow = (xy_pixels_from_rt - self.pixels_grid)
+        gt_flow = np.transpose(gt_flow, (1, 2, 0))
+        gt_flow[:,:,0] /= gt_flow.shape[1]
+        gt_flow[:,:,1] /= gt_flow.shape[0]
+        return gt_flow
+
+    def _generate(self, rotation_vector):
+        out = tf.py_func(self._create_gt_optical_flow_pair,
+                          [self.depth, rotation_vector, self.translation],
+                          tf.float32)
+        return tf.reshape(out, [self.intrinsics.height, self.intrinsics.width, 2])
+
+    def call(self, batch):
+        return tf.map_fn(self._generate, batch, parallel_iterations=1, dtype=tf.float32)
+
+    def compute_output_shape(self, input_shape):
+        return (None, self.intrinsics.height, self.intrinsics.width, 2)
