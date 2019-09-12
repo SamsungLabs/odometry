@@ -6,6 +6,8 @@ from pyquaternion import Quaternion
 from slam.aggregation.base_aggregator import BaseAggregator
 from slam.linalg import (GlobalTrajectory,
                          QuaternionWithTranslation,
+                         get_covariance_matrix_from_euler_uncertainty,
+                         convert_euler_uncertainty_to_quaternion_uncertainty,
                          convert_euler_angles_to_rotation_matrix)
 
 from slam.utils import mlflow_logging
@@ -33,6 +35,18 @@ class GraphOptimizer(BaseAggregator):
         vertex = self.create_vertex(np.eye(3), np.zeros(3), index=0)
         self.optimizer.add_vertex(vertex)
         self.current_pose = np.identity(6)
+    
+    def load(self, path):
+        optimizer.load(path)
+        print(f'Loaded {len(optimizer.vertices())} vertices')
+        print(f'Loaded {len(optimizer.edges())} edges', end='\n\n')
+
+        raw_trajectory = self.get_trajectory(raw)
+
+        if self.online:
+            self.optimize()
+        
+        return raw_trajectory
 
     def __len__(self):
         return len(self.optimizer.vertices())
@@ -98,7 +112,17 @@ class GraphOptimizer(BaseAggregator):
         edge = g2o.EdgeSE3()
         edge.set_measurement(measurement)
 
-        edge.set_information(np.eye(6))
+        euler_angles_std = row[['euler_x_confidence', 'euler_y_confidence', 'euler_z_confidence']].values
+        translation_std = row[['t_x_confidence', 't_y_confidence', 't_z_confidence']].values
+
+        covariance = get_covariance_matrix_from_euler_uncertainty(translation_std, euler_angles_std)
+        covariance = convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles, covariance)
+
+        information = np.linalg.pinv(covariance)
+        information = np.delete(information, 3, axis=0)
+        information = np.delete(information, 3, axis=1)
+
+        edge.set_information(information)
         edge.set_vertex(0, self.optimizer.vertex(int(row['from_index'])))
         edge.set_vertex(1, self.optimizer.vertex(int(row['to_index'])))
         return edge
@@ -107,9 +131,9 @@ class GraphOptimizer(BaseAggregator):
         self.optimizer.initialize_optimization()
         self.optimizer.optimize(self.max_iterations)
 
-    def get_trajectory(self):
+    def get_trajectory(self, raw=False):
 
-        if not self.online:
+        if not raw or not self.online:
             self.optimize()
 
         optimized_trajectory = GlobalTrajectory()
