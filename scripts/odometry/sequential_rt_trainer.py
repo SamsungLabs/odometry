@@ -19,9 +19,9 @@ class SequentialRTTrainer(BaseTrainer):
                  use_rotation_flow_for_translation=False,
                  **kwargs):
         self.intrinsics = intrinsics
-        self.use_input_flow_for_translation=use_input_flow_for_translation
-        self.use_cleaned_flow_for_translation=use_cleaned_flow_for_translation
-        self.use_rotation_flow_for_translation=use_rotation_flow_for_translation
+        self.use_input_flow_for_translation = use_input_flow_for_translation
+        self.use_cleaned_flow_for_translation = use_cleaned_flow_for_translation
+        self.use_rotation_flow_for_translation = use_rotation_flow_for_translation
         super().__init__(dataset_root,
                          dataset_type,
                          run_name,

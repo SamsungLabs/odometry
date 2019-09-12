@@ -140,16 +140,15 @@ class FlowComposer(Layer):
         self.pixels_grid = self.pixels_grid.astype(np.float64)
 
         self.pixels_normalized = self.intrinsics.forward(self.pixels_grid)
-        ones = np.expand_dims(np.ones(self.pixels_normalized.shape[1:]), 0)
+        ones = np.ones((1, ) + self.pixels_normalized.shape[1:])
         self.pixels_normalized = np.concatenate([self.pixels_normalized, ones], 0)
         super().__init__(**kwargs)
 
     def _create_gt_optical_flow_pair(depth, rotation_vector, gt_translation):
-        gt_rotation = convert_euler_angles_to_rotation_matrix(rotation_vector)
-        R = gt_rotation
-        t = gt_translation.reshape(3,-1)
+        R = convert_euler_angles_to_rotation_matrix(rotation_vector)
+        t = gt_translation.reshape(3, -1)
         points1 = depth * self.pixels_normalized
-        points2 = (R.T @ points1.reshape(3, -1)) - R.T @ t
+        points2 = R.T @ (points1.reshape(3, -1) - t)
         points2 = points2.reshape((3, self.intrinsics.height, self.intrinsics.width))
         xy_pixels_from_rt = self.intrinsics.backward(points2[:2] / points2[2])
         gt_flow = (xy_pixels_from_rt - self.pixels_grid)

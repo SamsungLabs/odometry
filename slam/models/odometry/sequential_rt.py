@@ -124,5 +124,4 @@ def construct_sequential_rt_model(inputs,
                                            name='translation',
                                            regularization=regularization)
 
-
     return output_rotation + output_translation
