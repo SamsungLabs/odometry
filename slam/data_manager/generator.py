@@ -254,7 +254,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
                 if col in self.y_cols and self.placeholder:
                     ones = np.ones((len(values), len(self.placeholder)))
-                    values = np.concatenate((np.expand_dims(values, -1), ones), axis=1)
+                    values = np.concatenate([np.expand_dims(values, -1), ones], axis=1)
 
                 batch.append(values)
 
