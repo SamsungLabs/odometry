@@ -34,7 +34,6 @@ class GraphOptimizer(BaseAggregator):
         self.optimizer.add_vertex(vertex)
         self.current_pose = np.identity(6)
 
-    @property
     def __len__(self):
         return len(self.optimizer.vertices())
 
