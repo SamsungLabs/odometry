@@ -2,28 +2,42 @@ from functools import partial
 
 import numpy as np
 import tensorflow as tf
-from keras.layers import Layer, Dense, concatenate
+from keras.layers import Layer, Dense, concatenate, multiply
 from keras.regularizers import l2
 
 from slam.linalg import convert_euler_angles_to_rotation_matrix
 from .functions import grid_sample
+from .functions import concat
 
 
 def construct_outputs(inputs,
                       regularization=0,
+                      scale=None,
                       return_confidence=False):
     outputs = []
-    for x, output_name in zip(inputs, ('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z')):
-        output = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(x)
+
+    for i, output_name in enumerate(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z')):
+        x = inputs[i]
+
+        output = Dense(1, kernel_regularizer=l2(regularization))(x)
+
+        if scale is not None:
+            s = scale[i] if isinstance(scale, list) else scale
+            output = multiply([output, s])
+
+        returned_values = [output]
+
+        if scale is not None:
+            returned_values.append(s)
 
         if return_confidence:
             confidence = Dense(1,
                                kernel_regularizer=l2(regularization),
                                kernel_initializer='glorot_normal',
-                               trainable=False,
-                               name=output_name + '_confidence')(x)
-            output = concatenate([output, confidence], name=output_name + '_with_confidence')
+                               trainable=False)(x)
+            returned_values.append(confidence)
 
+        output = concat(returned_values, name=output_name)
         outputs.append(output)
 
     return outputs
