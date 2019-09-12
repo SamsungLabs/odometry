@@ -34,6 +34,10 @@ class GraphOptimizer(BaseAggregator):
         self.optimizer.add_vertex(vertex)
         self.current_pose = np.identity(6)
 
+    @property
+    def length(self):
+        return len(self.optimizer.vertices())
+
     def append(self, df):
 
         for _, row in df.iterrows():
@@ -53,8 +57,7 @@ class GraphOptimizer(BaseAggregator):
             self.optimize()
 
     def get_previous_pose(self) -> np.ndarray:
-        index = len(self.optimizer.vertices())
-        previous_vertex = self.optimizer.vertex(index - 1)
+        previous_vertex = self.optimizer.vertex(self.length - 1)
         previous_estimate = previous_vertex.estimate()
         position = previous_estimate.position()
         quaternion_g2o = previous_estimate.Quaternion()
@@ -111,7 +114,7 @@ class GraphOptimizer(BaseAggregator):
             self.optimize()
 
         optimized_trajectory = GlobalTrajectory()
-        for index in range(len(self.optimizer.vertices())):
+        for index in range(self.length):
             estimate = self.optimizer.vertex(index).estimate()
             qt = QuaternionWithTranslation.from_rotation_matrix((estimate.R, estimate.t))
             optimized_trajectory.append(qt)

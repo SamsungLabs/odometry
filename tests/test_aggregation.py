@@ -132,9 +132,9 @@ class BaseTest(object):
             if index % 100 == 0:
                 gt_trajectory_partial = self.get_odometry_trajectory(gt, length=index)
                 odometry_trajectory = self.get_odometry_trajectory(predict, length=index)
-                self.calculate_metrics(gt_trajectory_partial, odometry_trajectory, prefix + '_odometry_i_{index}')
+                self.calculate_metrics(gt_trajectory_partial, odometry_trajectory, f'{prefix}_odometry_i_{index}')
                 predicted_trajectory = self.algorithm.get_trajectory()
-                self.calculate_metrics(gt_trajectory, predicted_trajectory, prefix + '_slam_optimized_i_{index}')
+                self.calculate_metrics(gt_trajectory, predicted_trajectory, f'{prefix}_slam_optimized_i_{index}')
 
         odometry_trajectory = self.get_odometry_trajectory(predict)
         odometry_record = self.calculate_metrics(gt_trajectory, odometry_trajectory, prefix + '_odometry')
