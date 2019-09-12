@@ -63,6 +63,7 @@ class BaseTrainer:
         self.preprocess_mode = None
         self.batch_size = 128
         self.target_size = self.config['target_size']
+        self.placeholder = None
 
         self.run_dir = None
         self.save_dir = None
@@ -134,7 +135,8 @@ class BaseTrainer:
                                 cached_images={} if self.cache else None,
                                 train_strides=self.config['train_strides'],
                                 val_strides=self.config['val_strides'],
-                                test_strides=self.config['test_strides'])
+                                test_strides=self.config['test_strides']
+                                placeholder=self.placeholder)
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
