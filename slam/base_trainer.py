@@ -30,7 +30,7 @@ class BaseTrainer:
                  backend='numpy',
                  cuda=False,
                  per_process_gpu_memory_fraction=0.33,
-                 mlflow=True,
+                 use_mlflow=True,
                  **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
@@ -67,31 +67,19 @@ class BaseTrainer:
         self.target_size = self.config['target_size']
         self.placeholder = None
 
-        self.run_dir = None
-        self.save_dir = None
-
         self.set_model_args()
         self.set_dataset_args()
 
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
-        self.mlflow = mlflow
-        if self.mlflow:
-            self.start_run(self.config['exp_name'], run_name)
-
-            mlflow.log_param('run_name', run_name)
-            mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
-            mlflow.log_param('epochs', epochs)
-            mlflow.log_param('seed', seed)
-        else:
-            exp_dir = self.config['exp_name'].replace('/', '_')
-
+        exp_dir = self.config['exp_name'].replace('/', '_')
         self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
         if os.path.exists(self.run_dir):
             shutil.rmtree(self.run_dir)
 
-        self.save_dir = self.run_dir
-
+        self.use_mlflow = use_mlflow
+        if self.use_mlflow:
+            self.start_run(self.config['exp_name'], run_name, exp_dir)
 
     def set_model_args(self):
         pass
@@ -99,11 +87,15 @@ class BaseTrainer:
     def set_dataset_args(self):
         pass
 
-    def start_run(self, exp_name, run_name):
+    def start_run(self, exp_name, run_name, exp_dir):
+        mlflow.log_param('run_name', run_name)
+        mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
+        mlflow.log_param('epochs', self.epochs)
+        mlflow.log_param('seed', self.seed)
+
         client = mlflow.tracking.MlflowClient(self.tracking_uri)
         exp = client.get_experiment_by_name(exp_name)
 
-        exp_dir = exp_name.replace('/', '_')
         if exp is None:
             exp_path = os.path.join(self.artifact_path, exp_dir)
             os.makedirs(exp_path)
@@ -154,13 +146,12 @@ class BaseTrainer:
                             scale_rotation=self.scale_rotation)
 
     def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
+        save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
         terminate_on_nan_callback = TerminateOnNaN()
 
         mlflow_callback = MlflowLogger(prefix=prefix)
 
         monitor = 'val_RPE_t' if evaluate and not self.save_best_only else 'val_loss'
-
-        save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
 
         predict_callback = Predict(model=model,
                                    dataset=dataset,
@@ -231,7 +222,7 @@ class BaseTrainer:
                            epochs=self.epochs,
                            evaluate=True)
 
-        if self.mlflow:
+        if self.use_mlflow:
             mlflow.log_metric('successfully_finished', 1)
             mlflow.end_run()
 
