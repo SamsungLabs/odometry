@@ -51,7 +51,7 @@ class SequentialRTTrainer(BaseTrainer):
 
     @staticmethod
     def get_parser():
-        parser = super().get_parser()
+        parser = BaseTrainer.get_parser()
         parser.add_argument('--use_input_flow_for_translation', type=bool, default=True)
         parser.add_argument('--use_cleaned_flow_for_translation', type=bool, default=True)
         parser.add_argument('--use_rotation_flow_for_translation', type=bool, default=False)
