@@ -135,7 +135,7 @@ class BaseTrainer:
                                 cached_images={} if self.cache else None,
                                 train_strides=self.config['train_strides'],
                                 val_strides=self.config['val_strides'],
-                                test_strides=self.config['test_strides']
+                                test_strides=self.config['test_strides'],
                                 placeholder=self.placeholder)
 
     def get_model_factory(self, input_shapes):
