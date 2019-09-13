@@ -106,7 +106,7 @@ class ModelFactory:
         self._compile()
 
         if mlflow.active_run():
-            mlflow.log_metric('Number of parameters', count_params(self.model.trainable_weights))
+            mlflow.log_metric('num_of_parameters', count_params(self.model.trainable_weights))
         return self.model
 
 

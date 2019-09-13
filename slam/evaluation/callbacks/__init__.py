@@ -36,22 +36,22 @@ def reset_params_on_batch_end(cls, batch, logs=None):
 keras.callbacks.ProgbarLogger.on_batch_end = reset_params_on_batch_end
 
 
-def save_weights_on_train_end(self, logs=None):
+def save_weights_on_train_end(cls, logs=None):
     logs = logs or {}
-    file_ext = os.path.splitext(self.filepath)[-1]
-    file_path = os.path.join(os.path.dirname(self.filepath), 'final' + file_ext)
-    if self.save_weights_only:
-        self.model.save_weights(file_path, overwrite=True)
+    file_ext = os.path.splitext(cls.filepath)[-1]
+    file_path = os.path.join(os.path.dirname(cls.filepath), 'final' + file_ext)
+    if cls.save_weights_only:
+        cls.model.save_weights(file_path, overwrite=True)
     else:
-        self.model.save(file_path, overwrite=True)
+        cls.model.save(file_path, overwrite=True)
 
 
 keras.callbacks.ModelCheckpoint.on_train_end = save_weights_on_train_end
 
 
-def update_logs_on_epoch_end(self, epoch, logs=None):
+def update_logs_on_epoch_end(cls, epoch, logs=None):
     logs = logs or {}
-    for callback in self.callbacks:
+    for callback in cls.callbacks:
         logs = callback.on_epoch_end(epoch, logs) or logs
 
 

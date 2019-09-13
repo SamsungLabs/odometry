@@ -5,7 +5,8 @@ from slam.models.layers import (chunk,
                                 conv2d,
                                 gated_conv2d,
                                 dense,
-                                construct_outputs)
+                                construct_outputs,
+                                transform_inputs)
 from slam.utils import mlflow_logging
 
 
@@ -93,9 +94,15 @@ def construct_multiscale_model(inputs,
                                kernel_initializer='glorot_normal',
                                use_gated_convolutions=False,
                                split=False,
+                               transform=None,
+                               agnostic=True,
+                               channel_wise=False,
                                return_confidence=False):
 
-    inputs = concat(inputs)
+    inputs, scale = transform_inputs(inputs,
+                                     transform=transform,
+                                     agnostic=agnostic,
+                                     channel_wise=channel_wise)
 
     features = construct_encoder(inputs,
                                  layers=layers,
@@ -128,5 +135,6 @@ def construct_multiscale_model(inputs,
 
     outputs = construct_outputs(fc,
                                 regularization=regularization,
+                                scale=scale,
                                 return_confidence=return_confidence)
     return outputs

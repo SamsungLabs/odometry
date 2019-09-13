@@ -28,7 +28,7 @@ class Leaderboard:
                  shared=False,
                  gmem=None,
                  round_robin=0,
-                 cache=False):
+                 other_args=None):
 
         if not os.path.exists(trainer_path):
             raise RuntimeError(f'Could not find trainer script {trainer_path}')
@@ -57,7 +57,7 @@ class Leaderboard:
         self.shared = shared
         self.gmem = gmem
         self.round_robin = min(len(self.machines), round_robin or len(self.machines))
-        self.cache = cache
+        self.other_args = other_args or []
 
     def submit(self):
 
@@ -164,9 +164,8 @@ class Leaderboard:
                    f'--dataset_type {dataset_type}',
                    f'--run_name {run_name}',
                    f'--seed {seed}']
-        if self.cache:
-            command.append('--cache')
-        return ' '.join(command)
+
+        return ' '.join(command + other_args)
 
     def wait_jobs(self, dataset_type, started_jobs_id):
 
@@ -239,9 +238,8 @@ if __name__ == '__main__':
                         help='Number of machines available for submitting each job '
                              'to avoid sending all jobs to a single machine '
                              '(0 for selecting all machines)')
-    parser.add_argument('--cache', action='store_true', help='Cache images')
 
-    args = parser.parse_args()
+    args, other_args = parser.parse_known_args()
 
     leaderboard = Leaderboard(trainer_path=args.trainer_path,
                               dataset_type=args.dataset_type,
@@ -254,6 +252,6 @@ if __name__ == '__main__':
                               shared=args.shared,
                               gmem=args.gmem,
                               round_robin=args.round_robin,
-                              cache=args.cache)
+                              other_args=other_args)
 
     leaderboard.submit()

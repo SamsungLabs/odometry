@@ -16,13 +16,15 @@ class BaseSlam:
                  odometry_model_path,
                  optical_flow_shape,
                  knn=20,
-                 rpe_indices='full'):
+                 rpe_indices='full',
+                 loop_threshold=100):
 
         self.reloc_weights_path = reloc_weights_path
         self.optflow_weights_path = optflow_weights_path
         self.odometry_model_path = odometry_model_path
         self.knn = knn
         self.rpe_indices = rpe_indices
+        self.loop_threshold = loop_threshold
 
         self.optical_flow_shape = optical_flow_shape
 
@@ -103,13 +105,13 @@ class BaseSlam:
 
         slam_trajectory = self.aggregator.get_trajectory()
 
-        is_adjustment_measurements = (frame_history.to_index - frame_history.from_index) == 1
-        adjustment_measurements = frame_history[is_adjustment_measurements].reset_index(drop=True)
+        index_difference = (frame_history.to_index - frame_history.from_index)
+        adjustment_measurements = frame_history[index_difference == 1].reset_index(drop=True)
         odometry_trajectory = RelativeTrajectory().from_dataframe(adjustment_measurements).to_global()
 
         self.aggregator.clear()
         self.aggregator.append(adjustment_measurements)
-        is_loop_closure = (frame_history.to_index - frame_history.from_index) > 100
+        is_loop_closure = index_difference > self.loop_threshold
         loop_closure = frame_history[is_loop_closure].reset_index(drop=True)
         self.aggregator.append(loop_closure)
         odometry_trajectory_with_loop_closures = self.aggregator.get_trajectory()
