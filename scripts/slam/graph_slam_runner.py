@@ -41,7 +41,7 @@ class GraphSlamRunner(BaseSlamRunner):
         p.add_argument('--matches_threshold', type=int, default=100, help='Parameter for BoVW')
         p.add_argument('--verbose', action='store_true')
         p.add_argument('--online', action='store_true', help='Optimize trajectory online')
-        p.add_argument('--max_iterations', type=int, default=1000, help='Parameter for GrapOptimizer')
+        p.add_argument('--max_iterations', type=int, default=1000, help='Parameter for GraphOptimizer')
         return p
 
 

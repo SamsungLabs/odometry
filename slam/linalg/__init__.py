@@ -12,6 +12,8 @@ from .trajectory import RelativeTrajectory
 
 from .quaternion import QuaternionWithTranslation
 
+from .intrinsics import Intrinsics
+
 __all__ = [
     'convert_rotation_matrix_to_euler_angles',
     'convert_euler_angles_to_rotation_matrix',
@@ -23,5 +25,6 @@ __all__ = [
     'convert_euler_uncertainty_to_quaternion_uncertainty',
     'get_covariance_matrix_from_euler_uncertainty',
     'euler_to_quaternion',
-    'QuaternionWithTranslation'
+    'QuaternionWithTranslation',
+    'Intrinsics'
 ]

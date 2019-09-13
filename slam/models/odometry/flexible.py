@@ -5,7 +5,8 @@ from slam.models.layers import (chunk,
                                 conv2d,
                                 gated_conv2d,
                                 dense,
-                                construct_outputs)
+                                construct_outputs,
+                                transform_inputs)
 from slam.utils import mlflow_logging
 
 
@@ -13,6 +14,7 @@ def construct_encoder(inputs,
                       kernel_sizes=[7, 5, 3, 3, 3, 3],
                       strides=[2, 1, 4, 1, 2, 1],
                       dilation_rates=None,
+                      activation='relu',
                       kernel_initializer='glorot_normal',
                       use_gated_convolutions=False,
                       use_batch_norm=False):
@@ -31,7 +33,7 @@ def construct_encoder(inputs,
                       dilation_rate=dilation_rates[i],
                       padding='same',
                       batch_norm=use_batch_norm and i == 0,
-                      activation='relu',
+                      activation=activation,
                       kernel_initializer=kernel_initializer)
 
     flatten = Flatten()(inputs)
@@ -50,14 +52,21 @@ def construct_flexible_model(inputs,
                              use_gated_convolutions=False,
                              use_batch_norm=False,
                              split=False,
+                             transform=None,
+                             agnostic=True,
+                             channel_wise=False,
                              return_confidence=False):
 
-    inputs = concat(inputs)
+    inputs, scale = transform_inputs(inputs,
+                                     transform=transform,
+                                     agnostic=agnostic,
+                                     channel_wise=channel_wise)
 
     features = construct_encoder(inputs,
                                  kernel_sizes=kernel_sizes,
                                  strides=strides,
                                  dilation_rates=dilation_rates,
+                                 activation=activation,
                                  kernel_initializer=kernel_initializer,
                                  use_gated_convolutions=use_gated_convolutions,
                                  use_batch_norm=use_batch_norm)
@@ -84,5 +93,6 @@ def construct_flexible_model(inputs,
 
     outputs = construct_outputs(fc,
                                 regularization=regularization,
+                                scale=scale,
                                 return_confidence=return_confidence)
     return outputs

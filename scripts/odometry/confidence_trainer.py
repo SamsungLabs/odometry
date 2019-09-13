@@ -43,29 +43,13 @@ class ConfidenceTrainer(BaseTrainer):
         self.holdout = holdout
         self.epochs_confidence = epochs_confidence
         self.max_to_visualize = 0
+        self.placeholder = ['confidence']
 
     def get_dataset(self,
                     train_trajectories=None,
                     val_trajectories=None):
-        train_trajectories = train_trajectories or self.config['train_trajectories']
-        val_trajectories = val_trajectories or self.config['val_trajectories']
-        test_trajectories = self.config['test_trajectories']
-        return GeneratorFactory(dataset_root=self.dataset_root,
-                                train_trajectories=train_trajectories,
-                                val_trajectories=val_trajectories,
-                                test_trajectories=test_trajectories,
-                                target_size=self.config['target_size'],
-                                x_col=self.x_col,
-                                y_col=self.y_col,
-                                image_col=self.image_col,
-                                load_mode=self.load_mode,
-                                preprocess_mode=self.preprocess_mode,
-                                depth_multiplicator=self.config['depth_multiplicator'],
-                                cached_images={} if self.cache else None,
-                                train_strides=self.config['train_strides'],
-                                val_strides=self.config['val_strides'],
-                                test_strides=self.config['test_strides'],
-                                return_confidence=True)
+        return super().get_dataset(train_trajectories=train_trajectories,
+                                   val_trajectories=val_trajectories)
 
     def get_model_factory(self, input_shapes):
         return ModelWithConfidenceFactory(self.construct_model_fn,
@@ -74,20 +58,6 @@ class ConfidenceTrainer(BaseTrainer):
                                           loss=self.loss,
                                           scale_rotation=self.scale_rotation)
 
-    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
-        return super().get_callbacks(model=model,
-                                     dataset=dataset,
-                                     evaluate=evaluate,
-                                     save_dir=save_dir,
-                                     prefix=prefix)
-
-    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
-        return super().fit_generator(model=model,
-                                     dataset=dataset,
-                                     epochs=epochs,
-                                     evaluate=evaluate,
-                                     save_dir=save_dir,
-                                     prefix=prefix)
 
     def train(self):
         dataset = self.get_dataset()
@@ -124,7 +94,7 @@ class ConfidenceTrainer(BaseTrainer):
 
     @staticmethod
     def get_parser():
-        parser = super(ConfidenceTrainer, ConfidenceTrainer).get_parser()
+        parser = super().get_parser()
         parser.add_argument('--holdout', type=float, default=0.1,
                             help='Ratio of dataset to train confidence')
         parser.add_argument('--epochs_confidence', type=int, default=100,
