@@ -99,6 +99,9 @@ class BoVW:
     def keypoints_overlap_test(self, match, des1):
 
         good_matches = list()
+        if match is None or len(match) == 0:
+            return list
+
         for k in range(len(match[0])):
             index = match[0][k].trainIdx
 
@@ -128,7 +131,8 @@ class BoVW:
         df = pd.DataFrame({'to_db_index': [self.counter - 1] * len(match),
                            'from_db_index': [m[0].trainIdx for m in match],
                            'to_index': [index] * len(match),
-                           'from_index': [self.index_mapping[m[0].trainIdx] for m in match]})
+                           'from_index': [self.index_mapping[m[0].trainIdx] for m in match],
+                           'matches_num': [m[1] for m in match]})
 
         self.matches = self.matches.append(df)
 
@@ -148,5 +152,5 @@ class BoVW:
     def clear(self):
         self.histograms = list()
         self.images = list()
-        self.matches = pd.DataFrame(columns=['to_db_index', 'from_db_index', 'to_index', 'from_index'])
+        self.matches = pd.DataFrame(columns=['to_db_index', 'from_db_index', 'to_index', 'from_index', 'matches_num'])
         self.counter = 0
