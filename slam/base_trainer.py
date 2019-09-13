@@ -88,11 +88,6 @@ class BaseTrainer:
         pass
 
     def start_run(self, exp_name, run_name, exp_dir):
-        mlflow.log_param('run_name', run_name)
-        mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
-        mlflow.log_param('epochs', self.epochs)
-        mlflow.log_param('seed', self.seed)
-
         client = mlflow.tracking.MlflowClient(self.tracking_uri)
         exp = client.get_experiment_by_name(exp_name)
 
@@ -112,7 +107,12 @@ class BaseTrainer:
 
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(exp_name)
+
         mlflow.start_run(run_name=run_name)
+        mlflow.log_param('run_name', run_name)
+        mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
+        mlflow.log_param('epochs', self.epochs)
+        mlflow.log_param('seed', self.seed)
 
     def get_dataset(self,
                     train_trajectories=None,
