@@ -1,4 +1,6 @@
-from keras.layers import (Conv2D,
+import keras.backend as K
+from keras.layers import (Lambda,
+                          Conv2D,
                           Conv2DTranspose,
                           Dense,
                           BatchNormalization,
@@ -9,11 +11,23 @@ from keras.layers import (Conv2D,
 from keras.regularizers import l2
 
 
+def mish(x):
+    return x * K.tanh(K.softplus(x))
+
+
+def swish(x):
+    return x * K.sigmoid(x)
+
+
 def activ(inputs, activation='relu'):
     if activation == 'leaky_relu':
         activation = LeakyReLU()(inputs)
     elif activation == 'p_relu':
         activation = PReLU()(inputs)
+    elif activation == 'mish':
+        activation = Lambda(mish)(inputs)
+    elif activation == 'swish':
+        activation = Lambda(swish)(inputs)
     else:
         activation = Activation(activation)(inputs)
     return activation

@@ -12,6 +12,8 @@ from .flexible_trainer import FlexibleTrainer
 
 from .confidence_trainer import ConfidenceTrainer
 
+from .sequential_rt_trainer import SequentialRTTrainer
+
 from .flexible_with_confidence_trainer import FlexibleWithConfidenceTrainer
 
 from .multiscale_trainer import MultiscaleTrainer
@@ -26,6 +28,7 @@ __all__ = [
     'STVOTrainer',
     'LSVOTrainer',
     'FlexibleTrainer',
+    'SequentialRTTrainer',
     'ConfidenceTrainer',
     'FlexibleWithConfidenceTrainer',
     'MultiscaleTrainer',

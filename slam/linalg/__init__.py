@@ -13,6 +13,8 @@ from .trajectory import RelativeTrajectory
 
 from .quaternion import QuaternionWithTranslation
 
+from .intrinsics import Intrinsics
+
 __all__ = [
     'convert_rotation_matrix_to_euler_angles',
     'convert_euler_angles_to_rotation_matrix',
@@ -26,4 +28,5 @@ __all__ = [
     'euler_to_quaternion',
     'shortest_path_with_normalization',
     'QuaternionWithTranslation'
+    'Intrinsics'
 ]

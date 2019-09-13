@@ -24,6 +24,7 @@ class GeneratorFactory:
                  x_col=('path_to_rgb', 'path_to_rgb_next'),
                  y_col=('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z'),
                  image_col=('path_to_rgb', 'path_to_rgb_next'),
+                 weight_fn=None,
                  train_generator_args=None,
                  val_generator_args=None,
                  test_generator_args=None,
@@ -47,6 +48,9 @@ class GeneratorFactory:
         self.x_col = list(x_col)
         self.y_col = list(y_col)
         self.image_col = list(image_col)
+
+        self.weight_fn = weight_fn
+        self.weight_col = 'weight' if self.weight_fn is not None else None
 
         self.batch_size = batch_size
 
@@ -120,15 +124,17 @@ class GeneratorFactory:
                                                  total=len(trajectories),
                                                  desc=f'Collect {subset} trajectories'):
             current_df = pd.read_csv(os.path.join(self.dataset_root, trajectory_name, self.csv_name))
-            current_df[self.image_col] = trajectory_name + '/' + current_df[self.image_col]
 
-            for image_col in self.image_col:
-                image_col_next = image_col + '_next'
-                if image_col_next in current_df.columns:
-                    current_df[image_col_next] = trajectory_name + '/' + current_df[image_col_next]
+            image_col_next = [image_col + '_next' for image_col in self.image_col]
+            image_col_all = self.image_col + list(filter(lambda x: x in current_df.columns, image_col_next))
+            current_df[image_col_all] = trajectory_name + '/' + current_df[image_col_all]
 
             current_df['trajectory_id'] = trajectory_name
             current_df['stride'] = stride
+            if self.weight_col:
+                current_df[self.weight_col] = current_df.apply(self.weight_fn, axis=1)
+                current_df[self.weight_col] /= current_df[self.weight_col].mean()
+
             df = current_df if df is None else df.append(current_df, sort=False)
 
             current_df_as_is = current_df.iloc[::stride]
@@ -177,6 +183,7 @@ class GeneratorFactory:
             x_col=self.x_col,
             y_col=self.y_col,
             image_col=self.image_col,
+            weight_col=self.weight_col,
             batch_size=self.batch_size,
             shuffle=shuffle,
             seed=42,

@@ -13,10 +13,12 @@ from .odometry import construct_ls_vo_rt_no_decoder_model
 from .odometry import construct_flexible_model
 from .odometry import construct_multiscale_model
 from .odometry import construct_rigidity_model
+from .odometry import construct_sequential_rt_model
 
 from .relocalization import BoVW
 
 from .slam import DummySlam
+from .slam import GraphSlam
 
 __all__ = [
     'PretrainedModelFactory',
@@ -33,6 +35,8 @@ __all__ = [
     'construct_flexible_model',
     'construct_multiscale_model',
     'construct_rigidity_model',
+    'construct_sequential_rt_model',
     'BoVW',
-    'DummySlam'
+    'DummySlam',
+    'GraphSlam'
 ]

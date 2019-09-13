@@ -7,6 +7,8 @@ DATASET_TYPES = ['kitti_8/3',
                  'kitti_4/6',
                  'kitti_4/6_mixed',
                  'kitti_4/6_mixed_1+2+4',
+                 'kitti_4/6_stride2',
+                 'kitti_4/6_stride4',
                  'discoman_v10',
                  'discoman_v10_mixed',
                  'mini_discoman_v10',
@@ -134,6 +136,54 @@ def get_kitti_4_6_config(_dataset_root):
               'train_strides': 1,
               'val_strides': 1,
               'test_strides': 1,
+              }
+    return config
+
+
+def get_kitti_4_6_stride2_config(_dataset_root):
+    config = {'train_trajectories': ['2/00',
+                                     '2/02',
+                                     '2/08',
+                                     '2/09'],
+              'val_trajectories': ['2/03',
+                                   '2/04',
+                                   '2/05',
+                                   '2/06',
+                                   '2/07',
+                                   '2/10'],
+              'test_trajectories': None,
+              'exp_name': 'kitti_4/6_stride2',
+              'target_size': (96, 320),
+              'source_size': (384, 1280),
+              'depth_multiplicator': 1.0,
+              'rpe_indices': 'kitti',
+              'train_strides': 2,
+              'val_strides': 2,
+              'test_strides': 2,
+              }
+    return config
+
+
+def get_kitti_4_6_stride4_config(_dataset_root):
+    config = {'train_trajectories': ['4/00',
+                                     '4/02',
+                                     '4/08',
+                                     '4/09'],
+              'val_trajectories': ['4/03',
+                                   '4/04',
+                                   '4/05',
+                                   '4/06',
+                                   '4/07',
+                                   '4/10'],
+              'test_trajectories': None,
+              'exp_name': 'kitti_4/6_stride4',
+              'target_size': (96, 320),
+              'source_size': (384, 1280),
+              'depth_multiplicator': 1.0,
+              'rpe_indices': 'kitti',
+              'train_strides': 4,
+              'val_strides': 4,
+              'test_strides': 4,
               }
     return config
 
