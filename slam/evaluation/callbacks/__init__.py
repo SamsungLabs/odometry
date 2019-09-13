@@ -1,5 +1,7 @@
 import os
 import keras
+import keras.backend as K
+import keras_contrib
 
 from .mlflow_logger_callback import MlflowLogger
 
@@ -56,3 +58,31 @@ def update_logs_on_epoch_end(cls, epoch, logs=None):
 
 
 keras.callbacks.CallbackList.on_epoch_end = update_logs_on_epoch_end
+keras.callbacks.CallbackList.on_train_end = update_logs_on_train_end
+
+
+def adjust_lr_on_batch_end(cls, epoch, logs=None):
+    logs = logs or {}
+
+    cyclic_lr = cls.clr()
+    cls.trn_iterations += 1
+    cls.clr_iterations += 1
+
+    actual_lr = K.get_value(cls.model.optimizer.lr)
+
+    k = actual_lr / cyclic_lr
+
+    if abs(1 - k) > K.epsilon():
+        cls.base_lr *= k
+        cls.max_lr *= k
+
+    K.set_value(cls.model.optimizer.lr, cls.clr())
+
+    cls.history.setdefault('lr', []).append(K.get_value(cls.model.optimizer.lr))
+    cls.history.setdefault('iterations', []).append(cls.trn_iterations)
+
+    for k, v in logs.items():
+        cls.history.setdefault(k, []).append(v)
+
+
+keras_contrib.callbacks.CyclicLR.on_batch_end = adjust_lr_on_batch_end
