@@ -7,12 +7,9 @@ DATASET_TYPES = ['kitti_8/3',
                  'kitti_4/6',
                  'kitti_4/6_mixed',
                  'kitti_4/6_mixed_1+2+4',
-<<<<<<< HEAD
                  'kitti_4/6_bovw',
-=======
                  'kitti_4/6_stride2',
                  'kitti_4/6_stride4',
->>>>>>> origin/bovw
                  'discoman_v10',
                  'discoman_v10_mixed',
                  'mini_discoman_v10',
