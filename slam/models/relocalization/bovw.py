@@ -100,7 +100,7 @@ class BoVW:
 
         good_matches = list()
         if match is None or len(match) == 0:
-            return list
+            return list()
 
         for k in range(len(match[0])):
             index = match[0][k].trainIdx
