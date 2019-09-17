@@ -19,8 +19,8 @@ class Leaderboard:
 
     def __init__(self,
                  script_path,
-                 experiment_name,
-                 load_experiment_name,
+                 leader_board,
+                 load_leader_board,
                  bundle_name,
                  load_bundle_name,
                  machines,
@@ -39,8 +39,8 @@ class Leaderboard:
         self.averager = MetricAverager()
 
         self.script_path = script_path
-        self.experiment_name = experiment_name
-        self.load_experiment_name = load_experiment_name
+        self.leader_board = leader_board
+        self.load_leader_board = load_leader_board
         self.bundle_name = bundle_name
         self.load_bundle_name = load_bundle_name
         self.bundle_size = bundle_size
@@ -67,49 +67,49 @@ class Leaderboard:
 
     def submit(self):
 
-        if self.experiment_name == 'leaderboard':
+        if self.leader_board == 'leaderboard':
             self.submit_on_all_leader_boards()
         else:
-            self.submit_bundle(self.experiment_name)
+            self.submit_bundle(self.leader_board)
 
     def submit_on_all_leader_boards(self):
 
         pool = Pool(len(self.leader_boards))
-        for experiment_name in self.leader_boards:
-            self.log(f'Submitting {experiment_name}')
-            pool.apply_async(self.submit_bundle, (experiment_name,))
+        for leader_board in self.leader_boards:
+            self.log(f'Submitting {leader_board}')
+            pool.apply_async(self.submit_bundle, (leader_board,))
         pool.close()
         pool.join()
 
-    def submit_bundle(self, experiment_name):
+    def submit_bundle(self, leader_board):
 
-        self.setup_logger(experiment_name)
+        self.setup_logger(leader_board)
 
-        self.log('Submitting jobs', experiment_name)
+        self.log('Submitting jobs', leader_board)
 
         started_jobs_id = set()
         for b in range(self.bundle_size):
-            job_id = self.submit_job(experiment_name, b)
+            job_id = self.submit_job(leader_board, b)
             started_jobs_id.add(job_id)
 
-        self.log(f'Started {started_jobs_id}', experiment_name)
-        self.wait_jobs(experiment_name, started_jobs_id)
+        self.log(f'Started {started_jobs_id}', leader_board)
+        self.wait_jobs(leader_board, started_jobs_id)
 
-        self.log('Averaging metrics', experiment_name)
+        self.log('Averaging metrics', leader_board)
 
         try:
-            self.averager.average_run(experiment_name, self.bundle_name)
+            self.averager.average_run(leader_board, self.bundle_name)
         except Exception as e:
             self.log(e)
 
-    def submit_job(self, experiment_name, bundle_id):
+    def submit_job(self, leader_board, bundle_id):
 
         run_name = f'{self.bundle_name}_b_{bundle_id}'
         load_name = f'{self.load_bundle_name}_b_{bundle_id}' if self.load_bundle_name else None
 
         machines = np.random.choice(self.machines, self.round_robin, replace=False)
         seed = np.random.randint(1000000)
-        cmd = self.get_lsf_command(experiment_name, run_name, load_name, ' '.join(machines), seed)
+        cmd = self.get_lsf_command(leader_board, run_name, load_name, ' '.join(machines), seed)
         self.log(f'Executing command: {cmd}')
 
         p = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
@@ -118,7 +118,7 @@ class Leaderboard:
         job_id = str(outs).split(' ')[1][1:-1]
         return job_id
 
-    def get_lsf_command(self, experiment_name: str, run_name: str, load_name: Union[str, None],
+    def get_lsf_command(self, leader_board: str, run_name: str, load_name: Union[str, None],
                         machines: str, seed: int) -> str:
 
         if self.shared:
@@ -133,7 +133,7 @@ class Leaderboard:
                    f'-gpu "num=1:mode={mode}"',
                    'python',
                    f'{self.script_path}',
-                   f'--experiment_name {experiment_name}',
+                   f'--leader_board {leader_board}',
                    f'--run_name {run_name}',
                    f'--bundle_name {self.bundle_name}',
                    f'--seed {seed}']
@@ -141,11 +141,11 @@ class Leaderboard:
         if load_name:
             command.extend([f'--load_name {load_name}',
                             f'--load_bundle_name {self.load_bundle_name}',
-                            f'--load_experiment_name {self.load_experiment_name}'])
+                            f'--load_leader_board {self.load_leader_board}'])
 
         return ' '.join(command + other_args)
 
-    def wait_jobs(self, experiment_name, started_jobs_id):
+    def wait_jobs(self, leader_board, started_jobs_id):
 
         finished = False
         while not finished:
@@ -158,21 +158,21 @@ class Leaderboard:
             still_running_jobs = started_jobs_id.intersection(job_ids)
             sorted_jobs = list(still_running_jobs)
             sorted_jobs.sort()
-            self.log(f'Running {sorted_jobs}', experiment_name)
+            self.log(f'Running {sorted_jobs}', leader_board)
 
             if still_running_jobs:
                 time.sleep(10)
             else:
                 finished = True
-                self.log('All jobs has been finished', experiment_name)
+                self.log('All jobs has been finished', leader_board)
 
-    def setup_logger(self, experiment_name):
+    def setup_logger(self, leader_board):
 
         logger = logging.getLogger('leaderboard')
         logger.setLevel(logging.DEBUG)
 
-        experiment_name = experiment_name.replace('/', '_')
-        fh = logging.FileHandler(os.path.join(env.PROJECT_PATH, f'log_leaderboard_{experiment_name}.txt'), mode='w+')
+        leader_board = leader_board.replace('/', '_')
+        fh = logging.FileHandler(os.path.join(env.PROJECT_PATH, f'log_leaderboard_{leader_board}.txt'), mode='w+')
         fh.setLevel(logging.DEBUG)
         logger.addHandler(fh)
 
@@ -182,14 +182,14 @@ class Leaderboard:
             logger.addHandler(sh)
 
     @staticmethod
-    def log(info, experiment_name=None):
+    def log(info, leader_board=None):
 
         logger = logging.getLogger('leaderboard')
 
         timestamp = datetime.datetime.now().isoformat().replace('T', ' ')
 
-        if experiment_name:
-            logger.info(f'{timestamp} Experiment {experiment_name}. {info}')
+        if leader_board:
+            logger.info(f'{timestamp} Experiment {leader_board}. {info}')
         else:
             logger.info(f'{timestamp} {info}')
 
@@ -198,9 +198,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--script_path', type=str, required=True)
 
-    parser.add_argument('--experiment_name', '-exp', type=str, required=True,
+    parser.add_argument('--leader_board', '-exp', type=str, required=True,
                         help='You can find available experiment names in slam.preprocessing.dataset_configs.py')
-    parser.add_argument('--load_experiment_name', '-lexp', type=str, default=None)
+    parser.add_argument('--load_leader_board', '-lexp', type=str, default=None)
 
     parser.add_argument('--bundle_name', '-n', type=str, required=True,
                         help='Name of the bundle. Must be unique and specific')
@@ -225,8 +225,8 @@ if __name__ == '__main__':
     args, other_args = parser.parse_known_args()
 
     leaderboard = Leaderboard(script_path=args.script_path,
-                              experiment_name=args.experiment_name,
-                              load_experiment_name=args.load_experiment_name,
+                              leader_board=args.leader_board,
+                              load_leader_board=args.load_leader_board,
                               bundle_name=args.bundle_name,
                               load_bundle_name=args.load_bundle_name,
                               bundle_size=args.bundle_size,

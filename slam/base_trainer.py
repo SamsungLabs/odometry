@@ -9,20 +9,14 @@ import env
 
 from slam.data_manager import GeneratorFactory
 from slam.models import ModelFactory
-<<<<<<< HEAD
 from slam.evaluation import MlflowLogger, Predict, TerminateOnLR, ModelCheckpoint
-from slam.preprocessing import get_config, DATASET_TYPES
+from slam.preprocessing import get_dataset_root, get_config, DATASET_TYPES
 from slam.utils import set_computation, chmod
-=======
-from slam.evaluation import MlflowLogger, Predict, TerminateOnLR
-from slam.preprocessing import get_config, get_dataset_root, DATASET_TYPES
-from slam.utils import set_computation
->>>>>>> Refactored training scripts
 
 
 class BaseTrainer:
     def __init__(self,
-                 experiment_name,
+                 leader_board,
                  run_name,
                  bundle_name,
                  seed=42,
@@ -43,11 +37,11 @@ class BaseTrainer:
         self.artifact_path = env.ARTIFACT_PATH
         self.project_path = env.PROJECT_PATH
 
-        dataset_root = get_dataset_root(experiment_name)
-        self.config = get_config(dataset_root, experiment_name)
+        dataset_root = get_dataset_root(leader_board)
+        self.config = get_config(dataset_root, leader_board)
 
         self.dataset_root = dataset_root
-        self.experiment_name = experiment_name
+        self.leader_board = leader_board
         self.run_name = run_name
         self.bundle_name = bundle_name
         self.seed = seed
@@ -82,18 +76,12 @@ class BaseTrainer:
 
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
-        experiment_name = self.config['exp_name']
-        experiment_dir = experiment_name.replace('/', '_')
-        
+        leader_board = self.config['exp_name']
+        experiment_dir = leader_board.replace('/', '_')
+
         if self.mlflow:
             self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
-            self.start_run(experiment_name, experiment_dir, run_name)
-
-            mlflow.log_param('run_name', run_name)
-            mlflow.log_param('bundle_name', bundle_name)
-            mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
-            mlflow.log_param('epochs', epochs)
-            mlflow.log_param('seed', seed)
+            self.start_run(leader_board, experiment_dir, run_name)
 
         self.run_dir = os.path.join(self.project_path, 'experiments', experiment_dir, run_name)
 
@@ -107,8 +95,8 @@ class BaseTrainer:
     def set_dataset_args(self):
         pass
 
-    def get_run(self, experiment_name, run_name):
-        experiment = self.client.get_experiment_by_name(experiment_name)
+    def get_run(self, leader_board, run_name):
+        experiment = self.client.get_experiment_by_name(leader_board)
 
         for info in self.client.list_run_infos(experiment.experiment_id):
             run = self.client.get_run(info.run_id)
@@ -118,20 +106,22 @@ class BaseTrainer:
 
         return None
 
-    def start_run(self, experiment_name, experiment_dir, run_name):
-        experiment = self.client.get_experiment_by_name(experiment_name)
+    def start_run(self, leader_board, experiment_dir, run_name):
+        experiment = self.client.get_experiment_by_name(leader_board)
 
         if experiment is None:
             experiment_path = os.path.join(self.artifact_path, experiment_dir)
             os.makedirs(experiment_path)
             os.chmod(experiment_path, 0o777)
-            mlflow.create_experiment(experiment_name, experiment_path)
+            mlflow.create_experiment(leader_board, experiment_path)
 
-        if self.get_run(experiment_name, run_name) is not None:
+        if self.get_run(leader_board, run_name) is not None:
             raise RuntimeError(f'Run {run_name} already exists')
 
         mlflow.set_tracking_uri(self.tracking_uri)
-        mlflow.set_experiment(experiment_name)
+
+        mlflow.set_experiment(leader_board)
+
         mlflow.start_run(run_name=run_name)
         mlflow.log_param('run_name', run_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
@@ -256,7 +246,7 @@ class BaseTrainer:
     def get_parser():
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--experiment_name', '-exp', type=str,
+        parser.add_argument('--leader_board', '-exp', type=str,
                             choices=DATASET_TYPES, required=True)
         parser.add_argument('--run_name', '-n', type=str, required=True,
                             help='Name of the run. Must be unique and specific')
