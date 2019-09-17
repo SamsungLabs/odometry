@@ -119,7 +119,9 @@ class BaseTrainer:
             raise RuntimeError(f'Run {run_name} already exists')
 
         mlflow.set_tracking_uri(self.tracking_uri)
+
         mlflow.set_experiment(leader_board)
+
         mlflow.start_run(run_name=run_name)
 
         mlflow.log_param('run_name', run_name)
