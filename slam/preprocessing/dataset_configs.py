@@ -7,25 +7,37 @@ import __init_path__
 import env
 
 
-DATASET_TYPES = ['kitti_8/3',
-                 'kitti_4/6',
-                 'kitti_4/6_mixed',
-                 'kitti_4/6_mixed_1+2+4',
-                 'kitti_4/6_bovw',
-                 'kitti_4/6_stride2',
-                 'kitti_4/6_stride4',
-                 'discoman_v10',
-                 'discoman_v10_mixed',
-                 'mini_discoman_v10',
-                 'mini_discoman_v10_mixed',
-                 'discoman_debug',
-                 'tum_debug',
-                 'tum_fr1',
-                 'tum_fr2',
-                 'tum_fr3',
-                 'tum',
-                 'zju',
-                 'euroc']
+DATASET_PATHS = {'kitti_8/3' : env.KITTI_PATH,
+                 'kitti_4/6': env.KITTI_PATH,
+                 'kitti_4/6_mixed': env.KITTI_MIXED_PATH,
+                 'kitti_4/6_mixed_1+2+4': env.KITTI_MIXED_PATH,
+                 'kitti_4/6_stride2': env.KITTI_MIXED_PATH,
+                 'kitti_4/6_stride4': env.KITTI_MIXED_PATH,
+                 'discoman_v10' : env.DISCOMAN_V10_PATH,
+                 'discoman_v10_mixed': env.DISCOMAN_V10_MIXED_PATH,
+                 'mini_discoman_v10': env.DISCOMAN_V10_PATH,
+                 'mini_discoman_v10_mixed' : env.DISCOMAN_V10_MIXED_PATH,
+                 'discoman_debug': env.DISCOMAN_V10_PATH,
+                 'tum_fr1': env.TUM_PATH,
+                 'tum_fr2': env.TUM_PATH,
+                 'tum_fr3': env.TUM_PATH,
+                 'tum': env.TUM_PATH,
+                 'tum_debug': env.TUM_PATH,
+                 'zju': env.ZJU_PATH,
+                 'euroc': env.EUROC_PATH,
+                 'saic_office': env.SAIC_OFFICE_PATH,
+                 'retail_bot': env.RETAIL_BOT_PATH}
+
+
+DATASET_TYPES = list(DATASET_PATHS.keys())
+
+
+def get_dataset_root(dataset_type):
+    dataset_root = DATASET_PATHS.get(dataset_type, None)
+    if dataset_root is None:
+        raise RuntimeError('Unknown dataset_type')
+
+    return dataset_root
 
 
 def is_int(string: str):
@@ -34,47 +46,6 @@ def is_int(string: str):
         return True
     except:
         return False
-
-
-def get_dataset_root(dataset_type):
-    if dataset_type == 'discoman_v10':
-        dataset_root = env.DISCOMAN_V10_PATH
-    elif dataset_type == 'mini_discoman_v10':
-        dataset_root = env.DISCOMAN_V10_PATH
-    elif dataset_type == 'discoman_v10_mixed':
-        dataset_root = env.DISCOMAN_V10_MIXED_PATH
-    elif dataset_type == 'mini_discoman_v10_mixed':
-        dataset_root = env.DISCOMAN_V10_MIXED_PATH
-    elif dataset_type == 'discoman_debug':
-        dataset_root = env.DISCOMAN_V10_PATH
-    elif dataset_type == 'kitti_4/6':
-        dataset_root = env.KITTI_PATH
-    elif dataset_type == 'kitti_4/6_mixed':
-        dataset_root = env.KITTI_MIXED_PATH
-    elif dataset_type == 'kitti_4/6_mixed_1+2+4':
-        dataset_root = env.KITTI_MIXED_PATH
-    elif dataset_type == 'kitti_4/6_stride2':
-        dataset_root = env.KITTI_MIXED_PATH
-    elif dataset_type == 'kitti_4/6_stride4':
-        dataset_root = env.KITTI_MIXED_PATH
-    elif dataset_type == 'kitti_8/3':
-        dataset_root = env.KITTI_PATH
-    elif dataset_type == 'tum':
-        dataset_root = env.TUM_PATH
-    elif dataset_type == 'tum_debug':
-        dataset_root = env.TUM_PATH
-    elif dataset_type == 'saic_office':
-        dataset_root = env.SAIC_OFFICE_PATH
-    elif dataset_type == 'retail_bot':
-        dataset_root = env.RETAIL_BOT_PATH
-    elif dataset_type == 'euroc':
-        dataset_root = env.EUROC_PATH
-    elif dataset_type == 'zju':
-        dataset_root = env.ZJU_PATH
-    else:
-        raise RuntimeError('Unknown dataset_type')
-
-    return dataset_root
 
 
 def get_config(dataset_root: str, dataset_type: str) -> Dict:
@@ -284,12 +255,7 @@ def get_kitti_4_6_mixed_1_2_4_config(dataset_root):
                                    '1/06',
                                    '1/07',
                                    '1/10'],
-              'test_trajectories': ['2/03',
-                                    '2/04',
-                                    '2/05',
-                                    '2/06',
-                                    '2/07',
-                                    '2/10'],
+              'test_trajectories': None,
               'exp_name': 'kitti_4/6_mixed_1+2+4',
               'target_size': (96, 320),
               'source_size': (384, 1280),
