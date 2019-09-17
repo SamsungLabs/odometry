@@ -15,7 +15,9 @@ from slam.utils import (visualize_trajectory_with_gt,
                         visualize_trajectory,
                         create_vis_file_path,
                         create_prediction_file_path,
-                        partial_format)
+                        partial_format,
+                        chmod,
+                        copy_with_chmod)
 
 
 def process_single_task(args):
@@ -92,12 +94,6 @@ class Predict(keras.callbacks.Callback):
     def create_trajectory(self, df):
         return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
 
-    @staticmethod
-    def copy(src_dir, dst_dir):
-        os.makedirs(os.path.dirname(dst_dir), exist_ok=True)
-        shutil.copyfile(src_dir, dst_dir)
-        os.chmod(dst_dir, 0o777)
-
     def create_prediction_file_path(self, trajectory_id, subset, prediction_id):
         return create_prediction_file_path(trajectory_id=trajectory_id,
                                            subset=subset,
@@ -108,7 +104,6 @@ class Predict(keras.callbacks.Callback):
         file_path = create_file_path('.', '.', prediction_id)
         path, file_name = os.path.split(file_path)
         path = os.path.abspath(path)
-        print(prediction_id, '->', path)
         return path
 
     def get_vis_dir(self, prediction_id):
@@ -129,7 +124,7 @@ class Predict(keras.callbacks.Callback):
                                                 prediction_id=prediction_id,
                                                 subset=subset)
         predictions.to_csv(file_path)
-        os.chmod(file_path, 0o777)
+        chmod(file_path)
 
     def visualize_trajectory(self,
                              predicted_trajectory,
@@ -153,7 +148,7 @@ class Predict(keras.callbacks.Callback):
                                          predicted_trajectory,
                                          title=title,
                                          file_path=file_path)
-        os.chmod(file_path, 0o777)
+        chmod(file_path)
 
     def predict_generator(self, generator):
         generator.reset()
@@ -302,10 +297,10 @@ class Predict(keras.callbacks.Callback):
             self.on_epoch_end(self.epoch - 1, logs)
         else:
             final_prediction_id = self.get_prediction_id(epoch='final', **logs)
-            self.copy(self.get_vis_dir(self.last_prediction_id),
-                      self.get_vis_dir(final_prediction_id))
-            self.copy(self.get_prediction_dir(self.last_prediction_id),
-                      self.get_prediction_dir(final_prediction_id))
+            copy_with_chmod(self.get_vis_dir(self.last_prediction_id),
+                            self.get_vis_dir(final_prediction_id))
+            copy_with_chmod(self.get_prediction_dir(self.last_prediction_id),
+                            self.get_prediction_dir(final_prediction_id))
 
         logs = self.last_logs
 
