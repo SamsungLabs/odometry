@@ -91,6 +91,8 @@ class Predict(keras.callbacks.Callback):
 
         self.save_artifacts = self.run_dir and self.artifact_dir
 
+        os.makedirs(self.run_dir, exist_ok=True)
+
     def create_trajectory(self, df):
         return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
 
@@ -245,8 +247,6 @@ class Predict(keras.callbacks.Callback):
         return is_best
 
     def get_prediction_id(self, epoch, **logs):
-        if self.save_best_only:
-            epoch = 'best'
         return partial_format(self.template, epoch=epoch, **logs)
 
     def on_epoch_end(self, epoch, logs=None):
@@ -266,7 +266,7 @@ class Predict(keras.callbacks.Callback):
 
                 logs = dict(**logs, **train_metrics, **val_metrics)
 
-            prediction_id = self.get_prediction_id(epoch + 1, **logs)
+            prediction_id = self.get_prediction_id('best' if self.save_best_only else epoch + 1, **logs)
 
             if not self.save_best_only or self.is_best(logs):
                 print('save')
