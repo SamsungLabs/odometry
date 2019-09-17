@@ -66,6 +66,7 @@ class Leaderboard:
         self.other_args = other_args or []
 
     def submit(self):
+
         if self.leader_board == 'leaderboard':
             self.submit_on_all_leader_boards()
         else:
