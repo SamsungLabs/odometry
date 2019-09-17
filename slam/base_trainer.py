@@ -1,6 +1,7 @@
 import os
 import shutil
 import mlflow
+import time
 import datetime
 import argparse
 from keras.callbacks import ReduceLROnPlateau, TerminateOnNaN
@@ -19,9 +20,8 @@ class BaseTrainer:
                  leader_board,
                  run_name,
                  bundle_name,
-                 seed=42,
                  cache=False,
-                 batch=1,
+                 batch_size=128,
                  epochs=100,
                  period=10,
                  save_best_only=False,
@@ -31,6 +31,7 @@ class BaseTrainer:
                  cuda=False,
                  per_process_gpu_memory_fraction=0.33,
                  use_mlflow=True,
+                 seed=42,
                  **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
@@ -44,9 +45,8 @@ class BaseTrainer:
         self.leader_board = leader_board
         self.run_name = run_name
         self.bundle_name = bundle_name
-        self.seed = seed
         self.cache = cache
-        self.batch = batch
+        self.batch_size = batch_size
         self.epochs = epochs
         self.period = period
         self.save_best_only = save_best_only
@@ -55,7 +55,8 @@ class BaseTrainer:
         self.backend = backend
         self.cuda = cuda
         self.use_mlflow = use_mlflow
-        self.max_to_visualize = 5
+        self.seed = seed
+        self.max_to_visualize = None
 
         self.construct_model_fn = None
         self.lr = None
@@ -67,27 +68,19 @@ class BaseTrainer:
         self.image_col = None
         self.load_mode = None
         self.preprocess_mode = None
-        self.batch_size = 128
         self.target_size = self.config['target_size']
         self.placeholder = None
 
         self.set_model_args()
         self.set_dataset_args()
 
+        self.experiment_dir = None
+        self.run_dir = None
+
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
-        leader_board = self.config['exp_name']
-        experiment_dir = leader_board.replace('/', '_')
-
-        if self.use_mlflow:
-            self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
-            self.start_run(leader_board, experiment_dir, run_name)
-
-        self.run_dir = os.path.join(self.project_path, 'experiments', experiment_dir, run_name)
-
-        if os.path.exists(self.run_dir):
-            shutil.rmtree(self.run_dir)
-        os.makedirs(self.run_dir)
+        self.client = None
+        self.experiment = None
 
     def set_model_args(self):
         pass
@@ -95,40 +88,60 @@ class BaseTrainer:
     def set_dataset_args(self):
         pass
 
-    def get_run(self, leader_board, run_name):
-        experiment = self.client.get_experiment_by_name(leader_board)
+    def set_run_dir(self):
+        self.experiment_dir = self.leader_board.replace('/', '_')
+        self.run_dir = os.path.join(self.project_path, 'experiments', self.experiment_dir, self.run_name)
 
-        for info in self.client.list_run_infos(experiment.experiment_id):
-            run = self.client.get_run(info.run_id)
-            current_run_name = run.data.params.get('run_name', None)
-            if current_run_name == run_name:
-                return run
+        if os.path.exists(self.run_dir):
+            shutil.rmtree(self.run_dir)
+        os.makedirs(self.run_dir)
 
-        return None
+    def create_experiment(self):
+        experiment_path = os.path.join(self.artifact_path, self.experiment_dir)
+        os.makedirs(experiment_path)
+        chmod(experiment_path)
 
-    def start_run(self, leader_board, experiment_dir, run_name):
-        experiment = self.client.get_experiment_by_name(leader_board)
+        mlflow.create_experiment(self.leader_board, experiment_path)
+        experiment = self.client.get_experiment_by_name(self.leader_board)
+        return experiment
 
-        if experiment is None:
-            experiment_path = os.path.join(self.artifact_path, experiment_dir)
-            os.makedirs(experiment_path)
-            os.chmod(experiment_path, 0o777)
-            mlflow.create_experiment(leader_board, experiment_path)
+    def set_experiment(self):
+        self.experiment = self.client.get_experiment_by_name(self.leader_board) or self.create_experiment()
+        mlflow.set_experiment(self.leader_board)
 
-        if self.get_run(leader_board, run_name) is not None:
-            raise RuntimeError(f'Run {run_name} already exists')
+    def get_run_data(self, run_name, leader_board):
+        if leader_board == self.leader_board:
+            experiment = self.experiment
+        else:
+            experiment = self.client.get_experiment_by_name(leader_board)
 
-        mlflow.set_tracking_uri(self.tracking_uri)
+        filter_string = f'params.run_name = "{run_name}"'
+        df = mlflow.search_runs(experiment_ids=[experiment.experiment_id],
+                                filter_string=filter_string)
 
-        mlflow.set_experiment(leader_board)
+        if len(df):
+            return df.iloc[0].to_dict()
+        else:
+            return None
 
-        mlflow.start_run(run_name=run_name)
+    def start_run(self):
+        if self.get_run_data(self.run_name, self.leader_board) is not None:
+            raise RuntimeError(f'Run {self.run_name} already exists')
 
-        mlflow.log_param('run_name', run_name)
+        mlflow.start_run(run_name=self.run_name)
+        self.log_params()
+
+    def log_params(self):
+        mlflow.log_param('run_name', self.run_name)
         mlflow.log_param('bundle_name', self.bundle_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
         mlflow.log_param('epochs', self.epochs)
         mlflow.log_param('seed', self.seed)
+        mlflow.log_param('avg', False)
+
+    def end_run(self):
+        mlflow.log_metric('successfully_finished', 1)
+        mlflow.end_run()
 
     def get_dataset(self,
                     train_trajectories=None,
@@ -229,6 +242,14 @@ class BaseTrainer:
                             callbacks=callbacks)
 
     def train(self):
+        if self.use_mlflow:
+            self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
+            mlflow.set_tracking_uri(self.tracking_uri)
+
+            self.set_experiment()
+            self.start_run()
+            self.set_run_dir()
+
         dataset = self.get_dataset()
 
         model_factory = self.get_model_factory(dataset.input_shapes)
@@ -241,8 +262,7 @@ class BaseTrainer:
                            evaluate=True)
 
         if self.use_mlflow:
-            mlflow.log_metric('successfully_finished', 1)
-            mlflow.end_run()
+            self.end_run()
 
     @staticmethod
     def get_parser():
@@ -256,8 +276,6 @@ class BaseTrainer:
                             help='Name of the bundle. Must be unique and specific')
         parser.add_argument('--cache', action='store_true',
                             help='Cache inputs in RAM')
-        parser.add_argument('--seed', type=int, default=42,
-                            help='Random seed')
         parser.add_argument('--epochs', '-ep', type=int, default=100,
                             help='Number of epochs')
         parser.add_argument('--period', type=int, default=10,
@@ -273,4 +291,6 @@ class BaseTrainer:
                             help='Backend used for evaluation')
         parser.add_argument('--cuda', action='store_true',
                             help='Use GPU for evaluation (only for backend=="torch")')
+        parser.add_argument('--seed', type=int, default=42,
+                            help='Random seed')
         return parser
