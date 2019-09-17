@@ -98,7 +98,7 @@ class Leaderboard:
         self.log('Averaging metrics', leader_board)
 
         try:
-            self.averager.average_run(leader_board, self.bundle_name)
+            self.averager.average_bundle(leader_board, self.bundle_name)
         except Exception as e:
             self.log(e)
 
