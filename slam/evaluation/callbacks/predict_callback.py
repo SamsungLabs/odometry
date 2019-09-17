@@ -269,11 +269,9 @@ class Predict(keras.callbacks.Callback):
             prediction_id = self.get_prediction_id('best' if self.save_best_only else epoch + 1, **logs)
 
             if not self.save_best_only or self.is_best(logs):
-                print('save')
                 self.save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
                 self.epochs_since_last_predict = 0
                 self.last_prediction_id = prediction_id
-                print('set prediction id =', self.last_prediction_id)
 
             if mlflow.active_run():
                 if self.evaluate:
