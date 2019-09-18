@@ -13,6 +13,7 @@ DATASET_TYPES = ['kitti_8/3',
                  'discoman_v10',
                  'discoman_v10_mixed',
                  'mini_discoman_v10',
+                 'mini_discoman_v10_bovw',
                  'mini_discoman_v10_mixed',
                  'discoman_debug',
                  'tum_debug',
@@ -20,8 +21,10 @@ DATASET_TYPES = ['kitti_8/3',
                  'tum_fr2',
                  'tum_fr3',
                  'tum',
+                 'tum_bovw',
                  'zju',
-                 'euroc']
+                 'euroc',
+                 'euroc_bovw']
 
 
 def is_int(string: str):
@@ -89,6 +92,12 @@ def get_euroc_config(_dataset_root):
               'val_strides': 1,
               'test_strides': 1,
               }
+    return config
+
+
+def get_euroc_bovw_config(dataset_root):
+    config = get_euroc_config(dataset_root)
+    config['exp_name'] = 'euroc_bovw'
     return config
 
 
@@ -521,4 +530,10 @@ def get_tum_config(dataset_root):
     for subset in subsets:
         config[f'{subset}_trajectories'].extend(fr2_config[f'{subset}_trajectories'])
         config[f'{subset}_trajectories'].extend(fr3_config[f'{subset}_trajectories'])
+    return config
+
+
+def get_tum_bovw_config(dataset_root):
+    config = get_tum_config(dataset_root)
+    config['exp_name'] = 'tum_bovw'
     return config

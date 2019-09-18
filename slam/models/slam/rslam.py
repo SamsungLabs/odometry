@@ -11,13 +11,14 @@ from slam.keyframe_selector import CounterKeyFrameSelector
 class RSlam(BaseSlam):
 
     @mlflow_logging(prefix='slam.', name='RSLAM')
-    def __init__(self, keyframe_period, matches_threshold, *args, **kwargs):
+    def __init__(self, keyframe_period, matches_threshold, matcher, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.keyframe_period = keyframe_period
         self.matches_threshold = matches_threshold
+        self.matcher = matcher
 
     def get_relocalization_model(self):
-        reloc_model = BoVW(knn=self.knn, matches_threshold=self.matches_threshold)
+        reloc_model = BoVW(knn=self.knn, matches_threshold=self.matches_threshold, matcher=self.matcher)
         reloc_model.load(self.reloc_weights_path)
         return reloc_model
 

@@ -1,6 +1,7 @@
 import os
 import shutil
 import tqdm
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -46,8 +47,10 @@ def create_pair_indices(single_frame_df, stride):
     return zip(first_part_indices, second_part_indices)
 
 
-def load_pair_indices(path):
+def load_pair_indices(path, matches_threshold):
     df = pd.read_csv(path)
+    if matches_threshold is not None:
+        df = df[np.isnan(df['matches_num'].values) | (df['matches_num'] >= matches_threshold)]
     return df[['from_index', 'to_index']].values
 
 
@@ -64,7 +67,8 @@ def prepare_trajectory(root,
                        single_frame_estimators=None, 
                        pair_frames_estimators=None,
                        stride=1,
-                       path_to_pair_indices=None):
+                       path_to_pair_indices=None,
+                       matches_threshold=None):
     assert stride >= 1
 
     if not isinstance(root, Path):
@@ -82,7 +86,7 @@ def prepare_trajectory(root,
         single_frame_df = work_with_estimator(root.as_posix(), single_frame_df, estimator)
 
     if path_to_pair_indices and os.path.exists(path_to_pair_indices):
-        pair_indices = load_pair_indices(path_to_pair_indices)
+        pair_indices = load_pair_indices(path_to_pair_indices, matches_threshold)
     else:
         pair_indices = create_pair_indices(single_frame_df, stride)
 

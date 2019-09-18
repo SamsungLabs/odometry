@@ -82,12 +82,12 @@ def get_default_dataset_parser():
     parser.add_argument('--indices_root', type=str, default=None,
                         help='Path to directory with same structure as dataset. In trajectory subdirectories stored'
                              'df.csv files with new pair indices.')
-
+    parser.add_argument('--matches_threshold', default=None, type=int)
     return parser
 
 
 def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optical_flow_checkpoint,
-                    depth_checkpoint=None, pwc_features=False, stride=1, swap_angles=False, indices_root=None):
+                    depth_checkpoint=None, pwc_features=False, stride=1, swap_angles=False, indices_root=None, matches_threshold=None):
 
     limit_resources()
 
@@ -137,7 +137,8 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                                     single_frame_estimators=sf_estimators,
                                     pair_frames_estimators=pf_estimators,
                                     stride=stride,
-                                    path_to_pair_indices=indices_path)
+                                    path_to_pair_indices=indices_path,
+                                    matches_threshold=matches_threshold)
             df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
 
             counter += 1

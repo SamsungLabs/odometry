@@ -135,6 +135,10 @@ class Leaderboard:
             dataset_root = env.KITTI_PATH
         elif dataset_type == 'tum':
             dataset_root = env.TUM_PATH
+        elif dataset_type == 'tum_bovw':
+            dataset_root = env.TUM_BOVW_PATH
+        elif dataset_type == 'tum_fr3':
+            dataset_root = env.TUM_PATH
         elif dataset_type == 'tum_debug':
             dataset_root = env.TUM_PATH
         elif dataset_type == 'saic_office':
@@ -143,6 +147,8 @@ class Leaderboard:
             dataset_root = env.RETAIL_BOT_PATH
         elif dataset_type == 'euroc':
             dataset_root = env.EUROC_PATH
+        elif dataset_type == 'euroc_bovw':
+            dataset_root = env.EUROC_BOVW_PATH
         elif dataset_type == 'zju':
             dataset_root = env.ZJU_PATH
         else:

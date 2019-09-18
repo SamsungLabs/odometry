@@ -13,6 +13,7 @@ class GraphSlamRunner(BaseSlamRunner):
                  max_iterations=1000,
                  online=False,
                  verbose=False,
+                 matcher='Flann',
                  *args,
                  **kwargs):
         super().__init__(knn=knn, *args, **kwargs)
@@ -21,6 +22,7 @@ class GraphSlamRunner(BaseSlamRunner):
         self.max_iterations = max_iterations
         self.online = online
         self.verbose = verbose
+        self.matcher = matcher
 
     def get_slam(self):
         return GraphSlam(reloc_weights_path=self.reloc_weights,
@@ -32,7 +34,8 @@ class GraphSlamRunner(BaseSlamRunner):
                          matches_threshold=self.matches_threshold,
                          max_iterations=self.max_iterations,
                          online=self.online,
-                         verbose=self.verbose)
+                         verbose=self.verbose,
+                         matcher=self.matcher)
 
     @staticmethod
     def get_parser():
@@ -42,6 +45,7 @@ class GraphSlamRunner(BaseSlamRunner):
         p.add_argument('--verbose', action='store_true')
         p.add_argument('--online', action='store_true', help='Optimize trajectory online')
         p.add_argument('--max_iterations', type=int, default=1000, help='Parameter for GraphOptimizer')
+        p.add_argument('--matcher', type=str, choices=['BruteForce', 'Flann'])
         return p
 
 
