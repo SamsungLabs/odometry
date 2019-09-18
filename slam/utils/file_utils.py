@@ -7,18 +7,6 @@ def chmod(path):
     os.chmod(path, mode)
 
 
-def _copy(src, dst):
-    are_dirs = os.path.isdir(src) and os.path.isdir(src)
-    are_files = os.path.isfile(dst) and os.path.isfile(src)
-    assert are_dirs or are_files
-    if are_dirs:
-        if os.path.exists(dst):
-            shutil.rmtree(dst)
-        shutil.copytree(src, dst)
-    else:
-        shutil.copyfile(src, dst)
-
-
 def symlink(src, dst):
     if os.path.exists(dst):
         if os.path.isdir(dst):
