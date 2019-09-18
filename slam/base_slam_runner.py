@@ -37,13 +37,18 @@ class BaseSlamRunner(BaseTrainer):
 
         prediction_path = create_prediction_file_path(save_dir=self.run_dir, trajectory_id=trajectory_id)
         prediction['frame_history'].to_csv(prediction_path, index=False)
+        mlflow.log_artifacts(self.run_dir) if mlflow.active_run() else None
 
         gt_trajectory = RelativeTrajectory.from_dataframe(gt[gt.trajectory_id == trajectory_id]).to_global()
 
         trajectory_types = ['slam_trajectory', 'odometry_trajectory', 'odometry_trajectory_with_loop_closures']
         slam_record = None
         for trajectory_type in trajectory_types:
-            predicted_trajectory = prediction[trajectory_type]
+            predicted_trajectory = prediction.get(trajectory_type, None)
+
+            if predicted_trajectory is None:
+                continue
+
             record = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices=self.config['rpe_indices'])
 
             if trajectory_type == 'slam_trajectory':
@@ -73,9 +78,11 @@ class BaseSlamRunner(BaseTrainer):
             print(f'Predicting {generator.trajectory_id}')
             prediction = slam.predict_generator(generator)
             record = self.evaluate_trajectory(prediction, df, subset)
-            records.append(record)
 
-        if mlflow.active_run():
+            if record is not None:
+                records.append(record)
+
+        if mlflow.active_run() and len(records) > 0:
             total_metrics = {f'{subset}_{key}': float(value) for key, value in average_metrics(records).items()}
             mlflow.log_metrics(total_metrics)
 

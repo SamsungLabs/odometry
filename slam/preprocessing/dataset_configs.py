@@ -7,6 +7,7 @@ DATASET_TYPES = ['kitti_8/3',
                  'kitti_4/6',
                  'kitti_4/6_mixed',
                  'kitti_4/6_mixed_1+2+4',
+                 'kitti_4/6_bovw',
                  'kitti_4/6_stride2',
                  'kitti_4/6_stride4',
                  'discoman_v10',
@@ -256,6 +257,12 @@ def get_kitti_4_6_mixed_1_2_4_config(dataset_root):
         trajectories = config[f'{d}_trajectories']
         config[f'{d}_strides'] = [int(Path(t).parent.name) for t in trajectories] if trajectories else None
 
+    return config
+
+
+def get_kitti_4_6_bovw_config(dataset):
+    config = get_kitti_4_6_config(dataset)
+    config['exp_name'] = 'kitti_4/6_bovw'
     return config
 
 
