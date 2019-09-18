@@ -19,7 +19,7 @@ def construct_outputs(inputs,
     for i, output_name in enumerate(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z')):
         x = inputs[i]
 
-        output = Dense(1, kernel_regularizer=l2(regularization))(x)
+        output = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(x)
 
         if scale is not None:
             s = scale[i] if isinstance(scale, list) else scale
@@ -37,7 +37,7 @@ def construct_outputs(inputs,
                                trainable=False)(x)
             returned_values.append(confidence)
 
-        output = concat(returned_values, name=output_name)
+        output = concat(returned_values)
         outputs.append(output)
 
     return outputs
