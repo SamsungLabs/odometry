@@ -120,7 +120,7 @@ class BoVW:
             descriptors_match = self.knn_matcher.knnMatch(des2, des1, knn_matches_num)
             good_descriptors_match = self.ratio_test(descriptors_match)
 
-            if len(good_descriptors_match) > self.matches_threshold:
+            if len(good_descriptors_match) >= self.matches_threshold:
                 good_matches.append((match[0][k], len(good_descriptors_match)))
 
         good_matches.sort(key=lambda tup: tup[1], reverse=True)
