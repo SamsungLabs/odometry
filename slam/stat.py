@@ -19,6 +19,8 @@ class DatasetStat:
         self.std_cols = [c + '_confidence' for c in self.mean_cols] 
         self.vis_columns = ['translation_distance', 'rotation_distance'] + self.translation_columns + self.rotation_columns
         self.dataframe_types = ['all', 'consecutive_fr', 'consecutive_kfr', 'loops']
+        colors = ['b', 'r', 'g', 'y', 'c']
+        self.colors = {k: v for k, v in zip(self.dataframe_types + ['pred'], colors)}
         self.summary_keys = ['frames_total', 'cons_fr_num', 'loop_fr_num', 'unique_loop_fr_num', 'loops_num']
         self.percentiles = [100, 95, 75]
         
@@ -65,7 +67,7 @@ class DatasetStat:
             predict['from_index'] = np.arange(0, len(gt))
         return predict
 
-    def get_trajectory_stat(self, path_to_csv, loop_threshold, keyframe_period):
+    def get_trajectory_stat(self, path_to_csv, loop_threshold, keyframe_period, trajectory_id):
         stat = self.init_data()
 
         pair_frame_df = pd.read_csv(path_to_csv)
@@ -73,7 +75,9 @@ class DatasetStat:
             return stat
 
         pair_frame_df = self.df2slam_predict(pair_frame_df)    
+        pair_frame_df = pair_frame_df.drop_duplicates(subset=['to_index', 'from_index'])
         pair_frame_df = self.get_pair_frame_stat(pair_frame_df)
+        pair_frame_df['trajectory_id'] = trajectory_id
         stat['all'] = pair_frame_df
 
         index_difference = pair_frame_df.to_index - pair_frame_df.from_index
@@ -110,72 +114,90 @@ class DatasetStat:
 
     def filter_outlier(self, x, percentile):
         if len(x) > 0:
-            return x[np.where(np.abs(x) < np.percentile(x, percentile))]
+            diff = 100 - percentile
+            max_percentile = 100 - diff / 2
+            min_percentile = diff / 2
+            # positive_percentile = np.percentile(x[np.where(x > 0)], percentile)
+            # negative_percentile = np.percentile(x[np.where(x < 0)], percentile)
+            return x[np.where((np.percentile(x, min_percentile) <= x) & (x <= np.percentile(x, max_percentile)))]
         else:
             return list()
 
+    def filter_pairs(self, gt_stat, pred_stat):
+        #print('Gt len before filtration', len(gt_stat))
+        #print('Pred len before filtration', len(pred_stat))
+        gt_stat = gt_stat.set_index(['from_index', 'to_index', 'trajectory_id'])
+        pred_stat = pred_stat.set_index(['from_index', 'to_index', 'trajectory_id'])
+        gt_stat = gt_stat.loc[pred_stat.index].reset_index()
+        #print('Gt len after filtration', len(gt_stat))
+        #print('Pred len after filtration', len(pred_stat))
+        return gt_stat
+        
+        
     def plot_hist(self, ax, gt_stat, pred_stat, column, percentile, title):
 
         y = list()
-        for key in self.dataframe_types:
-            gt = self.filter_outlier(gt_stat[key][column].values, percentile)  
-            y.append(gt)
+        legend = list()
+        colors = list()
+        total_max = float('-inf')
+        total_min = float('inf') 
+        
+        for index, key in enumerate(self.dataframe_types):
+            # print('gt', key, column, 'len before filtration', len(gt_stat[key][column]))
+            gt = self.filter_outlier(gt_stat[key][column].values, percentile)
+            # print('gt', key, column, 'len after filtration', len(gt))
+            if len(gt) > 0:
+                y_median = median(gt)
+                y_max = max(gt)
+                y_min = min(gt)
+                legend.append(f'gt {key}. [{y_min:.2}, {y_max:.2}] m={y_median:.2}.')
+                colors.append(self.colors[key])
+                total_max = max([y_max, total_max])
+                total_min = min([y_min, total_min])
+                y.append(gt)
 
-        y.append(self.filter_outlier(pred_stat['all'][column].values, percentile)) 
+        pred = self.filter_outlier(pred_stat['all'][column].values, percentile)
+        if len(pred) > 0:
+            y_median = median(pred)
+            y_max = max(pred)
+            y_min = min(pred)
+            legend.append(f'Pred all. [{y_min:.2}, {y_max:.2}] m={y_median:.2}.')
+            colors.append(self.colors['pred'])
+            total_max = max([y_max, total_max])
+            total_min = min([y_min, total_min])
+            y.append(pred) 
 
-        colors = ['b', 'r', 'g', 'y', 'c']
-
+        if len(y) == 0:
+            return None
+        
         _, bins, _ = ax.hist(y, normed=True, color=colors)
-
-        pair_frame_median = median(y[0]) if len(y[0]) else 0.0
-        adjustment_median = median(y[1]) if len(y[1]) else 0.0
-        periodic_median = median(y[2]) if len(y[2]) else 0.0
-        loop_median = median(y[3]) if len(y[3]) else 0.0
-        predict_median = median(y[4])  if len(y[4]) else 0.0
-
-
-        pair_frame_max = max(y[0]) if len(y[0]) > 0 else float('-inf')
-        adjustment_max = max(y[1]) if len(y[1]) > 0 else float('-inf')
-        periodic_max = max(y[2]) if len(y[2]) > 0 else float('-inf')
-        loop_max = max(y[3]) if len(y[3]) > 0 else float('-inf')
-        predict_max = max(y[4]) if len(y[4]) > 0 else float('-inf')
-
-        pair_frame_min = min(y[0]) if len(y[0]) > 0 else float('inf')
-        adjustment_min = min(y[1]) if len(y[1]) > 0 else float('inf')
-        periodic_min = min(y[2]) if len(y[2]) > 0 else float('inf')
-        loop_min = min(y[3]) if len(y[3]) > 0 else float('inf')
-        predict_min = min(y[4]) if len(y[4]) > 0 else float('inf')
-
-        legend = [f'gt all. [{pair_frame_min:.2}, {pair_frame_max:.2}] m={pair_frame_median:.2}.',
-                  f'gt cons. fr.. [{adjustment_min:.2}, {adjustment_max:.2}], m={adjustment_median:.2}',
-                  f'gt cons. kfr. [{periodic_min:.2}, {periodic_max:.2}], m={periodic_median:.2}',
-                  f'gt loops. [{loop_min:.2}, {loop_max:.2}], m={loop_median:.2}',
-                  f'predict all. [{predict_min:.2}, {predict_max:.2}], m={predict_median:.2}']
-
-
-
         ax.legend(legend)
         ax.set_title(title)
         ax.set_ylabel('normalized number of samples')
         ax.set_xlabel('x')
         ax.grid()
-
-        total_min = min([pair_frame_min, adjustment_min, loop_min, periodic_min, predict_min])
-        total_max = max([pair_frame_max, adjustment_max, loop_max, periodic_max, predict_max])
-
         if np.isinf(total_min) or np.isinf(total_max):
             return bins
-
         ax.axis(xmin=total_min, xmax=total_max)
-
+           
         return bins
 
     def plot_error(self, ax, gt_stat, pred_stat, bins, column, percentile, title):
+        
+        if bins is None:
+            return
+        
         markers = ['bo', 'r+', 'gx', 'y8']
         legend = ['all','consecutive frames', 'consective keyframes', 'loops']
         for index, key in enumerate(self.dataframe_types):
+            if len(gt_stat[key]) > len(pred_stat[key]):
+                gt_stat[key] = self.filter_pairs(gt_stat[key], pred_stat[key])
+            else:
+                pred_stat[key] = self.filter_pairs(pred_stat[key], gt_stat[key])
+                
             gt = gt_stat[key][column].values
             pred = pred_stat[key][column].values
+           
             assert len(gt) == len(pred), f'len(gt)={len(gt)}, len(pred)={len(pred)}'
 
             gt = self.filter_outlier(gt, percentile)
@@ -259,10 +281,15 @@ class DatasetStat:
         gt_history = self.init_data()
         predict_history = self.init_data()
 
-        for directory in dataset_root.iterdir():
+        for trajectory_id, directory in enumerate(dataset_root.iterdir()):
+
             if not directory.is_dir():
                 continue
-            gt_stat = self.get_trajectory_stat(directory/'df.csv', loop_threshold, keyframe_period)
+            gt_path = directory/'df.csv'
+            if not gt_path.is_file():
+                continue
+                
+            gt_stat = self.get_trajectory_stat(directory/'df.csv', loop_threshold, keyframe_period, trajectory_id)
 
             if len(gt_stat['all']) == 0:
                 print(f'Skipping {directory.as_posix()}. Gt not found')
@@ -279,8 +306,8 @@ class DatasetStat:
             predict_path = found_files[0].as_posix()
             
             print('Prediction_path', predict_path)
-            predict_stat = self.get_trajectory_stat(predict_path, loop_threshold, keyframe_period)
-            
+            predict_stat = self.get_trajectory_stat(predict_path, loop_threshold, keyframe_period, trajectory_id)
+                
             assert len(gt_stat) == len(predict_stat), f'GT len: {len(gt_stat)}, Predict len ={len(predict_stat)}'
 
             gt_history = self.append_to_history(gt_history, gt_stat)
