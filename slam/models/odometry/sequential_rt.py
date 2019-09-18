@@ -120,7 +120,7 @@ def construct_sequential_rt_model(inputs,
                            layers_num=2,
                            name='translation')
 
-    output_translation = construct_output(fc_rotation,
+    output_translation = construct_output(fc_translation,
                                            name='translation',
                                            regularization=regularization)
 
