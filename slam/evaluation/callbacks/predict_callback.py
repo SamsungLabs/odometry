@@ -85,14 +85,20 @@ class Predict(keras.callbacks.Callback):
 
         self.y_cols = self.train_generator.y_cols[:]
 
-    def create_trajectory(self, df):
+    def _create_trajectory(self, df):
         return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
 
-    def create_prediction_file_path(self, trajectory_id, subset, prediction_id):
+    def _create_prediction_file_path(self, trajectory_id, subset, prediction_id):
         return create_prediction_file_path(trajectory_id=trajectory_id,
                                            subset=subset,
                                            prediction_id=prediction_id,
                                            save_dir=self.save_dir)
+
+    def _create_vis_file_path(self, trajectory_id, subset, prediction_id):
+        return create_vis_file_path(trajectory_id=trajectory_id,
+                                    subset=subset,
+                                    prediction_id=prediction_id,
+                                    save_dir=self.save_dir)
 
     @staticmethod
     def _get_dir(prediction_id, create_file_path):
@@ -101,19 +107,13 @@ class Predict(keras.callbacks.Callback):
         path = os.path.abspath(path)
         return path
 
-    def get_vis_dir(self, prediction_id):
-        return self._get_dir(prediction_id, self.create_vis_file_path)
+    def _get_vis_dir(self, prediction_id):
+        return self._get_dir(prediction_id, self._create_vis_file_path)
 
-    def get_prediction_dir(self, prediction_id):
-        return self._get_dir(prediction_id, self.create_prediction_file_path)
+    def _get_prediction_dir(self, prediction_id):
+        return self._get_dir(prediction_id, self._create_prediction_file_path)
 
-    def create_vis_file_path(self, trajectory_id, subset, prediction_id):
-        return create_vis_file_path(trajectory_id=trajectory_id,
-                                    subset=subset,
-                                    prediction_id=prediction_id,
-                                    save_dir=self.save_dir)
-
-    def save_predictions(self, predictions, trajectory_id, subset, prediction_id):
+    def _save_predictions(self, predictions, trajectory_id, subset, prediction_id):
         file_path = create_prediction_file_path(save_dir=self.save_dir,
                                                 trajectory_id=trajectory_id,
                                                 prediction_id=prediction_id,
@@ -121,13 +121,13 @@ class Predict(keras.callbacks.Callback):
         predictions.to_csv(file_path)
         chmod(file_path)
 
-    def visualize_trajectory(self,
-                             predicted_trajectory,
-                             gt_trajectory,
-                             trajectory_id,
-                             subset,
-                             prediction_id,
-                             record=None):
+    def _visualize_trajectory(self,
+                              predicted_trajectory,
+                              gt_trajectory,
+                              trajectory_id,
+                              subset,
+                              prediction_id,
+                              record=None):
         file_path = create_vis_file_path(save_dir=self.save_dir,
                                          trajectory_id=trajectory_id,
                                          prediction_id=prediction_id,
@@ -145,7 +145,7 @@ class Predict(keras.callbacks.Callback):
                                          file_path=file_path)
         chmod(file_path)
 
-    def predict_generator(self, generator):
+    def _predict_generator(self, generator):
         generator.reset()
         generator.y_cols = self.y_cols[:]
         model_output = self.model.predict_generator(generator, steps=len(generator))
@@ -159,19 +159,19 @@ class Predict(keras.callbacks.Callback):
         predictions['path_to_rgb_next'] = generator.df.path_to_rgb_next
         return predictions
 
-    def create_tasks(self, generator, subset):
+    def _create_tasks(self, generator, subset):
         tasks = []
 
         if generator is None:
             return tasks
 
         gt = generator.df
-        predictions = self.predict_generator(generator)
+        predictions = self._predict_generator(generator)
 
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
             predicted_df = predictions.iloc[indices]
-            predicted_trajectory = self.create_trajectory(predicted_df)
-            gt_trajectory = self.create_trajectory(gt.iloc[indices]) if self.evaluate else None
+            predicted_trajectory = self._create_trajectory(predicted_df)
+            gt_trajectory = self._create_trajectory(gt.iloc[indices]) if self.evaluate else None
 
             tasks.append({'df': predicted_df,
                           'predicted': predicted_trajectory,
@@ -184,7 +184,7 @@ class Predict(keras.callbacks.Callback):
 
         return tasks
 
-    def save_tasks(self, tasks, prediction_id, max_to_visualize=None):
+    def _save_tasks(self, tasks, prediction_id, max_to_visualize=None):
         max_to_visualize = max_to_visualize or len(tasks)
 
         counter = Counter()
@@ -193,25 +193,25 @@ class Predict(keras.callbacks.Callback):
             trajectory_id = task['id']
             subset = task['subset']
 
-            self.save_predictions(predicted_df,
-                                  trajectory_id,
-                                  subset,
-                                  prediction_id)
+            self._save_predictions(predicted_df,
+                                   trajectory_id,
+                                   subset,
+                                   prediction_id)
 
             if counter[subset] < max_to_visualize:
                 gt_trajectory = task['gt']
                 predicted_trajectory = task['predicted']
                 record = task.get('record', None)
 
-                self.visualize_trajectory(predicted_trajectory,
-                                          gt_trajectory,
-                                          trajectory_id,
-                                          subset,
-                                          prediction_id,
-                                          record)
+                self._visualize_trajectory(predicted_trajectory,
+                                           gt_trajectory,
+                                           trajectory_id,
+                                           subset,
+                                           prediction_id,
+                                           record)
             counter[subset] += 1
 
-    def process_tasks(self, tasks):
+    def _process_tasks(self, tasks):
         if self.workers:
             with Pool(self.workers) as pool:
                 records = [res for res in pool.imap(process_single_task, tasks)]
@@ -219,8 +219,8 @@ class Predict(keras.callbacks.Callback):
             records = [process_single_task(task) for task in tasks]
         return records
 
-    def evaluate_tasks(self, tasks):
-        records = self.process_tasks(tasks)
+    def _evaluate_tasks(self, tasks):
+        records = self._process_tasks(tasks)
         assert len(records) == len(tasks)
 
         subset = None
@@ -232,7 +232,7 @@ class Predict(keras.callbacks.Callback):
         total_metrics = {subset + '_' + k: v for k, v in average_metrics(records).items()}
         return tasks, total_metrics
 
-    def is_best(self, logs):
+    def _is_best(self, logs):
         loss = logs.get(self.monitor, np.inf)
         is_best = loss < self.best_loss
         self.best_loss = min(loss, self.best_loss)
@@ -246,19 +246,19 @@ class Predict(keras.callbacks.Callback):
 
         if self.period and self.epochs_since_last_predict % self.period == 0:
 
-            train_tasks = self.create_tasks(self.train_generator, 'train')
-            val_tasks = self.create_tasks(self.val_generator, 'val')
+            train_tasks = self._create_tasks(self.train_generator, 'train')
+            val_tasks = self._create_tasks(self.val_generator, 'val')
 
             if self.evaluate:
-                train_tasks, train_metrics = self.evaluate_tasks(train_tasks)
-                val_tasks, val_metrics = self.evaluate_tasks(val_tasks)
+                train_tasks, train_metrics = self._evaluate_tasks(train_tasks)
+                val_tasks, val_metrics = self._evaluate_tasks(val_tasks)
 
                 logs = dict(**logs, **train_metrics, **val_metrics)
 
             prediction_id = self.template.format(epoch='best' if self.save_best_only else epoch + 1, **logs)
 
-            if not self.save_best_only or self.is_best(logs):
-                self.save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
+            if not self.save_best_only or self._is_best(logs):
+                self._save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
                 self.epochs_since_last_predict = 0
                 self.last_prediction_id = prediction_id
 
@@ -276,17 +276,17 @@ class Predict(keras.callbacks.Callback):
 
         final_prediction_id = 'final'
 
-        symlink(self.get_vis_dir(self.last_prediction_id),
-                self.get_vis_dir(final_prediction_id))
-        symlink(self.get_prediction_dir(self.last_prediction_id),
-                self.get_prediction_dir(final_prediction_id))
+        symlink(self._get_vis_dir(self.last_prediction_id),
+                self._get_vis_dir(final_prediction_id))
+        symlink(self._get_prediction_dir(self.last_prediction_id),
+                self._get_prediction_dir(final_prediction_id))
 
         logs = self.last_logs
 
-        test_tasks = self.create_tasks(self.test_generator, 'test')
+        test_tasks = self._create_tasks(self.test_generator, 'test')
         if self.evaluate:
-            test_tasks, test_metrics = self.evaluate_tasks(test_tasks)
+            test_tasks, test_metrics = self._evaluate_tasks(test_tasks)
 
-        self.save_tasks(test_tasks, prediction_id='test')
+        self._save_tasks(test_tasks, prediction_id='test')
 
         return logs
