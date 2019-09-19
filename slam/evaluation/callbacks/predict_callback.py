@@ -15,8 +15,7 @@ from slam.utils import (visualize_trajectory_with_gt,
                         create_vis_file_path,
                         create_prediction_file_path,
                         partial_format,
-                        chmod,
-                        symlink)
+                        chmod)
 
 
 def process_single_task(args):
@@ -273,13 +272,6 @@ class Predict(keras.callbacks.Callback):
             self.save_best_only = False
             self.period = 1
             self.on_epoch_end(self.epoch - 1, logs)
-
-        final_prediction_id = 'final'
-
-        symlink(self._get_vis_dir(self.last_prediction_id),
-                self._get_vis_dir(final_prediction_id))
-        symlink(self._get_prediction_dir(self.last_prediction_id),
-                self._get_prediction_dir(final_prediction_id))
 
         logs = self.last_logs
 

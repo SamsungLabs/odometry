@@ -2,7 +2,6 @@ from .computation_utils import set_computation
 from .computation_utils import make_memory_safe
 
 from .file_utils import chmod
-from .file_utils import symlink
 from .file_utils import create_vis_file_path
 from .file_utils import create_prediction_file_path
 
@@ -32,7 +31,6 @@ __all__ = [
     'set_computation',
     'make_memory_safe',
     'chmod',
-    'symlink',
     'create_vis_file_path',
     'create_prediction_file_path',
     'resize_image',

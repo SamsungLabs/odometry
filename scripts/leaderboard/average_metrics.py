@@ -4,11 +4,10 @@ import datetime
 import numpy as np
 import argparse
 from collections import defaultdict
+from typing import List, Set, Union, Iterator
 
 import __init_path__
 import env
-
-from typing import List, Set, Union, Iterator
 
 
 class MetricAverager:
@@ -25,22 +24,22 @@ class MetricAverager:
             print(f'Averaging {experiment.name} experiment.')
             self.average_experiment(experiment.name)
 
-    def average_experiment(self, experiment_name):
+    def average_experiment(self, leader_board):
         self._run_infos = None
-        run_infos = self.get_run_infos(experiment_name)
+        run_infos = self.get_run_infos(leader_board)
         run_names = self.get_run_names(run_infos)
-        base_names = self.get_base_names(run_names)
-        base_names = filter(lambda x: x + '_avg' not in run_names, base_names)
+        bundle_names = self.get_bundle_names(run_names)
+        bundle_names = filter(lambda x: x + '_avg' not in run_names, bundle_names)
 
         counter = 0
-        for counter, base_name in enumerate(base_names):
-            print(f'    Averaging {base_name} run.')
-            self.average_run(experiment_name, base_name)
-        print(f'    Averaged {counter} runs in {experiment_name} experiment.')
+        for counter, bundle_name in enumerate(bundle_names):
+            print(f'    Averaging {bundle_name} run.')
+            self.average_run(leader_board, bundle_name)
+        print(f'    Averaged {counter} runs in {leader_board} leaderboard.')
 
-    def get_run_infos(self, experiment_name):
+    def get_run_infos(self, leader_board):
         if self._run_infos is None:
-            experiment = self.client.get_experiment_by_name(experiment_name)
+            experiment = self.client.get_experiment_by_name(leader_board)
             run_infos = self.client.list_run_infos(experiment.experiment_id)
             return run_infos
         else:
@@ -53,18 +52,18 @@ class MetricAverager:
             run_names.append(run.data.params['run_name'])
         return run_names
 
-    def get_base_names(self, run_names: List[str]) -> Set[str]:
-        base_names = set()
+    def get_bundle_names(self, run_names: List[str]) -> Set[str]:
+        bundle_names = set()
         for run_name in run_names:
-            base_name = self.get_base_name(run_name)
-            if base_name is None:
+            bundle_name = self.get_bundle_name(run_name)
+            if bundle_name is None:
                 print(f'    It seems like {run_name} does not belong to any bundle')
             else:
-                base_names.add(base_name)
-        return base_names
+                bundle_names.add(bundle_name)
+        return bundle_names
 
     @staticmethod
-    def get_base_name(run_name: str) -> Union[str, None]:
+    def get_bundle_name(run_name: str) -> Union[str, None]:
         run_name_split = run_name.split('_')
 
         if len(run_name_split) < 2 or (run_name_split[-2] != 'b'):
@@ -72,10 +71,10 @@ class MetricAverager:
         else:
             return '_'.join(run_name_split[:-2])
 
-    def average_run(self, experiment_name, run_name):
-        mlflow.set_experiment(experiment_name)
+    def average_run(self, leader_board, run_name):
+        mlflow.set_experiment(leader_board)
 
-        metrics, model_name = self.load_metrics(experiment_name, run_name)
+        metrics, model_name = self.load_metrics(leader_board, run_name)
         if not metrics:
             raise ValueError(f'    No successfully finished runs were found for {run_name}')
         aggregated_metrics = self.aggregate_metrics(metrics)
@@ -98,14 +97,14 @@ class MetricAverager:
             mlflow.log_metrics(metrics_std)
             mlflow.log_metric('successfully_finished', 1)
 
-    def load_metrics(self, experiment_name, base_name):
+    def load_metrics(self, leader_board, bundle_name):
         metrics = list()
         model_name = None
-        run_infos = self.get_run_infos(experiment_name)
+        run_infos = self.get_run_infos(leader_board)
         for run_info in run_infos:
             data = self.client.get_run(run_info.run_id).data
-            current_base_name = self.get_base_name(data.params['run_name'])
-            if base_name == current_base_name:
+            current_bundle_name = self.get_bundle_name(data.params['run_name'])
+            if bundle_name == current_bundle_name:
                 if data.metrics.get('successfully_finished', 0):
                     metrics.append(data.metrics)
                 model_name = model_name or data.params.get('model.name', 'Unknown')
@@ -131,8 +130,8 @@ class MetricAverager:
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment_name', '-t', type=str, default=None,
-                        help='You can find available exp names in slam.preprocessing.dataset_configs.py')
+    parser.add_argument('--leader_board', '-t', type=str, default=None,
+                        help='You can find available experiment names in slam.preprocessing.dataset_configs.py')
 
     parser.add_argument('--run_name', '-n', type=str, default=None,
                         help='Name of the run. Must be unique and specific')
@@ -140,9 +139,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     averager = MetricAverager()
-    if args.experiment_name is None:
+    if args.leader_board is None:
         averager.average_db()
-    elif args.experiment_name is not None and args.run_name is None:
-        averager.average_experiment(args.experiment_name)
+    elif args.leader_board is not None and args.run_name is None:
+        averager.average_experiment(args.leader_board)
     else:
-        averager.average_run(run_name=args.run_name, experiment_name=args.experiment_name)
+        averager.average_run(run_name=args.run_name, leader_board=args.leader_board)

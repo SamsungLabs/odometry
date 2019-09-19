@@ -1,8 +1,11 @@
-from slam.preprocessing.prepare_trajectory import prepare_trajectory
-from slam.preprocessing.prepare_dataset import prepare_dataset
-from slam.preprocessing.prepare_dataset import get_default_dataset_parser
-from slam.preprocessing.dataset_configs import DATASET_TYPES
-from slam.preprocessing.dataset_configs import get_config
+from .prepare_trajectory import prepare_trajectory
+
+from .prepare_dataset import prepare_dataset
+from .prepare_dataset import get_default_dataset_parser
+
+from .dataset_configs import DATASET_TYPES
+from .dataset_configs import get_config
+from .dataset_configs import get_dataset_root
 
 from .parsers import KITTIParser
 from .parsers import TUMParser
@@ -22,6 +25,7 @@ from .estimators import PWCNetEstimator
 __all__ = [
     'DATASET_TYPES',
     'get_config',
+    'get_dataset_root',
     'prepare_trajectory',
     'prepare_dataset',
     'get_default_dataset_parser',

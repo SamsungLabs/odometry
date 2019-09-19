@@ -7,6 +7,7 @@ import subprocess as sp
 import numpy as np
 from pathlib import Path
 from multiprocessing import Pool
+from typing import Union
 
 import __init_path__
 import env
@@ -17,10 +18,11 @@ from scripts.leaderboard.average_metrics import MetricAverager
 class Leaderboard:
 
     def __init__(self,
-                 trainer_path,
-                 dataset_type,
-                 run_name,
-                 exp_name,
+                 script_path,
+                 leader_board,
+                 load_leader_board,
+                 bundle_name,
+                 load_bundle_name,
                  machines,
                  bundle_size=1,
                  core=8,
@@ -31,14 +33,16 @@ class Leaderboard:
                  round_robin=0,
                  other_args=None):
 
-        if not os.path.exists(trainer_path):
-            raise RuntimeError(f'Could not find trainer script {trainer_path}')
+        if not os.path.exists(script_path):
+            raise RuntimeError(f'Could not find trainer script {script_path}')
 
         self.averager = MetricAverager()
-        self.trainer_path = trainer_path
-        self.dataset_type = dataset_type
-        self.run_name = run_name
-        self.exp_name = exp_name
+
+        self.script_path = script_path
+        self.leader_board = leader_board
+        self.load_leader_board = load_leader_board
+        self.bundle_name = bundle_name
+        self.load_bundle_name = load_bundle_name
         self.bundle_size = bundle_size
         self.core = core
 
@@ -63,48 +67,49 @@ class Leaderboard:
 
     def submit(self):
 
-        if self.dataset_type == 'leaderboard':
-            self.submit_on_all_datasets()
+        if self.leader_board == 'leaderboard':
+            self.submit_on_all_leader_boards()
         else:
-            self.submit_bundle(self.exp_name)
+            self.submit_bundle(self.leader_board)
 
-    def submit_on_all_datasets(self):
+    def submit_on_all_leader_boards(self):
 
         pool = Pool(len(self.leader_boards))
-        for d_type in self.leader_boards:
-            self.log(f'Submitting {d_type}')
-            pool.apply_async(self.submit_bundle, (d_type,))
+        for leader_board in self.leader_boards:
+            self.log(f'Submitting {leader_board}')
+            pool.apply_async(self.submit_bundle, (leader_board,))
         pool.close()
         pool.join()
 
-    def submit_bundle(self, dataset_type):
+    def submit_bundle(self, leader_board):
 
-        self.setup_logger(dataset_type)
+        self.setup_logger(leader_board)
 
-        self.log('Submitting jobs', dataset_type)
+        self.log('Submitting jobs', leader_board)
 
         started_jobs_id = set()
         for b in range(self.bundle_size):
-            job_id = self.submit_job(dataset_type, b)
+            job_id = self.submit_job(leader_board, b)
             started_jobs_id.add(job_id)
 
-        self.log(f'Started {started_jobs_id}', dataset_type)
-        self.wait_jobs(dataset_type, started_jobs_id)
+        self.log(f'Started {started_jobs_id}', leader_board)
+        self.wait_jobs(leader_board, started_jobs_id)
 
-        self.log('Averaging metrics', dataset_type)
+        self.log('Averaging metrics', leader_board)
+
         try:
-            self.averager.average_run(dataset_type, self.run_name)
+            self.averager.average_run(leader_board, self.bundle_name)
         except Exception as e:
             self.log(e)
 
-    def submit_job(self, dataset_type, bundle_id):
+    def submit_job(self, leader_board, bundle_id):
 
-        run_name = self.run_name + f'_b_{bundle_id}'
+        run_name = f'{self.bundle_name}_b_{bundle_id}'
+        load_name = f'{self.load_bundle_name}_b_{bundle_id}' if self.load_bundle_name else None
 
         machines = np.random.choice(self.machines, self.round_robin, replace=False)
-
         seed = np.random.randint(1000000)
-        cmd = self.get_lsf_command(dataset_type, run_name, ' '.join(machines), seed)
+        cmd = self.get_lsf_command(leader_board, run_name, load_name, ' '.join(machines), seed)
         self.log(f'Executing command: {cmd}')
 
         p = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
@@ -113,42 +118,8 @@ class Leaderboard:
         job_id = str(outs).split(' ')[1][1:-1]
         return job_id
 
-    def get_lsf_command(self, dataset_type: str, run_name: str, machines: str, seed: int) -> str:
-
-        if dataset_type == 'discoman_v10':
-            dataset_root = env.DISCOMAN_V10_PATH
-        elif dataset_type == 'mini_discoman_v10':
-            dataset_root = env.DISCOMAN_V10_PATH
-        elif dataset_type == 'discoman_v10_mixed':
-            dataset_root = env.DISCOMAN_V10_MIXED_PATH
-        elif dataset_type == 'discoman_v10_relocalization':
-            dataset_root = env.DISCOMAN_V10_MIXED_PATH
-        elif dataset_type == 'discoman_debug':
-            dataset_root = env.DISCOMAN_V10_PATH
-        elif dataset_type == 'kitti_4/6':
-            dataset_root = env.KITTI_PATH
-        elif dataset_type == 'kitti_4/6_mixed':
-            dataset_root = env.KITTI_MIXED_PATH
-        elif dataset_type == 'kitti_4/6_mixed_1+2+4':
-            dataset_root = env.KITTI_MIXED_PATH
-        elif dataset_type == 'kitti_4/6_bovw':
-            dataset_root = env.KITTI_BOVW_PATH
-        elif dataset_type == 'kitti_8/3':
-            dataset_root = env.KITTI_PATH
-        elif dataset_type == 'tum':
-            dataset_root = env.TUM_PATH
-        elif dataset_type == 'tum_debug':
-            dataset_root = env.TUM_PATH
-        elif dataset_type == 'saic_office':
-            dataset_root = env.SAIC_OFFICE_PATH
-        elif dataset_type == 'retail_bot':
-            dataset_root = env.RETAIL_BOT_PATH
-        elif dataset_type == 'euroc':
-            dataset_root = env.EUROC_PATH
-        elif dataset_type == 'zju':
-            dataset_root = env.ZJU_PATH
-        else:
-            raise RuntimeError('Unknown dataset_type')
+    def get_lsf_command(self, leader_board: str, run_name: str, load_name: Union[str, None],
+                        machines: str, seed: int) -> str:
 
         if self.shared:
             mode = 'shared' + (f':gmem={self.gmem}' if self.gmem else '') + ":gtile='!'"
@@ -161,15 +132,20 @@ class Leaderboard:
                    f'-m "{machines}"',
                    f'-gpu "num=1:mode={mode}"',
                    'python',
-                   f'{self.trainer_path}',
-                   f'--dataset_root {dataset_root}',
-                   f'--dataset_type {dataset_type}',
+                   f'{self.script_path}',
+                   f'--leader_board {leader_board}',
                    f'--run_name {run_name}',
+                   f'--bundle_name {self.bundle_name}',
                    f'--seed {seed}']
+
+        if load_name:
+            command.extend([f'--load_name {load_name}',
+                            f'--load_bundle_name {self.load_bundle_name}',
+                            f'--load_leader_board {self.load_leader_board}'])
 
         return ' '.join(command + other_args)
 
-    def wait_jobs(self, dataset_type, started_jobs_id):
+    def wait_jobs(self, leader_board, started_jobs_id):
 
         finished = False
         while not finished:
@@ -182,21 +158,22 @@ class Leaderboard:
             still_running_jobs = started_jobs_id.intersection(job_ids)
             sorted_jobs = list(still_running_jobs)
             sorted_jobs.sort()
-            self.log(f'Running {sorted_jobs}', dataset_type)
+
+            self.log(f'Running {sorted_jobs}', leader_board)
 
             if still_running_jobs:
                 time.sleep(10)
             else:
                 finished = True
-                self.log('All jobs has been finished', dataset_type)
+                self.log('All jobs has been finished', leader_board)
 
-    def setup_logger(self, dataset_type):
+    def setup_logger(self, leader_board):
 
         logger = logging.getLogger('leaderboard')
         logger.setLevel(logging.DEBUG)
 
-        dataset_type = dataset_type.replace('/', '_')
-        fh = logging.FileHandler(os.path.join(env.PROJECT_PATH, f'log_leaderboard_{dataset_type}.txt'), mode='w+')
+        leader_board = leader_board.replace('/', '_')
+        fh = logging.FileHandler(os.path.join(env.PROJECT_PATH, f'log_leaderboard_{leader_board}.txt'), mode='w+')
         fh.setLevel(logging.DEBUG)
         logger.addHandler(fh)
 
@@ -206,31 +183,34 @@ class Leaderboard:
             logger.addHandler(sh)
 
     @staticmethod
-    def log(info, dataset_type=None):
+    def log(info, leader_board=None):
 
         logger = logging.getLogger('leaderboard')
 
         timestamp = datetime.datetime.now().isoformat().replace('T', ' ')
 
-        if dataset_type:
-            logger.info(f'{timestamp} Dataset {dataset_type}. {info}')
+        if leader_board:
+            logger.info(f'{timestamp} Experiment {leader_board}. {info}')
         else:
             logger.info(f'{timestamp} {info}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--trainer_path', type=str, required=True)
-    parser.add_argument('--dataset_type', '-t', type=str, required=True,
-                        help='You can find availible exp names in slam.preprocessing.dataset_configs.py')
+    parser.add_argument('--script_path', type=str, required=True)
 
-    parser.add_argument('--run_name', '-n', type=str, required=True,
-                        help='Name of the run. Must be unique and specific')
+    parser.add_argument('--leader_board', '-exp', type=str, required=True,
+                        help='You can find available experiment names in slam.preprocessing.dataset_configs.py')
+    parser.add_argument('--load_leader_board', '-lexp', type=str, default=None)
+
+    parser.add_argument('--bundle_name', '-n', type=str, required=True,
+                        help='Name of the bundle. Must be unique and specific')
+    parser.add_argument('--load_bundle_name', '-ln', type=str, default=None,
+                        help='Name of the loaded bundle')
+
     parser.add_argument('--bundle_size', '-b', type=int, required=True, help='Number runs in evaluate')
-    parser.add_argument('--exp_name', '-exp', type=str, default=None,
-                       help='Name of experiment (actual leaderboard). May differ from dataset_type')
-    parser.add_argument('--core', '-c', type=int, default=3, help='Number of cpu core')
 
+    parser.add_argument('--core', '-c', type=int, default=3, help='Number of cpu core')
     parser.add_argument('--verbose', '-v', action='store_true', help='Print output to console')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--machines', '-m', help='lsf arg. Specify machines on which execute job',
@@ -245,10 +225,11 @@ if __name__ == '__main__':
 
     args, other_args = parser.parse_known_args()
 
-    leaderboard = Leaderboard(trainer_path=args.trainer_path,
-                              dataset_type=args.dataset_type,
-                              run_name=args.run_name,
-                              exp_name=args.exp_name or args.dataset_type,
+    leaderboard = Leaderboard(script_path=args.script_path,
+                              leader_board=args.leader_board,
+                              load_leader_board=args.load_leader_board,
+                              bundle_name=args.bundle_name,
+                              load_bundle_name=args.load_bundle_name,
                               bundle_size=args.bundle_size,
                               core=args.core,
                               verbose=args.verbose,
