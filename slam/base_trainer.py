@@ -3,15 +3,15 @@ import shutil
 import mlflow
 import datetime
 import argparse
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TerminateOnNaN
+from keras.callbacks import ReduceLROnPlateau, TerminateOnNaN
 
 import env
 
 from slam.data_manager import GeneratorFactory
 from slam.models import ModelFactory
-from slam.evaluation import MlflowLogger, Predict, TerminateOnLR
+from slam.evaluation import MlflowLogger, Predict, TerminateOnLR, ModelCheckpoint
 from slam.preprocessing import get_config, DATASET_TYPES
-from slam.utils import set_computation
+from slam.utils import set_computation, chmod
 
 
 class BaseTrainer:
@@ -76,6 +76,7 @@ class BaseTrainer:
         self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
         if os.path.exists(self.run_dir):
             shutil.rmtree(self.run_dir)
+        os.makedirs(self.run_dir)
 
         self.use_mlflow = use_mlflow
         if self.use_mlflow:
@@ -94,7 +95,7 @@ class BaseTrainer:
         if exp is None:
             exp_path = os.path.join(self.artifact_path, exp_dir)
             os.makedirs(exp_path)
-            os.chmod(exp_path, 0o777)
+            chmod(exp_path)
             mlflow.create_experiment(exp_name, exp_path)
             exp = client.get_experiment_by_name(exp_name)
 
@@ -146,19 +147,17 @@ class BaseTrainer:
                             scale_rotation=self.scale_rotation)
 
     def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
-        save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
+        callbacks = []
+
         terminate_on_nan_callback = TerminateOnNaN()
+        callbacks.append(terminate_on_nan_callback)
 
-        mlflow_callback = MlflowLogger(prefix=prefix)
-
-        monitor = 'val_RPE_t' if evaluate and not self.save_best_only else 'val_loss'
+        save_dir = os.path.join(self.run_dir, save_dir or '.')
+        monitor = 'val_RPE_t' if evaluate else 'val_loss'
 
         predict_callback = Predict(model=model,
                                    dataset=dataset,
-                                   run_dir=self.run_dir,
                                    save_dir=save_dir,
-                                   artifact_dir=self.run_name,
-                                   prefix=prefix,
                                    monitor=monitor,
                                    period=self.period,
                                    save_best_only=self.save_best_only,
@@ -168,16 +167,7 @@ class BaseTrainer:
                                    backend=self.backend,
                                    cuda=self.cuda,
                                    workers=8)
-
-        reduce_lr_callback = ReduceLROnPlateau(monitor='val_loss', factor=self.reduce_factor)
-
-        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
-
-        callbacks = [terminate_on_nan_callback,
-                     mlflow_callback,
-                     predict_callback,
-                     reduce_lr_callback,
-                     terminate_on_lr_callback]
+        callbacks.append(predict_callback)
 
         if self.period:
             weights_dir = os.path.join(save_dir, 'weights')
@@ -190,6 +180,19 @@ class BaseTrainer:
                                                   mode='min',
                                                   period=self.period)
             callbacks.append(checkpoint_callback)
+
+        reduce_lr_callback = ReduceLROnPlateau(monitor='val_loss', factor=self.reduce_factor)
+        callbacks.append(reduce_lr_callback)
+
+        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr)
+        callbacks.append(terminate_on_lr_callback)
+
+        if self.use_mlflow:
+            mlflow_callback = MlflowLogger(alias={'loss': 'train_loss'},
+                                           prefix=prefix,
+                                           run_dir=self.run_dir,
+                                           artifact_dir=self.run_name)
+            callbacks.append(mlflow_callback)
 
         return callbacks
 
