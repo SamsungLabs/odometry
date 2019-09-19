@@ -1,8 +1,6 @@
 import os
 import keras
 
-from slam.utils import symlink
-
 
 class ModelCheckpoint(keras.callbacks.ModelCheckpoint):
     
