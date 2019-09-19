@@ -54,7 +54,7 @@ class BaseTrainer:
         self.reduce_factor = reduce_factor
         self.backend = backend
         self.cuda = cuda
-        self.mlflow = mlflow
+        self.use_mlflow = use_mlflow
         self.max_to_visualize = 5
 
         self.construct_model_fn = None
@@ -79,7 +79,7 @@ class BaseTrainer:
         leader_board = self.config['exp_name']
         experiment_dir = leader_board.replace('/', '_')
 
-        if self.mlflow:
+        if self.use_mlflow:
             self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
             self.start_run(leader_board, experiment_dir, run_name)
 
@@ -246,7 +246,7 @@ class BaseTrainer:
     def get_parser():
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--leader_board', '-exp', type=str,
+        parser.add_argument('--leader_board', '--dataset_type', type=str,
                             choices=DATASET_TYPES, required=True)
         parser.add_argument('--run_name', '-n', type=str, required=True,
                             help='Name of the run. Must be unique and specific')
