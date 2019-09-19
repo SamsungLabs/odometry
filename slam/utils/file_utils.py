@@ -7,18 +7,6 @@ def chmod(path):
     os.chmod(path, mode)
 
 
-def symlink(src, dst):
-    if os.path.exists(dst):
-        if os.path.isdir(dst):
-            shutil.rmtree(dst)
-        elif os.path.isfile(dst):
-            os.remove(dst)
-        else:
-            raise ValueError(f'{dst} should be a path to a directory or a file')
-
-    os.symlink(src, dst)
-
-
 def _create_file_path(save_dir, trajectory_id, ext, prediction_id='', subset=''):
     trajectory_name = trajectory_id.replace('/', '_')
     file_path = os.path.join(save_dir,
