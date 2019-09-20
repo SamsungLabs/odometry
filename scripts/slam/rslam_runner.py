@@ -13,7 +13,7 @@ class RSlamRunner(BaseSlamRunner):
                  max_iterations=1000,
                  online=False,
                  verbose=False,
-                 matcher='Flann',
+                 matcher_type='Flann',
                  *args,
                  **kwargs):
         super().__init__(knn=knn, *args, **kwargs)
@@ -22,7 +22,7 @@ class RSlamRunner(BaseSlamRunner):
         self.max_iterations = max_iterations
         self.online = online
         self.verbose = verbose
-        self.matcher = matcher
+        self.matcher_type = matcher_type
 
     def get_slam(self):
         return RSlam(reloc_weights_path=self.reloc_weights,
@@ -32,14 +32,14 @@ class RSlamRunner(BaseSlamRunner):
                      optical_flow_shape=self.config['target_size'],
                      keyframe_period=self.keyframe_period,
                      matches_threshold=self.matches_threshold,
-                     matcher=self.matcher)
+                     matcher_type=self.matcher_type)
 
     @staticmethod
     def get_parser():
         p = BaseSlamRunner.get_parser()
         p.add_argument('--keyframe_period', type=int, default=10, help='Period of keyframe selection')
         p.add_argument('--matches_threshold', type=int, default=100, help='Parameter for BoVW')
-        p.add_argument('--matcher', type=str, choices=['BruteForce', 'Flann'])
+        p.add_argument('--matcher_type', type=str, choices=['BruteForce', 'Flann'])
         return p
 
 

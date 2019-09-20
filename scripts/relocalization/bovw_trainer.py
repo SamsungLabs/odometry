@@ -11,11 +11,11 @@ from slam.data_manager.generator_factory import GeneratorFactory
 
 class BoVWTrainer(BaseTrainer):
 
-    def __init__(self, voc_size, train_sampling_step, matcher, *args, **kwargs):
+    def __init__(self, voc_size, train_sampling_step, matcher_type, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.voc_size = voc_size
         self.train_sampling_step = train_sampling_step
-        self.matcher = matcher
+        self.matcher_type = matcher_type
 
     def get_dataset(self,
                     train_trajectories=None,
@@ -44,7 +44,7 @@ class BoVWTrainer(BaseTrainer):
                                 cached_images={})
 
     def get_model(self):
-        model = BoVW(self.voc_size, run_dir=self.run_dir, matcher=self.matcher)
+        model = BoVW(self.voc_size, run_dir=self.run_dir, matcher_type=self.matcher_type)
         return model
 
     def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
@@ -69,7 +69,7 @@ class BoVWTrainer(BaseTrainer):
         parser = BaseTrainer.get_parser()
         parser.add_argument('--voc_size', type=int, help='number of clusters to form vocabulary')
         parser.add_argument('--train_sampling_step', type=int)
-        parser.add_argument('--matcher', type=str, choices=['BruteForce', 'Flann'])
+        parser.add_argument('--matcher_type', type=str, choices=['BruteForce', 'Flann'])
         return parser
 
 
