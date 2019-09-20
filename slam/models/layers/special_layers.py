@@ -19,7 +19,7 @@ def construct_outputs(inputs,
     for i, output_name in enumerate(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z')):
         x = inputs[i]
 
-        output = Dense(1, kernel_regularizer=l2(regularization))(x)
+        output = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(x)
 
         if scale is not None:
             s = scale[i] if isinstance(scale, list) else scale
@@ -37,7 +37,7 @@ def construct_outputs(inputs,
                                trainable=False)(x)
             returned_values.append(confidence)
 
-        output = concat(returned_values, name=output_name)
+        output = concat(returned_values)
         outputs.append(output)
 
     return outputs
@@ -145,31 +145,31 @@ def add_grid(inputs, f_x=1, f_y=1, c_x=0.5, c_y=0.5, **kwargs):
 class FlowComposer(Layer):
 
     def __init__(self, intrinsics, **kwargs):
-        self.translation = np.array([0., 0., 0.])
-        self.depth = np.ones((intrinsics.height, intrinsics.width))
+        self.translation = np.array([0., 0., 0.], dtype=np.float32)
+        self.depth = np.ones((intrinsics.height, intrinsics.width), dtype=np.float32)
         self.intrinsics = intrinsics
 
         self.pixels_grid = np.c_[np.meshgrid(np.arange(0, self.intrinsics.width),
                                  np.arange(0, self.intrinsics.height))]
-        self.pixels_grid = self.pixels_grid.astype(np.float64)
+        self.pixels_grid = self.pixels_grid.astype(np.float32)
 
         self.pixels_normalized = self.intrinsics.forward(self.pixels_grid)
         ones = np.ones((1, ) + self.pixels_normalized.shape[1:])
-        self.pixels_normalized = np.concatenate([self.pixels_normalized, ones], 0)
+        self.pixels_normalized = np.concatenate([self.pixels_normalized, ones], 0).astype(np.float32)
         super().__init__(**kwargs)
 
-    def _create_gt_optical_flow_pair(depth, rotation_vector, gt_translation):
+    def _create_gt_optical_flow_pair(self, depth, rotation_vector, gt_translation):
         R = convert_euler_angles_to_rotation_matrix(rotation_vector)
         t = gt_translation.reshape(3, -1)
         points1 = depth * self.pixels_normalized
-        points2 = R.T @ (points1.reshape(3, -1) - t)
+        points2 = R.T.astype(np.float32) @ (points1.reshape(3, -1) - t)
         points2 = points2.reshape((3, self.intrinsics.height, self.intrinsics.width))
         xy_pixels_from_rt = self.intrinsics.backward(points2[:2] / points2[2])
         gt_flow = (xy_pixels_from_rt - self.pixels_grid)
         gt_flow = np.transpose(gt_flow, (1, 2, 0))
         gt_flow[:,:,0] /= gt_flow.shape[1]
         gt_flow[:,:,1] /= gt_flow.shape[0]
-        return gt_flow
+        return gt_flow.astype(np.float32)
 
     def _generate(self, rotation_vector):
         out = tf.py_func(self._create_gt_optical_flow_pair,

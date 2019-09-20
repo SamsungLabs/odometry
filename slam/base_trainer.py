@@ -3,22 +3,22 @@ import shutil
 import mlflow
 import datetime
 import argparse
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TerminateOnNaN
+from keras.callbacks import ReduceLROnPlateau, TerminateOnNaN
 
 import env
 
 from slam.data_manager import GeneratorFactory
 from slam.models import ModelFactory
-from slam.evaluation import MlflowLogger, Predict, TerminateOnLR
-from slam.preprocessing import get_config, DATASET_TYPES
-from slam.utils import set_computation
+from slam.evaluation import MlflowLogger, Predict, TerminateOnLR, ModelCheckpoint
+from slam.preprocessing import get_dataset_root, get_config, DATASET_TYPES
+from slam.utils import set_computation, chmod
 
 
 class BaseTrainer:
     def __init__(self,
-                 dataset_root,
-                 dataset_type,
+                 leader_board,
                  run_name,
+                 bundle_name,
                  seed=42,
                  cache=False,
                  batch=1,
@@ -37,10 +37,13 @@ class BaseTrainer:
         self.artifact_path = env.ARTIFACT_PATH
         self.project_path = env.PROJECT_PATH
 
-        self.config = get_config(dataset_root, dataset_type)
+        dataset_root = get_dataset_root(leader_board)
+        self.config = get_config(dataset_root, leader_board)
+
         self.dataset_root = dataset_root
-        self.dataset_type = dataset_type
+        self.leader_board = leader_board
         self.run_name = run_name
+        self.bundle_name = bundle_name
         self.seed = seed
         self.cache = cache
         self.batch = batch
@@ -51,6 +54,7 @@ class BaseTrainer:
         self.reduce_factor = reduce_factor
         self.backend = backend
         self.cuda = cuda
+        self.use_mlflow = use_mlflow
         self.max_to_visualize = 5
 
         self.construct_model_fn = None
@@ -72,14 +76,18 @@ class BaseTrainer:
 
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
-        exp_dir = self.config['exp_name'].replace('/', '_')
-        self.run_dir = os.path.join(self.project_path, 'experiments', exp_dir, run_name)
+        leader_board = self.config['exp_name']
+        experiment_dir = leader_board.replace('/', '_')
+
+        if self.use_mlflow:
+            self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
+            self.start_run(leader_board, experiment_dir, run_name)
+
+        self.run_dir = os.path.join(self.project_path, 'experiments', experiment_dir, run_name)
+
         if os.path.exists(self.run_dir):
             shutil.rmtree(self.run_dir)
-
-        self.use_mlflow = use_mlflow
-        if self.use_mlflow:
-            self.start_run(self.config['exp_name'], run_name, exp_dir)
+        os.makedirs(self.run_dir)
 
     def set_model_args(self):
         pass
@@ -87,32 +95,40 @@ class BaseTrainer:
     def set_dataset_args(self):
         pass
 
-    def start_run(self, exp_name, run_name, exp_dir):
+    def get_run(self, leader_board, run_name):
+        experiment = self.client.get_experiment_by_name(leader_board)
+
+        for info in self.client.list_run_infos(experiment.experiment_id):
+            run = self.client.get_run(info.run_id)
+            current_run_name = run.data.params.get('run_name', None)
+            if current_run_name == run_name:
+                return run
+
+        return None
+
+    def start_run(self, leader_board, experiment_dir, run_name):
+        experiment = self.client.get_experiment_by_name(leader_board)
+
+        if experiment is None:
+            experiment_path = os.path.join(self.artifact_path, experiment_dir)
+            os.makedirs(experiment_path)
+            os.chmod(experiment_path, 0o777)
+            mlflow.create_experiment(leader_board, experiment_path)
+
+        if self.get_run(leader_board, run_name) is not None:
+            raise RuntimeError(f'Run {run_name} already exists')
+
+        mlflow.set_tracking_uri(self.tracking_uri)
+
+        mlflow.set_experiment(leader_board)
+
+        mlflow.start_run(run_name=run_name)
+
         mlflow.log_param('run_name', run_name)
+        mlflow.log_param('bundle_name', self.bundle_name)
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
         mlflow.log_param('epochs', self.epochs)
         mlflow.log_param('seed', self.seed)
-
-        client = mlflow.tracking.MlflowClient(self.tracking_uri)
-        exp = client.get_experiment_by_name(exp_name)
-
-        if exp is None:
-            exp_path = os.path.join(self.artifact_path, exp_dir)
-            os.makedirs(exp_path)
-            os.chmod(exp_path, 0o777)
-            mlflow.create_experiment(exp_name, exp_path)
-            exp = client.get_experiment_by_name(exp_name)
-
-        run_names = list()
-        for info in client.list_run_infos(exp.experiment_id):
-            run_names.append(client.get_run(info.run_id).data.params.get('run_name', ''))
-
-        if run_name in run_names:
-            raise RuntimeError('run_name must be unique')
-
-        mlflow.set_tracking_uri(self.tracking_uri)
-        mlflow.set_experiment(exp_name)
-        mlflow.start_run(run_name=run_name)
 
     def get_dataset(self,
                     train_trajectories=None,
@@ -135,7 +151,7 @@ class BaseTrainer:
                                 cached_images={} if self.cache else None,
                                 train_strides=self.config['train_strides'],
                                 val_strides=self.config['val_strides'],
-                                test_strides=self.config['test_strides']
+                                test_strides=self.config['test_strides'],
                                 placeholder=self.placeholder)
 
     def get_model_factory(self, input_shapes):
@@ -146,19 +162,17 @@ class BaseTrainer:
                             scale_rotation=self.scale_rotation)
 
     def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
-        save_dir = os.path.join(self.run_dir, save_dir) if save_dir else self.run_dir
+        callbacks = []
+
         terminate_on_nan_callback = TerminateOnNaN()
+        callbacks.append(terminate_on_nan_callback)
 
-        mlflow_callback = MlflowLogger(prefix=prefix)
-
-        monitor = 'val_RPE_t' if evaluate and not self.save_best_only else 'val_loss'
+        save_dir = os.path.join(self.run_dir, save_dir or '.')
+        monitor = 'val_RPE_t' if evaluate else 'val_loss'
 
         predict_callback = Predict(model=model,
                                    dataset=dataset,
-                                   run_dir=self.run_dir,
                                    save_dir=save_dir,
-                                   artifact_dir=self.run_name,
-                                   prefix=prefix,
                                    monitor=monitor,
                                    period=self.period,
                                    save_best_only=self.save_best_only,
@@ -168,16 +182,7 @@ class BaseTrainer:
                                    backend=self.backend,
                                    cuda=self.cuda,
                                    workers=8)
-
-        reduce_lr_callback = ReduceLROnPlateau(monitor='val_loss', factor=self.reduce_factor)
-
-        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr, prefix=prefix)
-
-        callbacks = [terminate_on_nan_callback,
-                     mlflow_callback,
-                     predict_callback,
-                     reduce_lr_callback,
-                     terminate_on_lr_callback]
+        callbacks.append(predict_callback)
 
         if self.period:
             weights_dir = os.path.join(save_dir, 'weights')
@@ -190,6 +195,19 @@ class BaseTrainer:
                                                   mode='min',
                                                   period=self.period)
             callbacks.append(checkpoint_callback)
+
+        reduce_lr_callback = ReduceLROnPlateau(monitor='val_loss', factor=self.reduce_factor)
+        callbacks.append(reduce_lr_callback)
+
+        terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr)
+        callbacks.append(terminate_on_lr_callback)
+
+        if self.use_mlflow:
+            mlflow_callback = MlflowLogger(alias={'loss': 'train_loss'},
+                                           prefix=prefix,
+                                           run_dir=self.run_dir,
+                                           artifact_dir=self.run_name)
+            callbacks.append(mlflow_callback)
 
         return callbacks
 
@@ -230,12 +248,12 @@ class BaseTrainer:
     def get_parser():
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--dataset_root', '-r', type=str, required=True,
-                            help='Directory with trajectories')
-        parser.add_argument('--dataset_type', '-t', type=str,
+        parser.add_argument('--leader_board', '--dataset_type', type=str,
                             choices=DATASET_TYPES, required=True)
         parser.add_argument('--run_name', '-n', type=str, required=True,
                             help='Name of the run. Must be unique and specific')
+        parser.add_argument('--bundle_name', '-bn', type=str, required=True,
+                            help='Name of the bundle. Must be unique and specific')
         parser.add_argument('--cache', action='store_true',
                             help='Cache inputs in RAM')
         parser.add_argument('--seed', type=int, default=42,

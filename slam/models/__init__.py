@@ -19,6 +19,7 @@ from .relocalization import BoVW
 
 from .slam import DummySlam
 from .slam import GraphSlam
+from .slam import RSlam
 
 __all__ = [
     'PretrainedModelFactory',
@@ -38,5 +39,6 @@ __all__ = [
     'construct_sequential_rt_model',
     'BoVW',
     'DummySlam',
-    'GraphSlam'
+    'GraphSlam',
+    'RSlam'
 ]

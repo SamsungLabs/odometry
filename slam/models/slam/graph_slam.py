@@ -7,7 +7,7 @@ from slam.utils import mlflow_logging
 
 class GraphSlam(BaseSlam):
 
-    @mlflow_logging(prefix='slam.', name='Dummy')
+    @mlflow_logging(prefix='slam.', name='Graph')
     def __init__(self, keyframe_period, matches_threshold, max_iterations, verbose, online, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.keyframe_period = keyframe_period

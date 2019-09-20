@@ -23,6 +23,7 @@ mlflow.set_tracking_uri(TRACKING_URI)
 TUM_PATH = '/dbstore/datasets/Odometry_team/tum_rgbd/'
 KITTI_PATH = '/dbstore/datasets/Odometry_team/KITTI_odometry_2012/'
 KITTI_MIXED_PATH = '/dbstore/datasets/Odometry_team/KITTI_odometry_2012_mixed/'
+KITTI_BOVW_PATH = '/dbstore/datasets/Odometry_team/KITTI_odometry_2012_bovw_p2/'
 DISCOMAN_V10_PATH = '/dbstore/datasets/Odometry_team/discoman_v10/'
 DISCOMAN_V10_MIXED_PATH = '/dbstore/datasets/Odometry_team/discoman_v10_mixed/'
 SAIC_OFFICE_PATH = '/dbstore/datasets/Odometry_team/saic_office_prepare_v1_1_again/'
