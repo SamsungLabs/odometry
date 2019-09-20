@@ -52,6 +52,12 @@ class BoVW:
 
         self.min_descriptors_num = min_descriptors_num
 
+        self.empty_predict = pd.DataFrame(columns=['to_db_index',
+                                                   'from_db_index',
+                                                   'to_index',
+                                                   'from_index',
+                                                   'matches_num'])
+
     def fit(self, generator):
 
         for _ in trange(len(generator)):
@@ -115,7 +121,7 @@ class BoVW:
             kp2, des2 = self.extractor.detectAndCompute(image, None)
 
             if des2 is None or len(des2) < knn_matches_num:
-                list()
+                return list()
 
             descriptors_match = self.knn_matcher.knnMatch(des2, des1, knn_matches_num)
             good_descriptors_match = self.ratio_test(descriptors_match)
@@ -132,7 +138,7 @@ class BoVW:
         hist, des = self.add(image, index)
 
         if hist is None or len(hist) == 0 or self.counter == 1:
-            return pd.DataFrame(columns=['to_db_index', 'from_db_index', 'to_index', 'from_index', 'matches_num'])
+            return self.empty_predict
 
         histograms = np.vstack(self.histograms[:-1])
         assert histograms.shape[0] >= min(self.counter - 1, self.knn)
@@ -143,7 +149,7 @@ class BoVW:
             np.save('histograms.npy', histograms)
             print('Error in BoVW class. Histograms has been dumped')
             print(e)
-            return pd.DataFrame(columns=['to_db_index', 'from_db_index', 'to_index', 'from_index', 'matches_num'])
+            return self.empty_predict
 
         df = pd.DataFrame({'to_db_index': [self.counter - 1] * len(match),
                            'from_db_index': [m[0].trainIdx for m in match],
@@ -181,5 +187,5 @@ class BoVW:
     def clear(self):
         self.histograms = list()
         self.images = list()
-        self.matches = pd.DataFrame(columns=['to_db_index', 'from_db_index', 'to_index', 'from_index', 'matches_num'])
+        self.matches = self.empty_predict
         self.counter = 0
