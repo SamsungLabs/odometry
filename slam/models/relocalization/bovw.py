@@ -18,7 +18,7 @@ class BoVW:
                  matches_threshold=10,
                  min_descriptors_num=10,
                  feature='SIFT',
-                 matcher='BruteForce',
+                 matcher_type='BruteForce',
                  run_dir=None):
 
         if feature == 'SIFT':
@@ -26,7 +26,7 @@ class BoVW:
         else:
             raise RuntimeError('No other type of features except SIFT is implemented')
 
-        if matcher == 'BruteForce':
+        if matcher_type == 'BruteForce':
             self.knn_matcher = cv2.BFMatcher()
         else:
             flann_params = dict(algorithm=1, trees=5)

@@ -1,4 +1,3 @@
-import os
 import sys
 from typing import Dict
 from pathlib import Path
@@ -7,24 +6,29 @@ import __init_path__
 import env
 
 
-DATASET_PATHS = {'kitti_8/3' : env.KITTI_PATH,
+DATASET_PATHS = {'kitti_8/3': env.KITTI_PATH,
                  'kitti_4/6': env.KITTI_PATH,
                  'kitti_4/6_mixed': env.KITTI_MIXED_PATH,
                  'kitti_4/6_mixed_1+2+4': env.KITTI_MIXED_PATH,
+                 'kitti_4/6_bovw': env.KITTI_BOVW_PATH,
                  'kitti_4/6_stride2': env.KITTI_MIXED_PATH,
                  'kitti_4/6_stride4': env.KITTI_MIXED_PATH,
-                 'discoman_v10' : env.DISCOMAN_V10_PATH,
+                 'discoman_v10': env.DISCOMAN_V10_PATH,
                  'discoman_v10_mixed': env.DISCOMAN_V10_MIXED_PATH,
+                 'discoman_v10_bovw': env.DISCOMAN_V10_BOVW_PATH,
                  'mini_discoman_v10': env.DISCOMAN_V10_PATH,
-                 'mini_discoman_v10_mixed' : env.DISCOMAN_V10_MIXED_PATH,
+                 'mini_discoman_v10_bovw': env.DISCOMAN_V10_BOVW_PATH,
+                 'mini_discoman_v10_mixed': env.DISCOMAN_V10_MIXED_PATH,
                  'discoman_debug': env.DISCOMAN_V10_PATH,
                  'tum_fr1': env.TUM_PATH,
                  'tum_fr2': env.TUM_PATH,
                  'tum_fr3': env.TUM_PATH,
                  'tum': env.TUM_PATH,
+                 'tum_bovw': env.TUM_BOVW_PATH,
                  'tum_debug': env.TUM_PATH,
                  'zju': env.ZJU_PATH,
                  'euroc': env.EUROC_PATH,
+                 'euroc_bovw': env.EUROC_BOVW_PATH,
                  'saic_office': env.SAIC_OFFICE_PATH,
                  'retail_bot': env.RETAIL_BOT_PATH}
 
@@ -105,6 +109,12 @@ def get_euroc_config(_dataset_root):
               'val_strides': 1,
               'test_strides': 1,
               }
+    return config
+
+
+def get_euroc_bovw_config(dataset_root):
+    config = get_euroc_config(dataset_root)
+    config['exp_name'] = 'euroc_bovw'
     return config
 
 
@@ -532,4 +542,10 @@ def get_tum_config(dataset_root):
     for subset in subsets:
         config[f'{subset}_trajectories'].extend(fr2_config[f'{subset}_trajectories'])
         config[f'{subset}_trajectories'].extend(fr3_config[f'{subset}_trajectories'])
+    return config
+
+
+def get_tum_bovw_config(dataset_root):
+    config = get_tum_config(dataset_root)
+    config['exp_name'] = 'tum_bovw'
     return config
