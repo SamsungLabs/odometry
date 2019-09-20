@@ -1,7 +1,11 @@
 import os
 import keras
 
+from .cyclic_lr_callback import CyclicLR
+
 from .mlflow_logger_callback import MlflowLogger
+
+from .model_checkpoint_callback import ModelCheckpoint
 
 from .predict_callback import Predict
 
@@ -9,7 +13,9 @@ from .terminate_on_lr_callback import TerminateOnLR
 
 
 __all__ = [
+    'CyclicLR',
     'MlflowLogger',
+    'ModelCheckpoint',
     'Predict',
     'TerminateOnLR'
 ]
@@ -36,23 +42,23 @@ def reset_params_on_batch_end(cls, batch, logs=None):
 keras.callbacks.ProgbarLogger.on_batch_end = reset_params_on_batch_end
 
 
-def save_weights_on_train_end(cls, logs=None):
-    logs = logs or {}
-    file_ext = os.path.splitext(cls.filepath)[-1]
-    file_path = os.path.join(os.path.dirname(cls.filepath), 'final' + file_ext)
-    if cls.save_weights_only:
-        cls.model.save_weights(file_path, overwrite=True)
-    else:
-        cls.model.save(file_path, overwrite=True)
-
-
-keras.callbacks.ModelCheckpoint.on_train_end = save_weights_on_train_end
-
-
 def update_logs_on_epoch_end(cls, epoch, logs=None):
     logs = logs or {}
     for callback in cls.callbacks:
         logs = callback.on_epoch_end(epoch, logs) or logs
 
 
+def update_logs_on_train_end(cls, logs=None):
+    logs = logs or {}
+    for callback in cls.callbacks:
+        logs = callback.on_train_end(logs) or logs
+
+
+def update_logs_on_train_end(cls, logs=None):
+    logs = logs or {}
+    for callback in cls.callbacks:
+        logs = callback.on_train_end(logs) or logs
+
+
 keras.callbacks.CallbackList.on_epoch_end = update_logs_on_epoch_end
+keras.callbacks.CallbackList.on_train_end = update_logs_on_train_end

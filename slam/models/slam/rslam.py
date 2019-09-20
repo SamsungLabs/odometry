@@ -53,6 +53,7 @@ class RSlam(BaseSlam):
         prediction = prediction.append(self.get_matches(frame))
 
         self.last_frame = frame
+
         self.frame_index += 1
 
         return prediction

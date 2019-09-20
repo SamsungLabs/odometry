@@ -14,7 +14,7 @@ class ConfidenceTrainer(BaseTrainer):
 
     def __init__(self,
                  dataset_root,
-                 dataset_type,
+                 leader_board,
                  run_name,
                  seed=42,
                  lsf=False,
@@ -29,7 +29,7 @@ class ConfidenceTrainer(BaseTrainer):
                  epochs_confidence=100):
 
         super().__init__(dataset_root=dataset_root,
-                         dataset_type=dataset_type,
+                         leader_board=leader_board,
                          run_name=run_name,
                          seed=seed,
                          lsf=lsf,
