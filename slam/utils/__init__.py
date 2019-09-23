@@ -24,8 +24,6 @@ from .logging_utils import mlflow_logging
 
 from .toolbox import Toolbox
 
-from .formatter import partial_format
-
 
 __all__ = [
     'set_computation',
@@ -46,6 +44,5 @@ __all__ = [
     'visualize_trajectory',
     'parse_video',
     'mlflow_logging',
-    'Toolbox',
-    'partial_format'
+    'Toolbox'
 ]
