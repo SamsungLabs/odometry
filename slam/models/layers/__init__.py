@@ -28,10 +28,11 @@ from .wrappers import dense
 
 from .special_layers import AddGrid
 from .special_layers import DepthFlow
+from .special_layers import FlowComposer
 from .special_layers import add_grid
 from .special_layers import depth_flow
+from .special_layers import flow_composer
 from .special_layers import construct_outputs
-from .special_layers import FlowComposer
 
 from .transforms import transform_inputs
 
@@ -64,11 +65,12 @@ __all__ = [
     'dense',
     'AddGrid',
     'DepthFlow',
+    'FlowComposer',
     'add_grid',
     'depth_flow',
+    'flow_composer',
     'construct_outputs',
     'transform_inputs',
-    'FlowComposer'
 ]
 
 CUSTOM_LAYERS = {
@@ -99,9 +101,10 @@ CUSTOM_LAYERS = {
      'dense': dense,
      'AddGrid': AddGrid,
      'DepthFlow': DepthFlow,
+     'FlowComposer': FlowComposer,
      'add_grid': add_grid,
      'depth_flow': depth_flow,
+     'flow_composer': flow_composer,
      'construct_outputs': construct_outputs,
-     'transform_inputs': transform_inputs,
-     'FlowComposer': FlowComposer
+     'transform_inputs': transform_inputs
 }
