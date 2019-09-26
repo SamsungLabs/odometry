@@ -132,7 +132,7 @@ class ModelWithDecoderFactory(ModelFactory):
 
 class ModelWithConfidenceFactory(ModelFactory):
 
-    def freeze(self, lr=0.01):
+    def freeze(self, lr=0.001):
         for layer in self.model.layers:
             layer.trainable = not layer.trainable
 
