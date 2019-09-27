@@ -12,19 +12,21 @@ class BasicOp(Layer):
         self.axis = axis
         self.op = None
 
+    def build(self, input_shape):
+        super().build(input_shape)
+        self.axis = self.axis or list(range(1, len(input_shape)))
+
     def call(self, inputs):
-        axis = self.axis or list(range(1, K.ndim(inputs)))
-        outputs = self.op(inputs, axis, keepdims=True)
+        outputs = self.op(inputs, self.axis, keepdims=True)
         return outputs
 
     def compute_output_shape(self, input_shape):
-        axis = self.axis or list(range(1, len(input_shape)))
         output_shape = list(input_shape)
-        if isinstance(axis, int):
-            output_shape[axis] = 1
+        if isinstance(self.axis, int):
+            output_shape[self.axis] = 1
         else:
-            for ax in axis:
-                output_shape[ax] = 1
+            for axis in self.axis:
+                output_shape[axis] = 1
 
         return tuple(output_shape)
 
@@ -76,7 +78,7 @@ class Percentile(BasicOp):
                                                 keep_dims=keepdims)
 
     def get_config(self):
-        config = super(BasicOp, self).get_config()
+        config = super().get_config()
         config['q'] = self.q
         return config
 
