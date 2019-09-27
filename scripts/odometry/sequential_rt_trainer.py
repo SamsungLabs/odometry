@@ -8,8 +8,6 @@ from slam.base_trainer import BaseTrainer
 from slam.models import construct_sequential_rt_model
 from slam.linalg import Intrinsics
 
-from keras_contrib.callbacks import CyclicLR
-
 
 class SequentialRTTrainer(BaseTrainer):
     def __init__(self,
@@ -63,16 +61,6 @@ class SequentialRTTrainer(BaseTrainer):
                                           use_rotation_flow=self.use_rotation_flow)
         return super().get_model_factory(input_shapes)
 
-    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
-        callbacks = super().get_callbacks(model=model,
-                                          dataset=dataset,
-                                          evaluate=evaluate,
-                                          save_dir=save_dir,
-                                          prefix=prefix)
-        lr_scheduler = CyclicLR(base_lr=0.0001, max_lr=0.001, step_size=1000, mode='exp_range')
-        callbacks.append(lr_scheduler)
-        return callbacks
-
     @staticmethod
     def get_parser():
         parser = BaseTrainer.get_parser()
@@ -85,13 +73,6 @@ class SequentialRTTrainer(BaseTrainer):
         parser.add_argument('--c_y', type=float, default=0.4925949468085106)
 
         return parser
-
-    def set_dataset_args(self):
-        self.x_col = ['path_to_optical_flow']
-        self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
-        self.image_col = ['path_to_optical_flow']
-        self.load_mode = ['flow_xy']
-        self.preprocess_mode = ['flow_xy']
 
 
 if __name__ == '__main__':
