@@ -76,7 +76,7 @@ class Leaderboard:
 
         pool = Pool(len(self.leader_boards))
         for leader_board in self.leader_boards:
-            self.log(f'Submitting {self.bundle_name} to {leader_board}')
+            self.log(f'submitting {self.bundle_name}', leader_board)
             pool.apply_async(self.submit_bundle, (leader_board,))
         pool.close()
         pool.join()
