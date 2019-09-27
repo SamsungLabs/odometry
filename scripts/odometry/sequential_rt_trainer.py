@@ -71,7 +71,6 @@ class SequentialRTTrainer(BaseTrainer):
         parser.add_argument('--f_y', type=float, default=1.91185106382978721)
         parser.add_argument('--c_x', type=float, default=0.48927703464947625)
         parser.add_argument('--c_y', type=float, default=0.4925949468085106)
-
         return parser
 
 
