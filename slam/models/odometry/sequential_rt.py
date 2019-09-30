@@ -4,7 +4,7 @@ from slam.models.layers import (concat,
                                 conv2d,
                                 dense,
                                 gated_conv2d,
-                                FlowComposer)
+                                flow_composer)
 from slam.utils import mlflow_logging
 
 from keras.layers import Layer, Dense, concatenate, Subtract
@@ -60,9 +60,9 @@ def construct_encoder(inputs,
 @mlflow_logging(ignore=('inputs',), prefix='model.', name='SequentialRT')
 def construct_sequential_rt_model(inputs,
                                   intrinsics,
-                                  use_input_flow_for_translation=True,
-                                  use_cleaned_flow_for_translation=True,
-                                  use_rotation_flow_for_translation=False,
+                                  use_input_flow=False,
+                                  use_diff_flow=False,
+                                  use_rotation_flow=False,
                                   kernel_sizes=[7, 5, 3, 3, 3, 3],
                                   strides=[2, 1, 4, 1 ,2, 1],
                                   dilation_rates=None,
@@ -73,6 +73,8 @@ def construct_sequential_rt_model(inputs,
                                   use_gated_convolutions=False,
                                   use_batch_norm=False,
                                   return_confidence=False):
+
+    assert use_input_flow or use_diff_flow or use_rotation_flow
 
     inputs = concat(inputs)
     features_rotation = construct_encoder(inputs,
@@ -95,13 +97,14 @@ def construct_sequential_rt_model(inputs,
                                        name='rotation',
                                        regularization=regularization)
 
-    rotation_flow = FlowComposer(intrinsics)(output_rotation)
+    rotation_flow = flow_composer(output_rotation, intrinsics=intrinsics)
+
     inputs_for_translation = []
-    if use_input_flow_for_translation:
+    if use_input_flow:
         inputs_for_translation.append(inputs)
-    if use_cleaned_flow_for_translation:
+    if use_diff_flow:
         inputs_for_translation.append(Subtract()([inputs, rotation_flow]))
-    if use_rotation_flow_for_translation:
+    if use_rotation_flow:
         inputs_for_translation.append(rotation_flow)
 
     features_translation = construct_encoder(concat(inputs_for_translation),
@@ -121,7 +124,7 @@ def construct_sequential_rt_model(inputs,
                            name='translation')
 
     output_translation = construct_output(fc_translation,
-                                           name='translation',
-                                           regularization=regularization)
+                                          name='translation',
+                                          regularization=regularization)
 
     return output_rotation + output_translation

@@ -11,57 +11,40 @@ from slam.linalg import Intrinsics
 
 class SequentialRTTrainer(BaseTrainer):
     def __init__(self,
-                 dataset_root,
-                 dataset_type,
+                 leader_board,
                  run_name,
-                 use_input_flow_for_translation,
-                 use_cleaned_flow_for_translation,
-                 use_rotation_flow_for_translation,
+                 bundle_name,
+                 use_input_flow,
+                 use_diff_flow,
+                 use_rotation_flow,
                  f_x,
                  f_y,
                  c_x,
                  c_y,
-                 width,
-                 height,
                  **kwargs):
+
+        super().__init__(leader_board=leader_board,
+                         run_name=run_name,
+                         bundle_name=bundle_name,
+                         **kwargs)
+
+        height, width = self.config['target_size']
         self.intrinsics = Intrinsics(f_x=f_x,
                                      f_y=f_y,
                                      c_x=c_x,
                                      c_y=c_y,
                                      width=width,
                                      height=height)
-        self.use_input_flow_for_translation = use_input_flow_for_translation
-        self.use_cleaned_flow_for_translation = use_cleaned_flow_for_translation
-        self.use_rotation_flow_for_translation = use_rotation_flow_for_translation
-        super().__init__(dataset_root,
-                         dataset_type,
-                         run_name,
-                         **kwargs)
+
+        self.use_input_flow = use_input_flow
+        self.use_diff_flow = use_diff_flow
+        self.use_rotation_flow = use_rotation_flow
 
     def set_model_args(self):
-        self.construct_model_fn = partial(
-            construct_sequential_rt_model,
-            intrinsics=self.intrinsics,
-            use_input_flow_for_translation=self.use_input_flow_for_translation,
-            use_cleaned_flow_for_translation=self.use_cleaned_flow_for_translation,
-            use_rotation_flow_for_translation=self.use_rotation_flow_for_translation)
+        self.construct_model_fn = construct_sequential_rt_model
         self.lr = 0.001
         self.loss = 'mae'
         self.scale_rotation = 50
-
-    @staticmethod
-    def get_parser():
-        parser = BaseTrainer.get_parser()
-        parser.add_argument('--use_input_flow_for_translation', type=bool, default=True)
-        parser.add_argument('--use_cleaned_flow_for_translation', type=bool, default=True)
-        parser.add_argument('--use_rotation_flow_for_translation', type=bool, default=False)
-        parser.add_argument('--f_x', type=float, default=0.5792554391619662)
-        parser.add_argument('--f_y', type=float, default=1.91185106382978721)
-        parser.add_argument('--c_x', type=float, default=0.48927703464947625)
-        parser.add_argument('--c_y', type=float, default=0.4925949468085106)
-        parser.add_argument('--width', type=int, default=320)
-        parser.add_argument('--height', type=int, default=96)
-        return parser
 
     def set_dataset_args(self):
         self.x_col = ['path_to_optical_flow']
@@ -69,7 +52,26 @@ class SequentialRTTrainer(BaseTrainer):
         self.image_col = ['path_to_optical_flow']
         self.load_mode = ['flow_xy']
         self.preprocess_mode = ['flow_xy']
-        self.batch_size = 128
+
+    def get_model_factory(self, input_shapes):
+        self.construct_model_fn = partial(self.construct_model_fn,
+                                          intrinsics=self.intrinsics,
+                                          use_input_flow=self.use_input_flow,
+                                          use_diff_flow=self.use_diff_flow,
+                                          use_rotation_flow=self.use_rotation_flow)
+        return super().get_model_factory(input_shapes)
+
+    @staticmethod
+    def get_parser():
+        parser = BaseTrainer.get_parser()
+        parser.add_argument('--use_input_flow', '-input', action='store_true')
+        parser.add_argument('--use_diff_flow', '-diff', action='store_true')
+        parser.add_argument('--use_rotation_flow', '-rotation', action='store_true')
+        parser.add_argument('--f_x', type=float, default=0.5792554391619662)
+        parser.add_argument('--f_y', type=float, default=1.91185106382978721)
+        parser.add_argument('--c_x', type=float, default=0.48927703464947625)
+        parser.add_argument('--c_y', type=float, default=0.4925949468085106)
+        return parser
 
 
 if __name__ == '__main__':

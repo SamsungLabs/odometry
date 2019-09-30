@@ -182,3 +182,7 @@ class FlowComposer(Layer):
 
     def compute_output_shape(self, input_shape):
         return (None, self.intrinsics.height, self.intrinsics.width, 2)
+
+
+def flow_composer(inputs, intrinsics, **kwargs):
+    return FlowComposer(intrinsics=intrinsics, **kwargs)(inputs)
