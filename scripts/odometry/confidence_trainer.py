@@ -13,33 +13,17 @@ from slam.data_manager import GeneratorFactory
 class ConfidenceTrainer(BaseTrainer):
 
     def __init__(self,
-                 dataset_root,
                  leader_board,
                  run_name,
-                 seed=42,
-                 lsf=False,
-                 cache=False,
-                 batch=1,
-                 epochs=100,
-                 period=10,
-                 save_best_only=False,
-                 min_lr=1e-5,
-                 reduce_factor=0.5,
+                 bundle_name,
                  holdout=0.1,
-                 epochs_confidence=100):
+                 epochs_confidence=100,
+                 **kwargs):
 
-        super().__init__(dataset_root=dataset_root,
-                         leader_board=leader_board,
+        super().__init__(leader_board=leader_board,
                          run_name=run_name,
-                         seed=seed,
-                         lsf=lsf,
-                         cache=cache,
-                         batch=batch,
-                         epochs=epochs,
-                         period=period,
-                         save_best_only=save_best_only,
-                         min_lr=min_lr,
-                         reduce_factor=reduce_factor)
+                         bundle_name=bundle_name,
+                         **kwargs)
         self.holdout = holdout
         self.epochs_confidence = epochs_confidence
         self.max_to_visualize = 0
@@ -94,7 +78,7 @@ class ConfidenceTrainer(BaseTrainer):
 
     @staticmethod
     def get_parser():
-        parser = super().get_parser()
+        parser = BaseTrainer.get_parser()
         parser.add_argument('--holdout', type=float, default=0.1,
                             help='Ratio of dataset to train confidence')
         parser.add_argument('--epochs_confidence', type=int, default=100,
