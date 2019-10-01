@@ -27,7 +27,7 @@ class BaseTrainer:
                  save_best_only=False,
                  min_lr=1e-5,
                  reduce_factor=0.5,
-                 cyclic_lr=False,
+                 no_cycle=False,
                  backend='numpy',
                  cuda=False,
                  per_process_gpu_memory_fraction=0.33,
@@ -53,7 +53,7 @@ class BaseTrainer:
         self.save_best_only = save_best_only
         self.min_lr = min_lr
         self.reduce_factor = reduce_factor
-        self.cyclic_lr = cyclic_lr
+        self.cyclic_lr = not no_cycle
         self.backend = backend
         self.cuda = cuda
         self.use_mlflow = use_mlflow
@@ -228,6 +228,9 @@ class BaseTrainer:
                                            artifact_dir=self.run_name)
             callbacks.append(mlflow_callback)
 
+        print('Training with callbacks:')
+        for callback in callbacks:
+            print(callback)
         return callbacks
 
     def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
@@ -293,8 +296,8 @@ class BaseTrainer:
                             help='Threshold value for learning rate in stopping criterion')
         parser.add_argument('--reduce_factor', type=float, default=0.5,
                             help='Reduce factor for learning rate')
-        parser.add_argument('--cyclic_lr', '--cyclic', action='store_true',
-                            help='Use cyclic learning rate')
+        parser.add_argument('--no_cycle', action='store_true',
+                            help='Disable cyclic learning rate')
         parser.add_argument('--backend', type=str, default='numpy', choices=['numpy', 'torch'],
                             help='Backend used for evaluation')
         parser.add_argument('--cuda', action='store_true',
