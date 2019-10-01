@@ -31,6 +31,7 @@ class Leaderboard:
                  shared=False,
                  gmem=None,
                  round_robin=0,
+                 stride=None,
                  other_args=None):
 
         if not os.path.exists(script_path):
@@ -63,6 +64,7 @@ class Leaderboard:
         self.shared = shared
         self.gmem = gmem
         self.round_robin = min(len(self.machines), round_robin or len(self.machines))
+        self.stride = stride
         self.other_args = other_args or []
 
     def submit(self):
@@ -223,6 +225,7 @@ if __name__ == '__main__':
                              'to avoid sending all jobs to a single machine '
                              '(0 for selecting all machines)')
 
+    parser.add_argument('--stride', type=int, default=None, help='Stride between frames in dataset')
     args, other_args = parser.parse_known_args()
 
     leaderboard = Leaderboard(script_path=args.script_path,
@@ -238,6 +241,7 @@ if __name__ == '__main__':
                               shared=args.shared,
                               gmem=args.gmem,
                               round_robin=args.round_robin,
+                              stride=args.stride,
                               other_args=other_args)
 
     leaderboard.submit()

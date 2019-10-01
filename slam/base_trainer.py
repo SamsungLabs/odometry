@@ -32,6 +32,7 @@ class BaseTrainer:
                  per_process_gpu_memory_fraction=0.33,
                  use_mlflow=True,
                  seed=42,
+                 stride=None,
                  **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
@@ -39,7 +40,7 @@ class BaseTrainer:
         self.project_path = env.PROJECT_PATH
 
         dataset_root = get_dataset_root(leader_board)
-        self.config = get_config(dataset_root, leader_board)
+        self.config = get_config(dataset_root, leader_board, stride)
 
         self.dataset_root = dataset_root
         self.leader_board = leader_board
@@ -293,4 +294,5 @@ class BaseTrainer:
                             help='Use GPU for evaluation (only for backend=="torch")')
         parser.add_argument('--seed', type=int, default=42,
                             help='Random seed')
+        parser.add_argument('--stride', type=int, default=None)
         return parser
