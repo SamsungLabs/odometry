@@ -138,7 +138,8 @@ class Leaderboard:
                    f'--leader_board {leader_board}',
                    f'--run_name {run_name}',
                    f'--bundle_name {self.bundle_name}',
-                   f'--seed {seed}']
+                   f'--seed {seed}',
+                   f'--stride {self.stride}']
 
         if load_name:
             command.extend([f'--load_name {load_name}',
