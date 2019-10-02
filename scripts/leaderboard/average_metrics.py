@@ -25,123 +25,108 @@ class MetricAverager:
             self.average_experiment(experiment.name)
 
     def average_experiment(self, leader_board):
-        self._run_infos = None
-        run_infos = self.get_run_infos(leader_board)
-        run_names = self.get_run_names(run_infos)
-        bundle_names = self.get_bundle_names(run_names)
-        bundle_names = filter(lambda x: x + '_avg' not in run_names, bundle_names)
+        experiment = self.client.get_experiment_by_name(leader_board)
 
-        counter = 0
-        for counter, bundle_name in enumerate(bundle_names):
-            print(f'    Averaging {bundle_name} run.')
-            self.average_run(leader_board, bundle_name)
-        print(f'    Averaged {counter} runs in {leader_board} leaderboard.')
-
-    def get_run_infos(self, leader_board):
-        if self._run_infos is None:
-            experiment = self.client.get_experiment_by_name(leader_board)
-            run_infos = self.client.list_run_infos(experiment.experiment_id)
-            return run_infos
-        else:
-            return self._run_infos
-
-    def get_run_names(self, run_infos: List[entities.RunInfo]) -> List[str]:
-        run_names = list()
-        for run_info in run_infos:
-            run = self.client.get_run(run_info.run_id)
-            run_names.append(run.data.params['run_name'])
-        return run_names
-
-    def get_bundle_names(self, run_names: List[str]) -> Set[str]:
         bundle_names = set()
-        for run_name in run_names:
-            bundle_name = self.get_bundle_name(run_name)
-            if bundle_name is None:
-                print(f'    It seems like {run_name} does not belong to any bundle')
-            else:
-                bundle_names.add(bundle_name)
-        return bundle_names
 
-    @staticmethod
-    def get_bundle_name(run_name: str) -> Union[str, None]:
-        run_name_split = run_name.split('_')
+        for run_info in self.client.list_run_infos(experiment.experiment_id):
+            run = self.client.get_run(run_info.run_id)
+            bundle_name = run.data.params['bundle_name']
+            bundle_names.add(bundle_name)
 
-        if len(run_name_split) < 2 or (run_name_split[-2] != 'b'):
-            return None
-        else:
-            return '_'.join(run_name_split[:-2])
+        for bundle_name in bundle_names:
+            print(f'    Averaging {bundle_name} run.')
+            self.average_bundle(leader_board, bundle_name)
 
-    def average_run(self, leader_board, run_name):
+        print(f'    Averaged {len(bundle_names)} runs in {leader_board} leaderboard.')
+
+    def average_bundle(self, bundle_name, leader_board):
         mlflow.set_experiment(leader_board)
 
-        metrics, model_name = self.load_metrics(leader_board, run_name)
-        if not metrics:
-            raise ValueError(f'    No successfully finished runs were found for {run_name}')
-        aggregated_metrics = self.aggregate_metrics(metrics)
-        metrics_mean = self.calculate_stat(aggregated_metrics, np.mean, ignore=self.ignore)
-        metrics_std = self.calculate_stat(aggregated_metrics, np.std, ignore=self.ignore + self.save_once,
-                                          suffix='std')
+        metrics, model_name = self.load_metrics(bundle_name, leader_board)
+        if metrics is None:
+            raise ValueError(f'    No successfully finished runs were found for {bundle_name}')
 
-        num_of_runs = len(next(iter(aggregated_metrics.values())))
+        metrics_mean = self.calculate_stat(metrics, np.mean)
+        metrics_std = self.calculate_stat(metrics, np.std, ignore=self.save_once, suffix='std')
 
-        run_name = run_name + '_avg'
+        run_name = bundle_name + '_avg'
         with mlflow.start_run(run_name=run_name):
             mlflow.log_param('run_name', run_name)
+            mlflow.log_param('bundle_name', bundle_name)
             mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
-
             mlflow.log_param('model.name', model_name)
-            mlflow.log_param('num_of_runs', num_of_runs)
+            mlflow.log_param('num_of_runs', len(metrics))
             mlflow.log_param('avg', True)
 
             mlflow.log_metrics(metrics_mean)
             mlflow.log_metrics(metrics_std)
             mlflow.log_metric('successfully_finished', 1)
 
-    def load_metrics(self, leader_board, bundle_name):
-        metrics = list()
-        model_name = None
-        run_infos = self.get_run_infos(leader_board)
-        for run_info in run_infos:
-            data = self.client.get_run(run_info.run_id).data
-            current_bundle_name = self.get_bundle_name(data.params['run_name'])
-            if bundle_name == current_bundle_name:
-                if data.metrics.get('successfully_finished', 0):
-                    metrics.append(data.metrics)
-                model_name = model_name or data.params.get('model.name', 'Unknown')
+    def load_metrics(self, bundle_name, leader_board):
+        experiment = self.client.get_experiment_by_name(leader_board)
 
+        filter_string = f'params.bundle_name = "{bundle_name}"'
+        df = mlflow.search_runs(experiment_ids=[experiment.experiment_id],
+                                filter_string=filter_string)
+        if len(df) == 0:
+            return None, None
+
+        model_name = df['params.model.name'].unique()[0] or 'Unknown'
+
+        print(f'Found {len(df)} runs with bundle_name="{bundle_name}"')
+        success_col = 'metrics.successfully_finished'
+        if not success_col in df.columns or not df[success_col].values.any():
+            return None, model_name
+
+        df = df[df[success_col] == 1]
+        print(f'Successfully finished: {len(df)} runs')
+
+        average_col = 'params.avg'
+        if average_col in df.columns:
+            is_average = df[average_col].isin([True, 'True'])
+            if is_average.values.any():
+                print('Average run already exists')
+
+            df = df[~is_average]
+
+        print(f'Averaging {len(df)} runs')
+
+        if len(df) == 0:
+            return None, model_name
+
+        metrics_columns = [col for col in df.columns if col.startswith('metrics.')]
+        metrics = df[metrics_columns]
+        mapping = {col: col.replace('metrics.', '') for col in metrics_columns}
+        metrics.rename(columns=mapping, inplace=True)
         return metrics, model_name
 
-    @staticmethod
-    def aggregate_metrics(metrics):
-        aggregated_metrics = defaultdict(list)
-
-        for metric in metrics:
-            for k, v in metric.items():
-                aggregated_metrics[k].append(v)
-
-        return aggregated_metrics
-
-    @staticmethod
-    def calculate_stat(metrics, stat_fn, ignore, suffix=None):
-        return {(k + '_' + suffix) if suffix else k: stat_fn(v)
-                for k, v in metrics.items() if k not in ignore}
+    def calculate_stat(self, metrics, stat_fn, ignore=None, suffix=None):
+        ignore = self.ignore + (ignore or [])
+        selected_columns = [col for col in metrics.columns if not col in ignore]
+        metrics = metrics[selected_columns]
+        if suffix:
+            mapping = {col: col + '_' + suffix for col in selected_columns}
+            metrics.rename(columns=mapping, inplace=True)
+        stat = metrics.apply(stat_fn, axis=0)
+        return stat.to_dict()
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--leader_board', '-t', type=str, default=None,
+    parser.add_argument('--leader_board', '--dataset_type', type=str, default=None,
                         help='You can find available experiment names in slam.preprocessing.dataset_configs.py')
 
-    parser.add_argument('--run_name', '-n', type=str, default=None,
-                        help='Name of the run. Must be unique and specific')
+    parser.add_argument('--bundle_name', '-n', type=str, default=None,
+                        help='Name of the bundle. Must be unique and specific')
 
     args = parser.parse_args()
 
     averager = MetricAverager()
     if args.leader_board is None:
         averager.average_db()
-    elif args.leader_board is not None and args.run_name is None:
+    elif args.leader_board is not None and args.bundle_name is None:
         averager.average_experiment(args.leader_board)
     else:
-        averager.average_run(run_name=args.run_name, leader_board=args.leader_board)
+        averager.average_run(bundle_name=args.bundle_name, leader_board=args.leader_board)
