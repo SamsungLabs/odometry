@@ -7,3 +7,4 @@ git remote add dbczumar https://github.com/dbczumar/mlflow.git
 git fetch dbczumar
 git checkout materialize_metrics
 pip install -e .
+
