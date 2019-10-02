@@ -72,7 +72,8 @@ def add_stride_to_path(config, stride):
 
     keys = ['train_trajectories', 'val_trajectories', 'test_trajectories']
     for key in keys:
-        config[key] = [f'{stride}/{trajectory}' for trajectory in config[key]]
+        if config[key] is not None:
+            config[key] = [f'{stride}/{trajectory}' for trajectory in config[key]]
 
     return config
 
@@ -138,18 +139,18 @@ def get_euroc_train_all_strided_config(_dataset_root, stride=1, is_sintel=False)
     exp_name = 'euroc_sintel' if is_sintel else 'euroc'
     if stride is not None and stride > 1:
         exp_name += f'_stride{stride}'
-    config = {'train_trajectories': [f'{stride}/MH_01_easy',
-                                     f'{stride}/MH_03_medium',
-                                     f'{stride}/MH_04_difficult',
-                                     f'{stride}/V1_01_easy',
-                                     f'{stride}/V1_03_difficult',
-                                     f'{stride}/V2_01_easy',
-                                     f'{stride}/V2_03_difficult',
-                                     f'{stride}/MH_02_easy',
-                                     f'{stride}/V1_02_medium',
-                                     f'{stride}/MH_05_difficult',
-                                     f'{stride}/V2_02_medium'],
-              'val_trajectories': None,
+    config = {'train_trajectories': ['MH_01_easy',
+                                     'MH_03_medium',
+                                     'MH_04_difficult',
+                                     'V1_01_easy',
+                                     'V1_03_difficult',
+                                     'V2_01_easy',
+                                     'V2_03_difficult',
+                                     'MH_02_easy',
+                                     'V1_02_medium',
+                                     'MH_05_difficult',
+                                     'V2_02_medium'],
+              'val_trajectories': ['MH_01_easy'],
               'test_trajectories': None,
               'exp_name': exp_name,
               'target_size': (120, 160),

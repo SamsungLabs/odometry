@@ -90,7 +90,6 @@ class BaseTrainer:
         pass
 
     def set_run_dir(self):
-        self.experiment_dir = self.leader_board.replace('/', '_')
         self.run_dir = os.path.join(self.project_path, 'experiments', self.experiment_dir, self.run_name)
 
         if os.path.exists(self.run_dir):
@@ -107,6 +106,7 @@ class BaseTrainer:
         return experiment
 
     def set_experiment(self):
+        self.experiment_dir = self.leader_board.replace('/', '_')
         self.experiment = self.client.get_experiment_by_name(self.leader_board) or self.create_experiment()
         mlflow.set_experiment(self.leader_board)
 
