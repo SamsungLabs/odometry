@@ -21,12 +21,14 @@ class MlflowLogger(keras.callbacks.Callback):
         self.prefix = prefix
         self.run_dir = run_dir
         self.artifact_dir = artifact_dir
+        self.epoch = 0
 
         os.makedirs(self.run_dir, exist_ok=True)
         self.save_artifacts = self.run_dir and self.artifact_dir
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
+        self.epoch = epoch
 
         if mlflow.active_run():
             for key, value in dict({'epoch': epoch + 1, **logs}).items():
@@ -45,7 +47,5 @@ class MlflowLogger(keras.callbacks.Callback):
         return logs
 
     def on_train_end(self, logs=None):
-        if mlflow.active_run() and self.save_artifacts:
-            mlflow.log_artifacts(self.run_dir, self.artifact_dir)
-
+        logs = self.on_epoch_end(self.epoch, logs)
         return logs

@@ -76,7 +76,7 @@ class Leaderboard:
 
         pool = Pool(len(self.leader_boards))
         for leader_board in self.leader_boards:
-            self.log(f'Submitting {leader_board}')
+            self.log(f'submitting {self.bundle_name}', leader_board)
             pool.apply_async(self.submit_bundle, (leader_board,))
         pool.close()
         pool.join()
@@ -98,7 +98,7 @@ class Leaderboard:
         self.log('Averaging metrics', leader_board)
 
         try:
-            self.averager.average_bundle(leader_board, self.bundle_name)
+            self.averager.average_bundle(bundle_name=self.bundle_name, leader_board=leader_board)
         except Exception as e:
             self.log(e)
 
@@ -172,8 +172,9 @@ class Leaderboard:
         logger = logging.getLogger('leaderboard')
         logger.setLevel(logging.DEBUG)
 
-        leader_board = leader_board.replace('/', '_')
-        fh = logging.FileHandler(os.path.join(env.PROJECT_PATH, f'log_leaderboard_{leader_board}.txt'), mode='w+')
+        log_dir = os.path.join(env.PROJECT_PATH, 'logs', leader_board.replace('/', '_'))
+        os.makedirs(log_dir, exist_ok=True)
+        fh = logging.FileHandler(os.path.join(log_dir, self.bundle_name + '.txt'), mode='w+')
         fh.setLevel(logging.DEBUG)
         logger.addHandler(fh)
 
@@ -182,15 +183,14 @@ class Leaderboard:
             sh.setLevel(logging.DEBUG)
             logger.addHandler(sh)
 
-    @staticmethod
-    def log(info, leader_board=None):
+    def log(self, info, leader_board=None):
 
         logger = logging.getLogger('leaderboard')
 
         timestamp = datetime.datetime.now().isoformat().replace('T', ' ')
 
         if leader_board:
-            logger.info(f'{timestamp} Experiment {leader_board}. {info}')
+            logger.info(f'{timestamp} {leader_board}:{self.bundle_name}. {info}')
         else:
             logger.info(f'{timestamp} {info}')
 
@@ -199,9 +199,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--script_path', type=str, required=True)
 
-    parser.add_argument('--leader_board', '-exp', type=str, required=True,
+    parser.add_argument('--leader_board', '--dataset_type', type=str, required=True,
                         help='You can find available experiment names in slam.preprocessing.dataset_configs.py')
-    parser.add_argument('--load_leader_board', '-lexp', type=str, default=None)
+    parser.add_argument('--load_leader_board', '--load_dataset_type', type=str, default=None)
 
     parser.add_argument('--bundle_name', '-n', type=str, required=True,
                         help='Name of the bundle. Must be unique and specific')

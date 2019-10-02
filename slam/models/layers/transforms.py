@@ -11,7 +11,7 @@ def identity(inputs, scale=None, axis=None):
     return inputs, scale
 
 
-def percentile_scale(inputs, axis=None, q=90):
+def percentile_scale(inputs, axis=None, q=50):
     axis = axis or tuple(range(1, K.ndim(inputs)))
 
     num_channels = K.int_shape(inputs)[-1]
@@ -90,30 +90,7 @@ class Transform:
         self.transform = transform
         self.agnostic = agnostic
         self.channel_wise = channel_wise
-
-        self.transform_fn = self.get_transform_fn(transform)
         self.axis = (1, 2) if self.channel_wise else (1, 2, 3)
-
-    @staticmethod
-    def get_transform_fn(transform):
-        if transform is None:
-            return identity
-        if transform == 'percentile_scale':
-            return percentile_scale
-        elif transform == 'range_scale':
-            return partial(project, use_bias=False)
-        elif transform == 'project':
-            return project
-        elif transform == 'standard_scale':
-            return partial(normalize, use_bias=False)
-        elif transform == 'normalize':
-            return normalize
-        elif transform == 'divide':
-            def _divide(inputs, scale, axis):
-                return divide(inputs, scale), scale
-            return _divide
-        else:
-            raise ValueError(f'Unknown transform option: "{transform}"')
 
     def __call__(self, inputs):
         if self.transform is None or self.agnostic:
@@ -121,12 +98,31 @@ class Transform:
         else:
             inputs, scale = concat(inputs[:-1]), inputs[-1]
 
-        if self.agnostic:
-            inputs, scale = self.transform_fn(inputs, axis=self.axis)
+        if self.transform == 'percentile_scale':
+            transformed_inputs, scale_from_inputs = percentile_scale(inputs, axis=self.axis, q=90)
+        elif self.transform == 'absmean_scale':
+            transformed_inputs, scale_from_inputs = percentile_scale(inputs, axis=self.axis, q=50)
+        elif self.transform == 'range_scale':
+            transformed_inputs, scale_from_inputs = project(inputs, axis=self.axis, q=10, use_bias=False)
+        elif self.transform == 'project':
+            transformed_inputs, scale_from_inputs = project(inputs, axis=self.axis, q=10)
+        elif self.transform == 'standard_scale':
+            transformed_inputs, scale_from_inputs = normalize(inputs, axis=self.axis, use_bias=False)
+        elif self.transform == 'normalize':
+            transformed_inputs, scale_from_inputs = normalize(inputs, axis=self.axis)
+        elif self.transform == 'divide':
+            transformed_inputs = divide(inputs, scale)
+            scale_from_inputs = scale
+        elif self.transform is None:
+            transformed_inputs = inputs
+            scale_from_inputs = scale
         else:
-            inputs, _ = self.transform_fn(inputs, scale=scale, axis=self.axis)
+            raise ValueError(f'Unknown transform option: "{self.transform}"')
 
-        return inputs, scale
+        if self.agnostic:
+            return transformed_inputs, scale_from_inputs
+        else:
+            return transformed_inputs, scale
 
 
 def transform_inputs(inputs, transform=None, agnostic=True, channel_wise=False):

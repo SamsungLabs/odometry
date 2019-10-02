@@ -14,7 +14,6 @@ from slam.utils import (visualize_trajectory_with_gt,
                         visualize_trajectory,
                         create_vis_file_path,
                         create_prediction_file_path,
-                        partial_format,
                         chmod)
 
 
@@ -61,7 +60,7 @@ class Predict(keras.callbacks.Callback):
         self.best_loss = np.inf
         self.save_best_only = save_best_only
         if self.save_best_only:
-            self.template = '{epoch}'
+            self.template = 'best'
         else:
             self.template = '_'.join(['{epoch:03d}', self.monitor, '{' + self.monitor + ':.6f}'])
         self.max_to_visualize = max_to_visualize
@@ -240,7 +239,7 @@ class Predict(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
 
-        self.epoch += 1
+        self.epoch = epoch
         self.epochs_since_last_predict += 1
 
         if self.period and self.epochs_since_last_predict % self.period == 0:
@@ -254,7 +253,7 @@ class Predict(keras.callbacks.Callback):
 
                 logs = dict(**logs, **train_metrics, **val_metrics)
 
-            prediction_id = self.template.format(epoch='best' if self.save_best_only else epoch + 1, **logs)
+            prediction_id = self.template.format(epoch=epoch + 1, **logs)
 
             if not self.save_best_only or self._is_best(logs):
                 self._save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
@@ -267,11 +266,24 @@ class Predict(keras.callbacks.Callback):
 
     def on_train_end(self, logs=None):
         # Check to not calculate metrics twice on_train_end
+        if self.save_best_only:
+            self.template = 'final'
 
-        if self.epochs_since_last_predict or self.last_prediction_id is None:
+        reuse = self.epochs_since_last_predict == 0 and self.last_prediction_id is not None
+        if reuse:
+            final_prediction_id = self.template.format(epoch=self.epoch, **logs)
+
+            final_prediction_dir = self._get_prediction_dir(final_prediction_id)
+            shutil.rmtree(final_prediction_dir)
+            shutil.copytree(self._get_prediction_dir(self.last_prediction_id), final_prediction_dir)
+
+            final_vis_dir = self._get_vis_dir(final_prediction_id)
+            shutil.rmtree(final_vis_dir)
+            shutil.copytree(self._get_vis_dir(self.last_prediction_id), final_vis_dir)
+        else:
             self.save_best_only = False
             self.period = 1
-            self.on_epoch_end(self.epoch - 1, logs)
+            self.on_epoch_end(self.epoch, logs)
 
         logs = self.last_logs
 

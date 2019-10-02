@@ -27,7 +27,26 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_PATH,
                  'tum_bovw': env.TUM_BOVW_PATH,
                  'tum_debug': env.TUM_PATH,
                  'zju': env.ZJU_PATH,
-                 'euroc': env.EUROC_PATH,
+                 'euroc': env.EUROC_MIXED_PATH,
+                 'euroc_stride2': env.EUROC_MIXED_PATH,
+                 'euroc_stride3': env.EUROC_MIXED_PATH,
+                 'euroc_stride4': env.EUROC_MIXED_PATH,
+                 'euroc_stride5': env.EUROC_MIXED_PATH,
+                 'euroc_stride6': env.EUROC_MIXED_PATH,
+                 'euroc_stride7': env.EUROC_MIXED_PATH,
+                 'euroc_stride8': env.EUROC_MIXED_PATH,
+                 'euroc_stride9': env.EUROC_MIXED_PATH,
+                 'euroc_stride10': env.EUROC_MIXED_PATH,
+                 'euroc_sintel_stride1': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride2': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride3': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride4': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride5': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride6': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride7': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride8': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride9': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_stride10': env.EUROC_SINTEL_MIXED_PATH,
                  'euroc_bovw': env.EUROC_BOVW_PATH,
                  'saic_office': env.SAIC_OFFICE_PATH,
                  'retail_bot': env.RETAIL_BOT_PATH}
@@ -88,28 +107,111 @@ def get_zju_config(_dataset_root):
     return config
 
 
-def get_euroc_config(_dataset_root):
-    config = {'train_trajectories': ['MH_01_easy',
-                                     'MH_03_medium',
-                                     'MH_04_difficult',
-                                     'V1_01_easy',
-                                     'V1_03_difficult',
-                                     'V2_01_easy',
-                                     'V2_03_difficult'],
-              'val_trajectories': ['MH_02_easy',
-                                   'V1_02_medium'],
-              'test_trajectories': ['MH_05_difficult',
-                                    'V2_02_medium'],
-              'exp_name': 'euroc',
+def get_euroc_strided_config(stride=1, is_sintel=False):
+    exp_name = 'euroc_sintel' if is_sintel else 'euroc'
+    if stride > 1:
+        exp_name += f'_stride{stride}'
+    config = {'train_trajectories': [f'{stride}/MH_01_easy',
+                                     f'{stride}/MH_03_medium',
+                                     f'{stride}/MH_04_difficult',
+                                     f'{stride}/V1_01_easy',
+                                     f'{stride}/V1_03_difficult',
+                                     f'{stride}/V2_01_easy',
+                                     f'{stride}/V2_03_difficult'],
+              'val_trajectories': [f'{stride}/MH_02_easy',
+                                   f'{stride}/V1_02_medium'],
+              'test_trajectories': [f'{stride}/MH_05_difficult',
+                                    f'{stride}/V2_02_medium'],
+              'exp_name': exp_name,
               'target_size': (120, 160),
               'source_size': (480, 640),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
-              'train_strides': 1,
-              'val_strides': 1,
-              'test_strides': 1,
+              'train_strides': stride,
+              'val_strides': stride,
+              'test_strides': stride,
               }
     return config
+
+
+def get_euroc_config(_dataset_root):
+    return get_euroc_strided_config(stride=1)
+
+
+def get_euroc_stride2_config(_dataset_root):
+    return get_euroc_strided_config(stride=2)
+
+
+def get_euroc_stride3_config(_dataset_root):
+    return get_euroc_strided_config(stride=3)
+
+
+def get_euroc_stride4_config(_dataset_root):
+    return get_euroc_strided_config(stride=4)
+
+
+def get_euroc_stride5_config(_dataset_root):
+    return get_euroc_strided_config(stride=5)
+
+
+def get_euroc_stride6_config(_dataset_root):
+    return get_euroc_strided_config(stride=6)
+
+
+def get_euroc_stride7_config(_dataset_root):
+    return get_euroc_strided_config(stride=7)
+
+
+def get_euroc_stride8_config(_dataset_root):
+    return get_euroc_strided_config(stride=8)
+
+
+def get_euroc_stride9_config(_dataset_root):
+    return get_euroc_strided_config(stride=9)
+
+
+def get_euroc_stride10_config(_dataset_root):
+    return get_euroc_strided_config(stride=10)
+
+
+def get_euroc_sintel_stride1_config(_dataset_root):
+    return get_euroc_strided_config(stride=1, is_sintel=True)
+
+
+def get_euroc_sintel_stride2_config(_dataset_root):
+    return get_euroc_strided_config(stride=2, is_sintel=True)
+
+
+def get_euroc_sintel_stride3_config(_dataset_root):
+    return get_euroc_strided_config(stride=3, is_sintel=True)
+
+
+def get_euroc_sintel_stride4_config(_dataset_root):
+    return get_euroc_strided_config(stride=4, is_sintel=True)
+
+
+def get_euroc_sintel_stride5_config(_dataset_root):
+    return get_euroc_strided_config(stride=5, is_sintel=True)
+
+
+def get_euroc_sintel_stride6_config(_dataset_root):
+    return get_euroc_strided_config(stride=6, is_sintel=True)
+
+
+def get_euroc_sintel_stride7_config(_dataset_root):
+    return get_euroc_strided_config(stride=7, is_sintel=True)
+
+
+def get_euroc_sintel_stride8_config(_dataset_root):
+    return get_euroc_strided_config(stride=8, is_sintel=True)
+
+
+def get_euroc_sintel_stride9_config(_dataset_root):
+    return get_euroc_strided_config(stride=9, is_sintel=True)
+
+
+def get_euroc_sintel_stride10_config(_dataset_root):
+    return get_euroc_strided_config(stride=10, is_sintel=True)
 
 
 def get_euroc_bovw_config(dataset_root):
