@@ -10,7 +10,7 @@ import env
 
 from slam.data_manager import GeneratorFactory
 from slam.models import ModelFactory
-from slam.evaluation import MlflowLogger, Predict, TerminateOnLR, ModelCheckpoint
+from slam.evaluation import MlflowLogger, Predict, TerminateOnLR, ModelCheckpoint, CyclicLR
 from slam.preprocessing import get_dataset_root, get_config, DATASET_TYPES
 from slam.utils import set_computation, chmod
 
@@ -27,6 +27,7 @@ class BaseTrainer:
                  save_best_only=False,
                  min_lr=1e-5,
                  reduce_factor=0.5,
+                 no_cycle=False,
                  backend='numpy',
                  cuda=False,
                  per_process_gpu_memory_fraction=0.33,
@@ -52,6 +53,7 @@ class BaseTrainer:
         self.save_best_only = save_best_only
         self.min_lr = min_lr
         self.reduce_factor = reduce_factor
+        self.cyclic_lr = not no_cycle
         self.backend = backend
         self.cuda = cuda
         self.use_mlflow = use_mlflow
@@ -212,6 +214,10 @@ class BaseTrainer:
         reduce_lr_callback = ReduceLROnPlateau(monitor='val_loss', factor=self.reduce_factor)
         callbacks.append(reduce_lr_callback)
 
+        if self.cyclic_lr:
+            lr_scheduler = CyclicLR(base_lr=self.lr * 0.1, max_lr=self.lr, step_size=1000, mode='exp_range')
+            callbacks.append(lr_scheduler)
+
         terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr)
         callbacks.append(terminate_on_lr_callback)
 
@@ -222,6 +228,9 @@ class BaseTrainer:
                                            artifact_dir=self.run_name)
             callbacks.append(mlflow_callback)
 
+        print('Training with callbacks:')
+        for callback in callbacks:
+            print(callback)
         return callbacks
 
     def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
@@ -285,8 +294,10 @@ class BaseTrainer:
                             help='Evaluate / checkpoint only if validation loss improves')
         parser.add_argument('--min_lr', type=float, default=1e-5,
                             help='Threshold value for learning rate in stopping criterion')
-        parser.add_argument('--reduce_factor', type=int, default=0.5,
+        parser.add_argument('--reduce_factor', type=float, default=0.5,
                             help='Reduce factor for learning rate')
+        parser.add_argument('--no_cycle', action='store_true',
+                            help='Disable cyclic learning rate')
         parser.add_argument('--backend', type=str, default='numpy', choices=['numpy', 'torch'],
                             help='Backend used for evaluation')
         parser.add_argument('--cuda', action='store_true',
