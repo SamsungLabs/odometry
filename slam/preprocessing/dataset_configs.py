@@ -28,7 +28,7 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_PATH,
                  'euroc': env.EUROC_MIXED_PATH,
                  'euroc_train_all': env.EUROC_MIXED_PATH,
                  'euroc_sintel': env.EUROC_SINTEL_MIXED_PATH,
-                 'euroc_bovw': env.EUROC_BOVW_PATH,
+                 'euroc_bovw2': env.EUROC_BOVW_PATH,
                  'saic_office': env.SAIC_OFFICE_PATH,
                  'retail_bot': env.RETAIL_BOT_PATH}
 
@@ -119,9 +119,9 @@ def get_euroc_config(_dataset_root, stride, is_sintel=False):
               'source_size': (480, 640),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
-              'train_strides': stride,
-              'val_strides': stride,
-              'test_strides': stride,
+              'train_strides': stride or 1,
+              'val_strides': stride or 1,
+              'test_strides': stride or 1,
               }
     config = add_stride_to_path(config, stride)
     return config
@@ -153,17 +153,17 @@ def get_euroc_train_all_config(_dataset_root, stride, is_sintel=False):
               'source_size': (480, 640),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
-              'train_strides': stride,
-              'val_strides': stride,
-              'test_strides': stride,
+              'train_strides': stride or 1,
+              'val_strides': stride or 1,
+              'test_strides': stride or 1,
               }
     config = add_stride_to_path(config, stride)
     return config
 
 
-def get_euroc_bovw_config(dataset_root, stride):
-    config = get_euroc_config(dataset_root, stride)
-    config['exp_name'] = 'euroc_bovw'
+def get_euroc_bovw2_config(dataset_root, _stride):
+    config = get_euroc_config(dataset_root, None)
+    config['exp_name'] = 'euroc_bovw2'
     return config
 
 
@@ -212,9 +212,9 @@ def get_kitti_4_6_config(_dataset_root, stride):
               'source_size': (384, 1280),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'kitti',
-              'train_strides': stride,
-              'val_strides': stride,
-              'test_strides': stride,
+              'train_strides': stride or 1,
+              'val_strides': stride or 1,
+              'test_strides': stride or 1,
               }
     config = add_stride_to_path(config, stride)
     return config
@@ -287,7 +287,7 @@ def get_kitti_4_6_mixed_1_2_4_config(_dataset_root, _stride):
 
 
 def get_kitti_4_6_bovw_config(dataset, _stride):
-    config = get_kitti_4_6_config(dataset, 1)
+    config = get_kitti_4_6_config(dataset, None)
     config['exp_name'] = 'kitti_4/6_bovw'
     return config
 
@@ -550,7 +550,7 @@ def get_tum_config(dataset_root, stride):
     return config
 
 
-def get_tum_bovw_config(dataset_root, stride):
-    config = get_tum_config(dataset_root, stride)
+def get_tum_bovw_config(dataset_root, _stride):
+    config = get_tum_config(dataset_root, None)
     config['exp_name'] = 'tum_bovw'
     return config
