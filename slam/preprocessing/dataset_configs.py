@@ -207,7 +207,7 @@ def get_kitti_4_6_config(_dataset_root, stride):
                                    '07',
                                    '10'],
               'test_trajectories': None,
-              'exp_name': 'kitti_4/6',
+              'exp_name': exp_name,
               'target_size': (96, 320),
               'source_size': (384, 1280),
               'depth_multiplicator': 1.0,
