@@ -58,11 +58,7 @@ def get_config(dataset_root: str, dataset_type: str, stride=None) -> Dict:
 
     this_module = sys.modules[__name__]
     dataset_type = dataset_type.replace('/', '_').replace('+', '_')
-
-    if stride is None:
-        config = getattr(this_module, f'get_{dataset_type}_config')(dataset_root)
-    else:
-        config = getattr(this_module,  f'get_{dataset_type}_strided_config')(dataset_root, stride)
+    config = getattr(this_module, f'get_{dataset_type}_config')(dataset_root, stride)
     return config
 
 
@@ -78,7 +74,7 @@ def add_stride_to_path(config, stride):
     return config
 
 
-def get_zju_config(_dataset_root):
+def get_zju_config(_dataset_root, _stride):
     config = {'train_trajectories': ['A0',
                                      'A3',
                                      'A4',
@@ -103,7 +99,7 @@ def get_zju_config(_dataset_root):
     return config
 
 
-def get_euroc_strided_config(_dataset_root, stride=1, is_sintel=False):
+def get_euroc_config(_dataset_root, stride, is_sintel=False):
     exp_name = 'euroc_sintel' if is_sintel else 'euroc'
     if stride is not None and stride > 1:
         exp_name += f'_stride{stride}'
@@ -131,11 +127,11 @@ def get_euroc_strided_config(_dataset_root, stride=1, is_sintel=False):
     return config
 
 
-def get_euroc_sintel_strided_config(_dataset_root, stride):
-    return get_euroc_strided_config(_dataset_root, stride=stride, is_sintel=True)
+def get_euroc_sintel_config(dataset_root, stride):
+    return get_euroc_config(dataset_root, stride, is_sintel=True)
 
 
-def get_euroc_train_all_strided_config(_dataset_root, stride=1, is_sintel=False):
+def get_euroc_train_all_config(_dataset_root, stride, is_sintel=False):
     exp_name = 'euroc_sintel' if is_sintel else 'euroc'
     if stride is not None and stride > 1:
         exp_name += f'_stride{stride}'
@@ -165,13 +161,13 @@ def get_euroc_train_all_strided_config(_dataset_root, stride=1, is_sintel=False)
     return config
 
 
-def get_euroc_bovw_config(dataset_root):
-    config = get_euroc_strided_config(dataset_root, stride=None)
+def get_euroc_bovw_config(dataset_root, stride):
+    config = get_euroc_config(dataset_root, stride)
     config['exp_name'] = 'euroc_bovw'
     return config
 
 
-def get_kitti_8_3_config(_dataset_root):
+def get_kitti_8_3_config(_dataset_root, _stride):
     config = {'train_trajectories': ['00',
                                      '01',
                                      '02',
@@ -196,7 +192,7 @@ def get_kitti_8_3_config(_dataset_root):
     return config
 
 
-def get_kitti_4_6_strided_config(_dataset_root, stride=1):
+def get_kitti_4_6_config(_dataset_root, stride):
     exp_name = 'kitti_4/6'
     if stride is not None and stride > 1:
         exp_name += f'_stride{stride}'
@@ -224,7 +220,7 @@ def get_kitti_4_6_strided_config(_dataset_root, stride=1):
     return config
 
 
-def get_kitti_4_6_mixed_config(_dataset_root):
+def get_kitti_4_6_mixed_config(_dataset_root, _stride):
     config = {'train_trajectories': ['1/00',
                                      '1/02',
                                      '1/08',
@@ -255,7 +251,7 @@ def get_kitti_4_6_mixed_config(_dataset_root):
     return config
 
 
-def get_kitti_4_6_mixed_1_2_4_config(_dataset_root):
+def get_kitti_4_6_mixed_1_2_4_config(_dataset_root, _stride):
     config = {'train_trajectories': ['1/00',
                                      '1/02',
                                      '1/08',
@@ -290,13 +286,13 @@ def get_kitti_4_6_mixed_1_2_4_config(_dataset_root):
     return config
 
 
-def get_kitti_4_6_bovw_config(dataset):
-    config = get_kitti_4_6_strided_config(dataset, stride=1)
+def get_kitti_4_6_bovw_config(dataset, _stride):
+    config = get_kitti_4_6_config(dataset, 1)
     config['exp_name'] = 'kitti_4/6_bovw'
     return config
 
 
-def get_discoman_v10_config(dataset_root):
+def get_discoman_v10_config(dataset_root, _stride):
     config = {'train_trajectories': list(),
               'val_trajectories': list(),
               'test_trajectories': list(),
@@ -320,7 +316,7 @@ def get_discoman_v10_config(dataset_root):
     return config
 
 
-def get_mini_discoman_v10_config(dataset_root):
+def get_mini_discoman_v10_config(dataset_root, _stride):
     config = {'train_trajectories': list(),
               'val_trajectories': list(),
               'test_trajectories': list(),
@@ -348,7 +344,7 @@ def get_mini_discoman_v10_config(dataset_root):
     return config
 
 
-def get_discoman_v10_mixed_config(dataset_root):
+def get_discoman_v10_mixed_config(dataset_root, _stride):
     config = {'train_trajectories': list(),
               'val_trajectories': list(),
               'test_trajectories': list(),
@@ -379,7 +375,7 @@ def get_discoman_v10_mixed_config(dataset_root):
     return config
 
 
-def get_mini_discoman_v10_mixed_config(dataset_root):
+def get_mini_discoman_v10_mixed_config(dataset_root, _stride):
     config = {'train_trajectories': list(),
               'val_trajectories': list(),
               'test_trajectories': list(),
@@ -412,7 +408,7 @@ def get_mini_discoman_v10_mixed_config(dataset_root):
     return config
 
 
-def get_discoman_debug_config(_dataset_root):
+def get_discoman_debug_config(_dataset_root, _stride):
     config = {'train_trajectories': ['train/000001'],
               'val_trajectories': ['val/000230'],
               'test_trajectories': ['test/000200'],
@@ -428,7 +424,7 @@ def get_discoman_debug_config(_dataset_root):
     return config
 
 
-def get_tum_debug_config(_dataset_root):
+def get_tum_debug_config(_dataset_root, _stride):
     config = {'train_trajectories': ['rgbd_dataset_freiburg1_desk'],
               'val_trajectories': ['rgbd_dataset_freiburg1_desk'],
               'test_trajectories': ['rgbd_dataset_freiburg1_desk'],
@@ -444,7 +440,7 @@ def get_tum_debug_config(_dataset_root):
     return config
 
 
-def get_tum_fr1_config(_dataset_root):
+def get_tum_fr1_config(_dataset_root, _stride):
     config = {'train_trajectories': ['rgbd_dataset_freiburg1_desk',
                                      'rgbd_dataset_freiburg1_xyz',
                                      'rgbd_dataset_freiburg1_360',
@@ -465,7 +461,7 @@ def get_tum_fr1_config(_dataset_root):
     return config
 
 
-def get_tum_fr2_config(_dataset_root):
+def get_tum_fr2_config(_dataset_root, _stride):
     config = {'train_trajectories': ['rgbd_dataset_freiburg2_xyz',
                                      'rgbd_dataset_freiburg2_rpy',
                                      'rgbd_dataset_freiburg2_flowerbouquet_brownbackground',
@@ -488,7 +484,7 @@ def get_tum_fr2_config(_dataset_root):
     return config
 
 
-def get_tum_fr3_config(_dataset_root):
+def get_tum_fr3_config(_dataset_root, _stride):
     config = {'train_trajectories': ['rgbd_dataset_freiburg3_checkerboard_large',
                                      'rgbd_dataset_freiburg3_sitting_xyz',
                                      'rgbd_dataset_freiburg3_long_office_household',
@@ -539,10 +535,10 @@ def get_tum_fr3_config(_dataset_root):
     return config
 
 
-def get_tum_config(dataset_root):
-    fr1_config = get_tum_fr1_config(dataset_root)
-    fr2_config = get_tum_fr2_config(dataset_root)
-    fr3_config = get_tum_fr3_config(dataset_root)
+def get_tum_config(dataset_root, stride):
+    fr1_config = get_tum_fr1_config(dataset_root, stride)
+    fr2_config = get_tum_fr2_config(dataset_root, stride)
+    fr3_config = get_tum_fr3_config(dataset_root, stride)
 
     config = fr1_config
     config['exp_name'] = 'tum'
@@ -554,7 +550,7 @@ def get_tum_config(dataset_root):
     return config
 
 
-def get_tum_bovw_config(dataset_root):
-    config = get_tum_config(dataset_root)
+def get_tum_bovw_config(dataset_root, stride):
+    config = get_tum_config(dataset_root, stride)
     config['exp_name'] = 'tum_bovw'
     return config
