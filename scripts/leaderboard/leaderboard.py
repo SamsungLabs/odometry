@@ -225,8 +225,8 @@ if __name__ == '__main__':
                         help='Number of machines available for submitting each job '
                              'to avoid sending all jobs to a single machine '
                              '(0 for selecting all machines)')
-
     parser.add_argument('--stride', type=int, default=None, help='Stride between frames in dataset')
+
     args, other_args = parser.parse_known_args()
 
     leaderboard = Leaderboard(script_path=args.script_path,
