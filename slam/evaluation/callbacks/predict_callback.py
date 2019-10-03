@@ -290,6 +290,7 @@ class Predict(keras.callbacks.Callback):
         test_tasks = self._create_tasks(self.test_generator, 'test')
         if self.evaluate:
             test_tasks, test_metrics = self._evaluate_tasks(test_tasks)
+            logs = dict(**logs, **test_metrics)
 
         self._save_tasks(test_tasks, prediction_id='test')
 
