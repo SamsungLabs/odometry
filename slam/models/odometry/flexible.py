@@ -55,6 +55,8 @@ def construct_flexible_model(inputs,
                              transform=None,
                              agnostic=True,
                              channel_wise=False,
+                             concat_scale_to_fc=False,
+                             multiply_outputs_by_scale=False,
                              return_confidence=False):
 
     inputs, scale = transform_inputs(inputs,
@@ -71,20 +73,42 @@ def construct_flexible_model(inputs,
                                  use_gated_convolutions=use_gated_convolutions,
                                  use_batch_norm=use_batch_norm)
 
-    fc_rotation = dense(features,
-                        output_size=output_size,
-                        layers_num=2,
-                        regularization=regularization,
-                        activation=activation,
-                        kernel_initializer=kernel_initializer,
-                        name='rotation')
-    fc_translation = dense(features,
-                           output_size=output_size,
-                           layers_num=2,
-                           regularization=regularization,
-                           activation=activation,
-                           kernel_initializer=kernel_initializer,
-                           name='translation')
+    if concat_scale_to_fc:
+        fc_rotation = features
+        fc_translation = features
+
+        for i in range(2):
+            fc_rotation = concat([fc_rotation, scale])
+            fc_translation = concat([fc_translation, scale])
+
+            fc_rotation = dense(fc_rotation,
+                                output_size=output_size,
+                                layers_num=1,
+                                regularization=regularization,
+                                activation=activation,
+                                kernel_initializer=kernel_initializer)
+
+            fc_translation = dense(fc_translation,
+                                   output_size=output_size,
+                                   layers_num=1,
+                                   regularization=regularization,
+                                   activation=activation,
+                                   kernel_initializer=kernel_initializer)
+    else:
+        fc_rotation = dense(features,
+                            output_size=output_size,
+                            layers_num=2,
+                            regularization=regularization,
+                            activation=activation,
+                            kernel_initializer=kernel_initializer,
+                            name='rotation')
+        fc_translation = dense(features,
+                               output_size=output_size,
+                               layers_num=2,
+                               regularization=regularization,
+                               activation=activation,
+                               kernel_initializer=kernel_initializer,
+                               name='translation')
 
     if split:
         fc = chunk(fc_rotation, n=3) + chunk(fc_translation, n=3)
@@ -93,6 +117,6 @@ def construct_flexible_model(inputs,
 
     outputs = construct_outputs(fc,
                                 regularization=regularization,
-                                scale=scale,
+                                scale=scale if multiply_outputs_by_scale else None,
                                 return_confidence=return_confidence)
     return outputs
