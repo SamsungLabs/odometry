@@ -142,7 +142,7 @@ def get_euroc_sintel_g_config(dataset_root, stride):
     return get_euroc_config(dataset_root, stride, pwc_mode='sintel_g')
 
 
-def get_euroc_train_all_config(_dataset_root, stride):
+def get_euroc_train_all_config(_dataset_root, stride, pwc_mode=None):
     if pwc_mode is None:
         exp_name = 'euroc'
     elif pwc_mode == 'sintel':
