@@ -128,9 +128,11 @@ class Leaderboard:
         else:
             mode = 'exclusive_process'
 
+        output_file_name = f'{leader_board.replace("/", "_")}:{run_name}'
+        output_file_path = f'{Path.home().joinpath("lsf").joinpath("%J").as_posix()}_{output_file_name}'
         command = ['bsub',
                    f'-n 1 -R "span[hosts=1] affinity[core({self.core}):distribute=pack]"',
-                   f'-o {Path.home().joinpath("lsf").joinpath("%J").as_posix()}_{run_name}',
+                   f'-o {output_file_path}',
                    f'-m "{machines}"',
                    f'-gpu "num=1:mode={mode}"',
                    'python',
