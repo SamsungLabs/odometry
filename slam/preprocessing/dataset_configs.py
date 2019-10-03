@@ -28,6 +28,7 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_PATH,
                  'euroc': env.EUROC_MIXED_PATH,
                  'euroc_train_all': env.EUROC_MIXED_PATH,
                  'euroc_sintel': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
                  'euroc_bovw2': env.EUROC_BOVW_PATH,
                  'saic_office': env.SAIC_OFFICE_PATH,
                  'retail_bot': env.RETAIL_BOT_PATH}
@@ -98,9 +99,15 @@ def get_zju_config(_dataset_root, _stride):
               }
     return config
 
-
-def get_euroc_config(_dataset_root, stride, is_sintel=False):
-    exp_name = 'euroc_sintel' if is_sintel else 'euroc'
+def get_euroc_config(_dataset_root, stride, pwc_mode=None):
+    if pwc_mode is None:
+        exp_name = 'euroc'
+    elif pwc_mode == 'sintel':
+        exp_name = 'euroc_sintel'
+    elif pwc_mode == 'sintel_g':
+        exp_name = 'euroc_sintel_g'
+    else:
+        raise Exception('pwc_mode is invalid')
     if stride is not None and stride > 1:
         exp_name += f'_stride{stride}'
     config = {'train_trajectories': ['MH_01_easy',
@@ -128,11 +135,22 @@ def get_euroc_config(_dataset_root, stride, is_sintel=False):
 
 
 def get_euroc_sintel_config(dataset_root, stride):
-    return get_euroc_config(dataset_root, stride, is_sintel=True)
+    return get_euroc_config(dataset_root, stride, pwc_mode='sintel')
 
 
-def get_euroc_train_all_config(_dataset_root, stride, is_sintel=False):
-    exp_name = 'euroc_sintel' if is_sintel else 'euroc'
+def get_euroc_sintel_g_config(dataset_root, stride):
+    return get_euroc_config(dataset_root, stride, pwc_mode='sintel_g')
+
+
+def get_euroc_train_all_config(_dataset_root, stride, pwc_mode=None):
+    if pwc_mode is None:
+        exp_name = 'euroc'
+    elif pwc_mode == 'sintel':
+        exp_name = 'euroc_sintel'
+    elif pwc_mode == 'sintel_g':
+        exp_name = 'euroc_sintel_g'
+    else:
+        raise Exception('pwc_mode is invalid')
     if stride is not None and stride > 1:
         exp_name += f'_stride{stride}'
     config = {'train_trajectories': ['MH_01_easy',
