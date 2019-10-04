@@ -1,7 +1,6 @@
 import os
 import shutil
 import mlflow
-import time
 import datetime
 import argparse
 from keras.callbacks import ReduceLROnPlateau, TerminateOnNaN
@@ -34,6 +33,8 @@ class BaseTrainer:
                  use_mlflow=True,
                  seed=42,
                  stride=None,
+                 min_frame_ind_diff=0,
+                 max_frame_ind_diff=float('inf'),
                  **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
@@ -84,6 +85,9 @@ class BaseTrainer:
 
         self.client = None
         self.experiment = None
+
+        self.min_frame_ind_diff = min_frame_ind_diff
+        self.max_frame_ind_diff = max_frame_ind_diff
 
     def set_model_args(self):
         pass
@@ -168,7 +172,9 @@ class BaseTrainer:
                                 train_strides=self.config['train_strides'],
                                 val_strides=self.config['val_strides'],
                                 test_strides=self.config['test_strides'],
-                                placeholder=self.placeholder)
+                                placeholder=self.placeholder,
+                                min_frame_ind_diff=self.min_frame_ind_diff,
+                                max_frame_ind_diff=self.max_frame_ind_diff)
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
@@ -306,4 +312,9 @@ class BaseTrainer:
         parser.add_argument('--seed', type=int, default=42,
                             help='Random seed')
         parser.add_argument('--stride', type=int, default=None)
+        parser.add_argument('--min_frame_ind_diff', type=int, default=0,
+                            help='Minimum allowed stride between frames.')
+        parser.add_argument('--max_frame_ind_diff', type=float, default=float('inf'),
+                            help='Maximum allowed stride between frames.')
+
         return parser
