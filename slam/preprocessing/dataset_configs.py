@@ -167,7 +167,7 @@ def get_euroc_mixed_1_2_3_config(_dataset_root, _stride, pwc_mode=None):
                                      '2/V1_01_easy',
                                      '2/V1_03_difficult',
                                      '2/V2_01_easy',
-                                     '2/V2_03_difficult'
+                                     '2/V2_03_difficult',
                                      '3/MH_01_easy',
                                      '3/MH_03_medium',
                                      '3/MH_04_difficult',
@@ -179,14 +179,14 @@ def get_euroc_mixed_1_2_3_config(_dataset_root, _stride, pwc_mode=None):
               'val_trajectories': ['1/MH_02_easy',
                                    '1/V1_02_medium',
                                    '2/MH_02_easy',
-                                   '2/V1_02_medium'
+                                   '2/V1_02_medium',
                                    '3/MH_02_easy',
                                    '3/V1_02_medium'
                                    ],
               'test_trajectories': ['1/MH_05_difficult',
                                     '1/V2_02_medium',
                                     '2/MH_05_difficult',
-                                    '2/V2_02_medium'
+                                    '2/V2_02_medium',
                                     '3/MH_05_difficult',
                                     '3/V2_02_medium'
                                     ],
