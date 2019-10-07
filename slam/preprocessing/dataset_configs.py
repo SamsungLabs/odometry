@@ -26,6 +26,7 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_PATH,
                  'tum_debug': env.TUM_PATH,
                  'zju': env.ZJU_PATH,
                  'euroc': env.EUROC_MIXED_PATH,
+                 'euroc_mixed_1_2_3': env.EUROC_MIXED_PATH,
                  'euroc_train_all': env.EUROC_MIXED_PATH,
                  'euroc_sintel': env.EUROC_SINTEL_MIXED_PATH,
                  'euroc_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
@@ -75,6 +76,14 @@ def add_stride_to_path(config, stride):
     return config
 
 
+def gen_strides_from_path(config):
+    sub_dirs = ['train', 'val', 'test']
+    for d in sub_dirs:
+        trajectories = config[f'{d}_trajectories']
+        config[f'{d}_strides'] = [int(Path(t).parent.name) for t in trajectories] if trajectories else None
+    return config
+
+
 def get_zju_config(_dataset_root, _stride):
     config = {'train_trajectories': ['A0',
                                      'A3',
@@ -98,6 +107,7 @@ def get_zju_config(_dataset_root, _stride):
               'test_strides': 1,
               }
     return config
+
 
 def get_euroc_config(_dataset_root, stride, pwc_mode=None):
     if pwc_mode is None:
@@ -131,6 +141,62 @@ def get_euroc_config(_dataset_root, stride, pwc_mode=None):
               'test_strides': stride or 1,
               }
     config = add_stride_to_path(config, stride)
+    return config
+
+
+def get_euroc_mixed_1_2_3_config(_dataset_root, _stride, pwc_mode=None):
+    if pwc_mode is None:
+        exp_name = 'euroc_mixed_1_2_3'
+    elif pwc_mode == 'sintel':
+        exp_name = 'euroc_mixed_1_2_3_sintel'
+    elif pwc_mode == 'sintel_g':
+        exp_name = 'euroc_mixed_1_2_3_sintel_g'
+    else:
+        raise Exception('pwc_mode is invalid')
+    config = {'train_trajectories': ['1/MH_01_easy',
+                                     '1/MH_03_medium',
+                                     '1/MH_04_difficult',
+                                     '1/V1_01_easy',
+                                     '1/V1_03_difficult',
+                                     '1/V2_01_easy',
+                                     '1/V2_03_difficult',
+                                     '2/MH_01_easy',
+                                     '2/MH_03_medium',
+                                     '2/MH_04_difficult',
+                                     '2/V1_01_easy',
+                                     '2/V1_03_difficult',
+                                     '2/V2_01_easy',
+                                     '2/V2_03_difficult'
+                                     '3/MH_01_easy',
+                                     '3/MH_03_medium',
+                                     '3/MH_04_difficult',
+                                     '3/V1_01_easy',
+                                     '3/V1_03_difficult',
+                                     '3/V2_01_easy',
+                                     '3/V2_03_difficult'
+                                     ],
+              'val_trajectories': ['1/MH_02_easy',
+                                   '1/V1_02_medium',
+                                   '2/MH_02_easy',
+                                   '2/V1_02_medium'
+                                   '3/MH_02_easy',
+                                   '3/V1_02_medium'
+                                   ],
+              'test_trajectories': ['1/MH_05_difficult',
+                                    '1/V2_02_medium',
+                                    '2/MH_05_difficult',
+                                    '2/V2_02_medium'
+                                    '3/MH_05_difficult',
+                                    '3/V2_02_medium'
+                                    ],
+              'exp_name': exp_name,
+              'target_size': (120, 160),
+              'source_size': (480, 640),
+              'depth_multiplicator': 1.0,
+              'rpe_indices': 'full',
+              }
+
+    config = gen_strides_from_path(config)
     return config
 
 
@@ -261,11 +327,7 @@ def get_kitti_4_6_mixed_config(_dataset_root, _stride):
               'rpe_indices': 'kitti',
               }
 
-    sub_dirs = ['train', 'val', 'test']
-    for d in sub_dirs:
-        trajectories = config[f'{d}_trajectories']
-        config[f'{d}_strides'] = [int(Path(t).parent.name) for t in trajectories] if trajectories else None
-
+    config = gen_strides_from_path(config)
     return config
 
 
@@ -296,11 +358,7 @@ def get_kitti_4_6_mixed_1_2_4_config(_dataset_root, _stride):
               'rpe_indices': 'kitti',
               }
 
-    sub_dirs = ['train', 'val', 'test']
-    for d in sub_dirs:
-        trajectories = config[f'{d}_trajectories']
-        config[f'{d}_strides'] = [int(Path(t).parent.name) for t in trajectories] if trajectories else None
-
+    config = gen_strides_from_path(config)
     return config
 
 
