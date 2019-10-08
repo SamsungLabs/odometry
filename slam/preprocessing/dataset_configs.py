@@ -26,13 +26,17 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_PATH,
                  'tum_debug': env.TUM_PATH,
                  'zju': env.ZJU_PATH,
                  'euroc': env.EUROC_MIXED_PATH,
+                 'euroc_bovw2': env.EUROC_BOVW_PATH,
                  'euroc_mixed_1_2_3': env.EUROC_MIXED_PATH,
-                 'euroc_train_all': env.EUROC_MIXED_PATH,
                  'euroc_sintel': env.EUROC_SINTEL_MIXED_PATH,
                  'euroc_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
                  'euroc_bovw_sintel_g': env.EUROC_BOVW_SINTEL_GRAY_PATH,
                  'euroc_mixed_1_2_3_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
-                 'euroc_bovw2': env.EUROC_BOVW_PATH,
+                 'euroc_x': env.EUROC_MIXED_PATH,
+                 'euroc_x_sintel': env.EUROC_SINTEL_MIXED_PATH,
+                 'euroc_x_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
+                 'euroc_x_bovw_sintel_g': env.EUROC_BOVW_SINTEL_GRAY_PATH,
+                 'euroc_x_mixed_1_2_3_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
                  'saic_office': env.SAIC_OFFICE_PATH,
                  'retail_bot': env.RETAIL_BOT_PATH}
 
@@ -146,6 +150,42 @@ def get_euroc_config(_dataset_root, stride, pwc_mode=None):
     return config
 
 
+def get_euroc_x_config(_dataset_root, stride, pwc_mode=None):
+    if pwc_mode is None:
+        exp_name = 'euroc_x'
+    elif pwc_mode == 'sintel':
+        exp_name = 'euroc_x_sintel'
+    elif pwc_mode == 'sintel_g':
+        exp_name = 'euroc_x_sintel_g'
+    else:
+        raise Exception('pwc_mode is invalid')
+    if stride is not None and stride > 1:
+        exp_name += f'_stride{stride}'
+    config = {'train_trajectories': ['MH_01_easy',
+                                     'MH_03_medium',
+                                     'MH_04_difficult',
+                                     'V1_01_easy',
+                                     'V1_03_difficult',
+                                     'V2_01_easy',
+                                     'MH_05_difficult',
+                                     'V2_02_medium'],
+              'val_trajectories': ['MH_02_easy',
+                                   'V1_02_medium'],
+              'test_trajectories': ['V1_03_difficult',
+                                    'V2_03_difficult'],
+              'exp_name': exp_name,
+              'target_size': (120, 160),
+              'source_size': (480, 640),
+              'depth_multiplicator': 1.0,
+              'rpe_indices': 'full',
+              'train_strides': stride or 1,
+              'val_strides': stride or 1,
+              'test_strides': stride or 1,
+              }
+    config = add_stride_to_path(config, stride)
+    return config
+
+
 def get_euroc_mixed_1_2_3_config(_dataset_root, _stride, pwc_mode=None):
     if pwc_mode is None:
         exp_name = 'euroc_mixed_1_2_3'
@@ -202,6 +242,65 @@ def get_euroc_mixed_1_2_3_config(_dataset_root, _stride, pwc_mode=None):
     return config
 
 
+def get_euroc_x_mixed_1_2_3_config(_dataset_root, _stride, pwc_mode=None):
+    if pwc_mode is None:
+        exp_name = 'euroc_x_mixed_1_2_3'
+    elif pwc_mode == 'sintel':
+        exp_name = 'euroc_x_mixed_1_2_3_sintel'
+    elif pwc_mode == 'sintel_g':
+        exp_name = 'euroc_x_mixed_1_2_3_sintel_g'
+    else:
+        raise Exception('pwc_mode is invalid')
+    config = {'train_trajectories': ['1/MH_01_easy',
+                                     '1/MH_03_medium',
+                                     '1/MH_04_difficult',
+                                     '1/V1_01_easy',
+                                     '1/V1_03_difficult',
+                                     '1/V2_01_easy',
+                                     '1/MH_05_difficult',
+                                     '1/V2_02_medium',
+                                     '2/MH_01_easy',
+                                     '2/MH_03_medium',
+                                     '2/MH_04_difficult',
+                                     '2/V1_01_easy',
+                                     '2/V1_03_difficult',
+                                     '2/V2_01_easy',
+                                     '2/MH_05_difficult',
+                                     '2/V2_02_medium',
+                                     '3/MH_01_easy',
+                                     '3/MH_03_medium',
+                                     '3/MH_04_difficult',
+                                     '3/V1_01_easy',
+                                     '3/V1_03_difficult',
+                                     '3/V2_01_easy',
+                                     '3/MH_05_difficult',
+                                     '3/V2_02_medium'
+                                     ],
+              'val_trajectories': ['1/MH_02_easy',
+                                   '1/V1_02_medium',
+                                   '2/MH_02_easy',
+                                   '2/V1_02_medium',
+                                   '3/MH_02_easy',
+                                   '3/V1_02_medium'
+                                   ],
+              'test_trajectories': ['1/V1_03_difficult',
+                                    '1/V2_03_difficult',
+                                    '2/V1_03_difficult',
+                                    '2/V2_03_difficult',
+                                    '3/V1_03_difficult',
+                                    '3/V2_03_difficult'
+                                    ],
+              'exp_name': exp_name,
+              'target_size': (120, 160),
+              'source_size': (480, 640),
+              'depth_multiplicator': 1.0,
+              'rpe_indices': 'full',
+              }
+
+    config = gen_strides_from_path(config)
+    return config
+
+
 def get_euroc_sintel_config(dataset_root, stride):
     return get_euroc_config(dataset_root, stride, pwc_mode='sintel')
 
@@ -214,41 +313,16 @@ def get_euroc_mixed_1_2_3_sintel_g_config(dataset_root, stride):
     return get_euroc_mixed_1_2_3_config(dataset_root, stride, pwc_mode='sintel_g')
 
 
-def get_euroc_train_all_config(_dataset_root, stride, pwc_mode=None):
-    if pwc_mode is None:
-        exp_name = 'euroc'
-    elif pwc_mode == 'sintel':
-        exp_name = 'euroc_sintel'
-    elif pwc_mode == 'sintel_g':
-        exp_name = 'euroc_sintel_g'
-    else:
-        raise Exception('pwc_mode is invalid')
-    if stride is not None and stride > 1:
-        exp_name += f'_stride{stride}'
-    config = {'train_trajectories': ['MH_01_easy',
-                                     'MH_03_medium',
-                                     'MH_04_difficult',
-                                     'V1_01_easy',
-                                     'V1_03_difficult',
-                                     'V2_01_easy',
-                                     'V2_03_difficult',
-                                     'MH_02_easy',
-                                     'V1_02_medium',
-                                     'MH_05_difficult',
-                                     'V2_02_medium'],
-              'val_trajectories': ['MH_01_easy'],
-              'test_trajectories': None,
-              'exp_name': exp_name,
-              'target_size': (120, 160),
-              'source_size': (480, 640),
-              'depth_multiplicator': 1.0,
-              'rpe_indices': 'full',
-              'train_strides': stride or 1,
-              'val_strides': stride or 1,
-              'test_strides': stride or 1,
-              }
-    config = add_stride_to_path(config, stride)
-    return config
+def get_euroc_x_sintel_config(dataset_root, stride):
+    return get_euroc_x_config(dataset_root, stride, pwc_mode='sintel')
+
+
+def get_euroc_x_sintel_g_config(dataset_root, stride):
+    return get_euroc_x_config(dataset_root, stride, pwc_mode='sintel_g')
+
+
+def get_euroc_x_mixed_1_2_3_sintel_g_config(dataset_root, stride):
+    return get_euroc_x_mixed_1_2_3_config(dataset_root, stride, pwc_mode='sintel_g')
 
 
 def get_euroc_bovw2_config(dataset_root, _stride):
@@ -260,6 +334,12 @@ def get_euroc_bovw2_config(dataset_root, _stride):
 def get_euroc_bovw_sintel_g_config(dataset_root, _stride):
     config = get_euroc_config(dataset_root, None)
     config['exp_name'] = 'euroc_bovw_sintel_g'
+    return config
+
+
+def get_euroc_x_bovw_sintel_g_config(dataset_root, _stride):
+    config = get_euroc_x_config(dataset_root, None)
+    config['exp_name'] = 'euroc_x_bovw_sintel_g'
     return config
 
 
