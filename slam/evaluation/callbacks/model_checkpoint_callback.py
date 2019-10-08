@@ -34,7 +34,7 @@ class ModelCheckpoint(keras.callbacks.ModelCheckpoint):
         reuse = self.epochs_since_last_save == 0 and self.last_file_path is not None
         if reuse:
             file_path = self.filepath.format(epoch=self.epoch + 1, **logs)
-            if self.filepath != file_path:
+            if self.last_file_path != file_path:
                 shutil.copyfile(self.last_file_path, file_path)
         else:
             self.save_best_only = False
