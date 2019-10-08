@@ -257,6 +257,12 @@ def get_euroc_bovw2_config(dataset_root, _stride):
     return config
 
 
+def get_euroc_bovw_sintel_g_config(dataset_root, _stride):
+    config = get_euroc_config(dataset_root, None)
+    config['exp_name'] = 'euroc_bovw_sintel_g'
+    return config
+
+
 def get_kitti_8_3_config(_dataset_root, _stride):
     config = {'train_trajectories': ['00',
                                      '01',
