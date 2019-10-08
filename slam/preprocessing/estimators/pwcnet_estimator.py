@@ -34,7 +34,7 @@ class PWCNetEstimator(NetworkEstimator):
         nn_opts['pyr_lvls'] = 6
         nn_opts['flow_pred_lvl'] = 2
         nn_opts['resize'] = False
-        return nn_opts 
+        return nn_opts
 
     def _load_model(self):
         nn_opts = self.get_nn_opts()
@@ -59,7 +59,7 @@ class PWCNetEstimator(NetworkEstimator):
             final_optical_flow[..., 1] /= (width / final_width)
         else:
             final_optical_flow = optical_flow
- 
+
         final_optical_flow[..., 0] /= width
         final_optical_flow[..., 1] /= height
 

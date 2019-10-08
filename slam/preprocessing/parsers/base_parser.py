@@ -9,7 +9,7 @@ class BaseParser:
         if not os.path.exists(self.src_dir):
             raise RuntimeError(f'Could not find trajectory dir {src_dir}')
 
-        self.cols = ['path_to_rgb', 'path_to_depth']
+        self.cols = ['path_to_rgb', 'path_to_rgb_right', 'path_to_depth']
         self.df = None
         self.name = None
 

@@ -1,6 +1,6 @@
 from .prepare_trajectory import prepare_trajectory
 
-from .prepare_dataset import prepare_dataset
+from .prepare_dataset import DatasetPreparator
 from .prepare_dataset import get_default_dataset_parser
 
 from .dataset_configs import DATASET_TYPES
@@ -27,7 +27,7 @@ __all__ = [
     'get_config',
     'get_dataset_root',
     'prepare_trajectory',
-    'prepare_dataset',
+    'DatasetPreparator',
     'get_default_dataset_parser',
     'KITTIParser',
     'TUMParser',
