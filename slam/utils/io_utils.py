@@ -20,7 +20,7 @@ def warp2d(image, flow):
     x_warped_indexes = np.clip(x_warped_indexes, a_min=0, a_max=width - 1)
     y_warped_indexes = np.clip(y_warped_indexes, a_min=0, a_max=height - 1)
     warped_image = np.zeros_like(image)
-    warped_image[y_indexes, x_indexes] = image[y_warped_indexes, x_warped_indexes]
+    warped_image[y_warped_indexes, x_warped_indexes] = image[y_indexes, x_indexes]
     return warped_image
 
 
