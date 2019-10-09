@@ -9,6 +9,27 @@ import torch
 import torch.nn.functional as F
 
 
+def clip_with_nans(arr, max_value, min_value=0):
+    arr[(arr < min_value) | (arr >= max_value)] = 0
+    return arr
+
+
+def warping2d(flow, first_image, width, height):
+    meshgrid = np.meshgrid(np.arange(0, width), np.arange(0, height))
+    x_pixels, y_pixels = meshgrid
+
+    x2_from_flow_pixels = clip_with_nans(x_pixels + flow[:, :, 0], max_value=meshgrid[0].shape[1] - 1)
+    y2_from_flow_pixels = clip_with_nans(y_pixels + flow[:, :, 1], max_value=meshgrid[0].shape[0] - 1)
+    round_x2 = np.round(x2_from_flow_pixels)
+    round_y2 = np.round(y2_from_flow_pixels)
+    second_representation_from_flow_pixels = np.full_like(first_image, 0)
+    x_indexes = round_x2.astype(int)
+    y_indexes = round_y2.astype(int)
+    j_indexes, i_indexes = np.meshgrid(np.arange(width), np.arange(height))
+    second_representation_from_flow_pixels[i_indexes, j_indexes] = img_r[y_indexes, x_indexes]
+    return second_representation_from_flow_pixels
+
+
 def resize_image(image, target_size):
     return cv2.resize(image, target_size, cv2.INTER_LINEAR)
 
