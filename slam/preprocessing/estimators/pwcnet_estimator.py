@@ -46,22 +46,18 @@ class PWCNetEstimator(NetworkEstimator):
 
         batch_size, height, width, channels_num = optical_flow.shape
 
-        if target_size is not None:
-            final_height, final_width = target_size
+        optical_flow[..., 0] /= width
+        optical_flow[..., 1] /= height
 
-            final_optical_flow = np.zeros((batch_size, final_height, final_width, channels_num))
+        if target_size is not None:
+            final_optical_flow = np.zeros((batch_size, self.target_size[0], self.target_size[1], channels_num))
             for batch_index in range(batch_size):
                 final_optical_flow[batch_index] = resize_image_arr(optical_flow[batch_index],
-                                                                   target_size=target_size,
+                                                                   target_size=self.target_size,
                                                                    data_format='channels_last',
                                                                    mode='nearest')
-            final_optical_flow[..., 0] /= (width / final_width)
-            final_optical_flow[..., 1] /= (width / final_width)
         else:
             final_optical_flow = optical_flow
-
-        final_optical_flow[..., 0] /= width
-        final_optical_flow[..., 1] /= height
 
         return final_optical_flow
 

@@ -80,8 +80,7 @@ class DatasetPreparator:
                                                                       output_col='path_to_depth',
                                                                       sub_dir='depth',
                                                                       checkpoint=self.depth_checkpoint,
-                                                                      height=self.target_size[0],
-                                                                      width=self.target_size[1])
+                                                                      input_size=self.target_size)
             single_frame_estimators.append(struct2depth_estimator)
 
         if self.binocular_depth_checkpoint is not None:
@@ -90,7 +89,7 @@ class DatasetPreparator:
                 output_col='path_to_binocular_depth',
                 sub_dir='binocular_depth',
                 checkpoint=self.binocular_depth_checkpoint,
-                intrinsics=self.intrinsics,
+                intinsics=self.intinsics,
                 baseline_distance=self.baseline_distance)
             single_frame_estimators.append(binocular_depth_estimator)
 
@@ -106,8 +105,8 @@ class DatasetPreparator:
         pwcnet_estimator = estimators.PWCNetEstimator(input_col=['path_to_rgb', 'path_to_rgb_next'],
                                                       output_col='path_to_optical_flow',
                                                       sub_dir='optical_flow',
-                                                      checkpoint=self.optical_flow_checkpointб
-                                                      )
+                                                      checkpoint=self.optical_flow_checkpoint,
+                                                      target_size=self.target_size)
 
         pair_frames_estimators = [global2relative_estimator, pwcnet_estimator]
 
