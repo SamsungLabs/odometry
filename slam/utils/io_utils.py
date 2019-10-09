@@ -11,9 +11,12 @@ import torch.nn.functional as F
 
 def warp2d(image, flow):
     width, height = image.shape[1], image.shape[0]
+    flow_absolute = flow.copy()
+    flow_absolute[..., 0] *= width
+    flow_absolute[..., 1] *= height
     x_indexes, y_indexes = np.meshgrid(np.arange(width), np.arange(height))
-    x_warped_indexes = np.round(x_indexes + flow[..., 0]).astype(int)
-    y_warped_indexes = np.round(y_indexes + flow[..., 1]).astype(int)
+    x_warped_indexes = np.round(x_indexes + flow_absolute[..., 0]).astype(int)
+    y_warped_indexes = np.round(y_indexes + flow_absolute[..., 1]).astype(int)
     x_warped_indexes = np.clip(x_warped_indexes, a_min=0, a_max=width - 1)
     y_warped_indexes = np.clip(y_warped_indexes, a_min=0, a_max=height - 1)
     warped_image = np.zeros_like(image)
