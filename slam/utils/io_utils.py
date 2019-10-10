@@ -10,6 +10,7 @@ import torch.nn.functional as F
 
 
 def warp2d(image, flow):
+    assert (image[...,0].shape == flow[...,0].shape), 'shape mismatch'
     width, height = image.shape[1], image.shape[0]
     flow_absolute = flow.copy()
     flow_absolute[..., 0] *= width
