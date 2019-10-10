@@ -6,6 +6,7 @@ from collections import Counter
 from multiprocessing import Pool
 
 import keras
+from pathlib import Path
 from keras import backend as K
 
 from slam.evaluation import calculate_metrics, average_metrics, normalize_metrics
@@ -84,6 +85,8 @@ class Predict(keras.callbacks.Callback):
         self.y_cols = self.train_generator.y_cols[:]
 
     def _create_trajectory(self, df):
+        df['to_index'] = df['path_to_rgb_next'].apply(lambda x: int(Path(x).stem))
+        df['from_index'] = df['path_to_rgb'].apply(lambda x: int(Path(x).stem))
         index_difference = df.to_index - df.from_index
         min_stride = np.min(index_difference.values)
         consecutive_df = df[index_difference == min_stride].reset_index(drop=True)
