@@ -84,7 +84,10 @@ class Predict(keras.callbacks.Callback):
         self.y_cols = self.train_generator.y_cols[:]
 
     def _create_trajectory(self, df):
-        return RelativeTrajectory.from_dataframe(df[self.y_cols]).to_global()
+        index_difference = df.to_index - df.from_index
+        min_stride = np.min(index_difference.values)
+        consecutive_df = df[index_difference == min_stride].reset_index(drop=True)
+        return RelativeTrajectory.from_dataframe(consecutive_df[self.y_cols]).to_global()
 
     def _create_prediction_file_path(self, trajectory_id, subset, prediction_id):
         return create_prediction_file_path(trajectory_id=trajectory_id,
