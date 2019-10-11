@@ -89,7 +89,7 @@ class DatasetPreparator:
                 output_col='path_to_binocular_depth',
                 sub_dir='binocular_depth',
                 checkpoint=self.binocular_depth_checkpoint,
-                intinsics=self.intinsics,
+                intrinsics=self.intrinsics,
                 baseline_distance=self.baseline_distance)
             single_frame_estimators.append(binocular_depth_estimator)
 
