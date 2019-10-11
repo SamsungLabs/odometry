@@ -46,7 +46,9 @@ class BaseTrainer:
 
         self.dataset_root = dataset_root
         self.leader_board = leader_board
+        self.experiment_dir = self.leader_board.replace('/', '_')
         self.run_name = run_name
+        self.run_dir = None
         self.bundle_name = bundle_name
         self.cache = cache
         self.batch_size = batch_size
@@ -77,9 +79,6 @@ class BaseTrainer:
 
         self.set_model_args()
         self.set_dataset_args()
-
-        self.experiment_dir = None
-        self.run_dir = None
 
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
@@ -112,7 +111,6 @@ class BaseTrainer:
         return experiment
 
     def set_experiment(self):
-        self.experiment_dir = self.leader_board.replace('/', '_')
         self.experiment = self.client.get_experiment_by_name(self.leader_board) or self.create_experiment()
         mlflow.set_experiment(self.leader_board)
 
@@ -188,7 +186,6 @@ class BaseTrainer:
 
         terminate_on_nan_callback = TerminateOnNaN()
         callbacks.append(terminate_on_nan_callback)
-
         save_dir = os.path.join(self.run_dir, save_dir or '.')
         monitor = 'val_RPE_t' if evaluate else 'val_loss'
 
@@ -261,10 +258,10 @@ class BaseTrainer:
         if self.use_mlflow:
             self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
             mlflow.set_tracking_uri(self.tracking_uri)
-
             self.set_experiment()
             self.start_run()
-            self.set_run_dir()
+
+        self.set_run_dir()
 
         dataset = self.get_dataset()
 
