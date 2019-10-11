@@ -1,6 +1,8 @@
 [submodule "submodules/tf_models"]
 	path = submodules/tf_models
 	url = https://github.com/tensorflow/models.git
+	ignore = dirty
 [submodule "submodules/tfoptflow"]
 	path = submodules/tfoptflow
 	url = https://github.sec.samsung.net/AIMC-TSU/tfoptflow.git
+	ignore = dirty
