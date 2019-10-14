@@ -151,13 +151,14 @@ class DatasetPreparator:
                               'target_size': self.target_size,
                               'stride': self.stride,
                               'binocular_depth_checkpoint': self.binocular_depth_checkpoint,
-                              'intrinsics': (self.intrinsics.f_x,
-                                             self.intrinsics.f_y,
-                                             self.intrinsics.c_x,
-                                             self.intrinsics.c_y,
-                                             self.intrinsics.width,
-                                             self.intrinsics.height),
                               'baseline_distance': self.baseline_distance}
+            if self.intrinsics is not None:
+                dataset_config['intrinsics'] = (self.intrinsics.f_x,
+                                                self.intrinsics.f_y,
+                                                self.intrinsics.c_x,
+                                                self.intrinsics.c_y,
+                                                self.intrinsics.width,
+                                                self.intrinsics.height)
             json.dump(dataset_config, f)
 
         trajectories = [d.as_posix() for d in list(Path(self.dataset_root).rglob('*/**'))]
