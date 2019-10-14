@@ -14,6 +14,7 @@ from .io_utils import convert_hwc_to_chw
 from .io_utils import convert_chw_to_hwc
 from .io_utils import get_channels_num
 from .io_utils import get_fill_fn
+from .io_utils import warp2d
 
 from .visualization_utils import visualize_trajectory_with_gt
 from .visualization_utils import visualize_trajectory
@@ -40,6 +41,7 @@ __all__ = [
     'convert_chw_to_hwc',
     'get_channels_count',
     'get_fill_fn',
+    'warp2d',
     'visualize_trajectory_with_gt',
     'visualize_trajectory',
     'parse_video',

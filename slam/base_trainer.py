@@ -1,7 +1,6 @@
 import os
 import shutil
 import mlflow
-import time
 import datetime
 import argparse
 from keras.callbacks import ReduceLROnPlateau, TerminateOnNaN
@@ -34,6 +33,8 @@ class BaseTrainer:
                  use_mlflow=True,
                  seed=42,
                  stride=None,
+                 min_frame_ind_diff=0,
+                 max_frame_ind_diff=float('inf'),
                  **kwargs):
 
         self.tracking_uri = env.TRACKING_URI
@@ -45,7 +46,9 @@ class BaseTrainer:
 
         self.dataset_root = dataset_root
         self.leader_board = leader_board
+        self.experiment_dir = self.leader_board.replace('/', '_')
         self.run_name = run_name
+        self.run_dir = None
         self.bundle_name = bundle_name
         self.cache = cache
         self.batch_size = batch_size
@@ -77,13 +80,13 @@ class BaseTrainer:
         self.set_model_args()
         self.set_dataset_args()
 
-        self.experiment_dir = None
-        self.run_dir = None
-
         set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
 
         self.client = None
         self.experiment = None
+
+        self.min_frame_ind_diff = min_frame_ind_diff
+        self.max_frame_ind_diff = max_frame_ind_diff
 
     def set_model_args(self):
         pass
@@ -108,7 +111,6 @@ class BaseTrainer:
         return experiment
 
     def set_experiment(self):
-        self.experiment_dir = self.leader_board.replace('/', '_')
         self.experiment = self.client.get_experiment_by_name(self.leader_board) or self.create_experiment()
         mlflow.set_experiment(self.leader_board)
 
@@ -168,7 +170,9 @@ class BaseTrainer:
                                 train_strides=self.config['train_strides'],
                                 val_strides=self.config['val_strides'],
                                 test_strides=self.config['test_strides'],
-                                placeholder=self.placeholder)
+                                placeholder=self.placeholder,
+                                min_frame_ind_diff=self.min_frame_ind_diff,
+                                max_frame_ind_diff=self.max_frame_ind_diff)
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
@@ -182,7 +186,6 @@ class BaseTrainer:
 
         terminate_on_nan_callback = TerminateOnNaN()
         callbacks.append(terminate_on_nan_callback)
-
         save_dir = os.path.join(self.run_dir, save_dir or '.')
         monitor = 'val_RPE_t' if evaluate else 'val_loss'
 
@@ -255,10 +258,10 @@ class BaseTrainer:
         if self.use_mlflow:
             self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
             mlflow.set_tracking_uri(self.tracking_uri)
-
             self.set_experiment()
             self.start_run()
-            self.set_run_dir()
+
+        self.set_run_dir()
 
         dataset = self.get_dataset()
 
@@ -306,4 +309,9 @@ class BaseTrainer:
         parser.add_argument('--seed', type=int, default=42,
                             help='Random seed')
         parser.add_argument('--stride', type=int, default=None)
+        parser.add_argument('--min_frame_ind_diff', type=int, default=0,
+                            help='Minimum allowed stride between frames.')
+        parser.add_argument('--max_frame_ind_diff', type=float, default=float('inf'),
+                            help='Maximum allowed stride between frames.')
+
         return parser

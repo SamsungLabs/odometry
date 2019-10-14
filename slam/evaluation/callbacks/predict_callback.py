@@ -271,6 +271,7 @@ class Predict(keras.callbacks.Callback):
 
         reuse = self.epochs_since_last_predict == 0 and self.last_prediction_id is not None
         if reuse:
+            logs = self.last_logs
             final_prediction_id = self.template.format(epoch=self.epoch, **logs)
 
             final_prediction_dir = self._get_prediction_dir(final_prediction_id)
@@ -284,12 +285,12 @@ class Predict(keras.callbacks.Callback):
             self.save_best_only = False
             self.period = 1
             self.on_epoch_end(self.epoch, logs)
-
-        logs = self.last_logs
+            logs = self.last_logs
 
         test_tasks = self._create_tasks(self.test_generator, 'test')
         if self.evaluate:
             test_tasks, test_metrics = self._evaluate_tasks(test_tasks)
+            logs = dict(**logs, **test_metrics)
 
         self._save_tasks(test_tasks, prediction_id='test')
 

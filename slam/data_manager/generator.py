@@ -1,7 +1,7 @@
 import os
 import psutil
 import numpy as np
-
+from pathlib import Path
 import keras_preprocessing.image as keras_image
 
 
@@ -38,7 +38,9 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  max_memory_consumption=0.8,
                  placeholder=None,
                  trajectory_id='',
-                 include_last=False):
+                 include_last=False,
+                 min_frame_ind_diff=0,
+                 max_frame_ind_diff=float('inf')):
 
         if target_size == -1:
             path_to_first_image = os.path.join(directory, dataframe[image_col].iloc[0].values[0])
@@ -54,6 +56,12 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                                      save_format='png',
                                      subset=subset,
                                      interpolation=interpolation)
+
+        dataframe['to_index'] = dataframe['path_to_rgb_next'].apply(lambda x: int(Path(x).stem))
+        dataframe['from_index'] = dataframe['path_to_rgb'].apply(lambda x: int(Path(x).stem))
+        index_diff = dataframe['to_index'] - dataframe['from_index']
+        is_in_interval = (min_frame_ind_diff < index_diff) & (index_diff < max_frame_ind_diff)
+        dataframe = dataframe[is_in_interval].reset_index(drop=True)
 
         self.df = dataframe
         self._include_last() if include_last else None

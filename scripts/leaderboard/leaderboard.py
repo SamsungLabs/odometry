@@ -140,8 +140,10 @@ class Leaderboard:
                    f'--leader_board {leader_board}',
                    f'--run_name {run_name}',
                    f'--bundle_name {self.bundle_name}',
-                   f'--seed {seed}',
-                   f'--stride {self.stride}']
+                   f'--seed {seed}']
+
+        if self.stride:
+            command.append(f'--stride {self.stride}')
 
         if load_name:
             command.extend([f'--load_name {load_name}',
@@ -227,8 +229,8 @@ if __name__ == '__main__':
                         help='Number of machines available for submitting each job '
                              'to avoid sending all jobs to a single machine '
                              '(0 for selecting all machines)')
-
     parser.add_argument('--stride', type=int, default=None, help='Stride between frames in dataset')
+
     args, other_args = parser.parse_known_args()
 
     leaderboard = Leaderboard(script_path=args.script_path,
