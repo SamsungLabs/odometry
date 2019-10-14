@@ -83,11 +83,22 @@ def get_default_dataset_parser():
                         help='Path to directory with same structure as dataset. In trajectory subdirectories stored'
                              'df.csv files with new pair indices.')
     parser.add_argument('--matches_threshold', default=None, type=int)
+    parser.add_argument('--trajectories', default=None, type=str, nargs='+', help='Name of trajectories')
     return parser
 
 
-def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optical_flow_checkpoint,
-                    depth_checkpoint=None, pwc_features=False, stride=1, swap_angles=False, indices_root=None, matches_threshold=None):
+def prepare_dataset(dataset_type,
+                    dataset_root,
+                    output_root,
+                    target_size,
+                    optical_flow_checkpoint,
+                    depth_checkpoint=None,
+                    pwc_features=False,
+                    stride=1,
+                    swap_angles=False,
+                    indices_root=None,
+                    matches_threshold=None,
+                    trajectories=None):
 
     limit_resources()
 
@@ -113,8 +124,11 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
                           'stride': stride}
         json.dump(dataset_config, f)
 
-    trajectories = [d.as_posix() for d in list(Path(dataset_root).rglob('*/**'))]
-    trajectories.append(dataset_root)
+    if trajectories is None:
+        trajectories = [d.as_posix() for d in list(Path(dataset_root).rglob('*/**'))]
+        trajectories.append(dataset_root)
+    else:
+        trajectories = [os.path.join(dataset_root, trajectory) for trajectory in trajectories]
 
     counter = 0
 
@@ -148,3 +162,4 @@ def prepare_dataset(dataset_type, dataset_root, output_root, target_size, optica
             logger.info(e)
 
     logger.info(f'{counter} trajectories has been processed')
+
