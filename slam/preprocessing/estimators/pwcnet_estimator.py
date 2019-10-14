@@ -40,7 +40,7 @@ class PWCNetEstimator(NetworkEstimator):
         nn_opts = self.get_nn_opts()
         self.model = pwc_net(mode='test', options=nn_opts)
 
-    def _convert_model_output_to_prediction(self, optical_flow, target_size=None):
+    def _convert_model_output_to_prediction(self, optical_flow):
         if not isinstance(optical_flow, np.ndarray):
             optical_flow = np.stack(optical_flow)
 
@@ -49,7 +49,7 @@ class PWCNetEstimator(NetworkEstimator):
         optical_flow[..., 0] /= width
         optical_flow[..., 1] /= height
 
-        if target_size is not None:
+        if self.target_size is not None:
             final_optical_flow = np.zeros((batch_size, self.target_size[0], self.target_size[1], channels_num))
             for batch_index in range(batch_size):
                 final_optical_flow[batch_index] = resize_image_arr(optical_flow[batch_index],

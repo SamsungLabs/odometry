@@ -15,9 +15,9 @@ class KITTIParser(ElementwiseParser):
 
         self.name = 'KITTIParser'
 
-        self.image_dir = os.path.join(self.src_dir, 'image_2')
-        if not os.path.exists(self.image_dir):
-            raise RuntimeError(f'Could not find image sub dir for trajectory: {self.image_dir}')
+        self.image_dir_left = os.path.join(self.src_dir, 'image_2')
+        if not os.path.exists(self.image_dir_left):
+            raise RuntimeError(f'Could not find image sub dir for trajectory: {self.image_dir_left}')
 
         self.image_dir_right = os.path.join(self.src_dir, 'image_3')
         if not os.path.exists(self.image_dir_right):
@@ -48,7 +48,7 @@ class KITTIParser(ElementwiseParser):
                 for image_filename in sorted(os.listdir(image_dir))]
 
     def _load_data(self):
-        self.image_filepaths = self._construct_image_filepaths(self.image_dir)
+        self.image_filepaths = self._construct_image_filepaths(self.image_dir_left)
         self.image_right_filepaths = self._construct_image_filepaths(self.image_dir_right)
 
         if self.pose_filepath:
