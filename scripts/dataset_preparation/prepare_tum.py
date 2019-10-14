@@ -21,5 +21,6 @@ if __name__ == '__main__':
                     stride=args.stride,
                     depth_checkpoint=args.depth_checkpoint if args.depth else None,
                     indices_root=args.indices_root,
-                    matches_threshold=args.matches_threshold)
+                    matches_threshold=args.matches_threshold,
+                    trajectories=args.trajectories)
 

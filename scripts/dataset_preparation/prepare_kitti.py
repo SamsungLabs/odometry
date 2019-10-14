@@ -20,4 +20,5 @@ if __name__ == '__main__':
                     optical_flow_checkpoint=args.of_checkpoint,
                     stride=args.stride,
                     depth_checkpoint=args.depth_checkpoint if args.depth else None,
-                    indices_root=args.indices_root)
+                    indices_root=args.indices_root,
+                    trajectories=args.trajectories)
