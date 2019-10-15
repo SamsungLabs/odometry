@@ -71,7 +71,8 @@ class BaseSlam:
                                input_col=[],
                                output_col=[],
                                sub_dir='',
-                               checkpoint=self.optflow_weights_path)
+                               checkpoint=self.optflow_weights_path,
+                               target_size=self.optical_flow_shape)
 
     def get_aggregator(self):
         raise RuntimeError('Not implemented')
@@ -129,7 +130,7 @@ class BaseSlam:
 
         for index, row in prediction.iterrows():
             image_pair = self.get_image_pair(row, frame)
-            optical_flow = self.optflow_model.predict(image_pair, target_size=self.optical_flow_shape)
+            optical_flow = self.optflow_model.predict(image_pair)
             pose_mean, pose_std = self.predict_pose(optical_flow)
             prediction.loc[index, self.odometry_mean_columns] = pose_mean
             prediction.loc[index, self.odometry_std_columns] = pose_std

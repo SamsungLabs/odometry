@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Intrinsics:
     def __init__(self, f_x, f_y, c_x, c_y, width, height):
         self.f_x = f_x
@@ -29,4 +30,5 @@ class Intrinsics:
 
     def create_frustrum(self, x_pixels, y_pixels, depth):
         xy_pixels = np.c_[[x_pixels, y_pixels]]
-        return self.forward(xy_pixels) * depth
+        xy_frustrum = self.forward(xy_pixels) * depth
+        return np.concatenate([xy_frustrum, np.expand_dims(depth, axis=0)])

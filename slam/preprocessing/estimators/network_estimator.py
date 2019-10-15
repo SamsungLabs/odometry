@@ -12,12 +12,12 @@ class NetworkEstimator(BaseEstimator):
                  output_col,
                  checkpoint,
                  sub_dir,
-                 height=None,
-                 width=None):
+                 input_size=None,
+                 target_size=None):
         super(NetworkEstimator, self).__init__(input_col, output_col)
 
-        self.height = height
-        self.width = width
+        self.input_size = input_size
+        self.target_size = target_size
 
         self.dir = sub_dir
 
@@ -32,7 +32,7 @@ class NetworkEstimator(BaseEstimator):
     def _convert_image_to_model_input(self, image):
         return np.array(image, dtype=np.float32)
 
-    def _convert_model_output_to_prediction(self, output, target_size=None):
+    def _convert_model_output_to_prediction(self, output):
         return output
 
     def _create_output_filename(self, row):
@@ -70,7 +70,7 @@ class NetworkEstimator(BaseEstimator):
 
     def predict(self, batch, target_size=None):
         model_output = self._run_model_inference(batch)
-        prediction = self._convert_model_output_to_prediction(model_output, target_size)
+        prediction = self._convert_model_output_to_prediction(model_output)
         return prediction
 
     def __repr__(self):
