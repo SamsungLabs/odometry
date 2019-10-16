@@ -11,6 +11,7 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_PATH,
                  'kitti_4/6_mixed': env.KITTI_MIXED_PATH,
                  'kitti_4/6_mixed_1+2+4': env.KITTI_MIXED_PATH,
                  'kitti_4/6_bovw': env.KITTI_BOVW_PATH,
+                 'kitti_4_6_binocular_depth': '/dbstore/datasets/Odometry_team/KITTI_binocular_depth_mixed/',
                  'discoman_v10': env.DISCOMAN_V10_PATH,
                  'discoman_v10_mixed': env.DISCOMAN_V10_MIXED_PATH,
                  'discoman_v10_bovw': env.DISCOMAN_V10_BOVW_PATH,
@@ -453,6 +454,12 @@ def get_kitti_4_6_mixed_1_2_4_config(_dataset_root, _stride):
 def get_kitti_4_6_bovw_config(dataset, _stride):
     config = get_kitti_4_6_config(dataset, None)
     config['exp_name'] = 'kitti_4/6_bovw'
+    return config
+
+
+def get_kitti_4_6_binocular_depth_config(dataset_root, stride):
+    config = get_kitti_4_6_config(dataset_root, stride)
+    config['exp_name'] = 'kitti_4/6_binocular_depth'
     return config
 
 
