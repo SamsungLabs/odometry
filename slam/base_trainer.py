@@ -35,7 +35,9 @@ class BaseTrainer:
                  stride=None,
                  min_frame_ind_diff=0,
                  max_frame_ind_diff=float('inf'),
-                 **kwargs):
+                 train_generator_args=None,
+                 val_generator_args=None,
+                 test_generator_args=None):
 
         self.tracking_uri = env.TRACKING_URI
         self.artifact_path = env.ARTIFACT_PATH
@@ -77,6 +79,13 @@ class BaseTrainer:
         self.target_size = self.config['target_size']
         self.placeholder = None
 
+        self.min_frame_ind_diff = min_frame_ind_diff
+        self.max_frame_ind_diff = max_frame_ind_diff
+
+        self.train_generator_args = train_generator_args
+        self.val_generator_args = val_generator_args
+        self.test_generator_args = test_generator_args
+
         self.set_model_args()
         self.set_dataset_args()
 
@@ -84,9 +93,6 @@ class BaseTrainer:
 
         self.client = None
         self.experiment = None
-
-        self.min_frame_ind_diff = min_frame_ind_diff
-        self.max_frame_ind_diff = max_frame_ind_diff
 
     def set_model_args(self):
         pass
@@ -172,7 +178,10 @@ class BaseTrainer:
                                 test_strides=self.config['test_strides'],
                                 placeholder=self.placeholder,
                                 min_frame_ind_diff=self.min_frame_ind_diff,
-                                max_frame_ind_diff=self.max_frame_ind_diff)
+                                max_frame_ind_diff=self.max_frame_ind_diff,
+                                train_generator_args = self.train_generator_args,
+                                val_generator_args = self.val_generator_args,
+                                test_generator_args = self.test_generator_args)
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
@@ -266,10 +275,10 @@ class BaseTrainer:
         dataset = self.get_dataset()
 
         model_factory = self.get_model_factory(dataset.input_shapes)
-        model = model_factory.construct()
-        print(model.summary())
+        self.model = model_factory.construct()
+        print(self.model.summary())
 
-        self.fit_generator(model=model,
+        self.fit_generator(model=self.model,
                            dataset=dataset,
                            epochs=self.epochs,
                            evaluate=True)
