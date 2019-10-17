@@ -19,7 +19,7 @@ class BaseTrainer:
                  leader_board,
                  run_name,
                  bundle_name,
-                 cache=False,
+                 cache=True,
                  batch_size=128,
                  epochs=100,
                  period=10,
@@ -148,6 +148,7 @@ class BaseTrainer:
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
         mlflow.log_param('epochs', self.epochs)
         mlflow.log_param('seed', self.seed)
+        mlflow.log_param('cache', self.cache)
         mlflow.log_param('avg', False)
 
     def end_run(self):
@@ -296,8 +297,6 @@ class BaseTrainer:
                             help='Name of the run. Must be unique and specific')
         parser.add_argument('--bundle_name', '-bn', type=str, required=True,
                             help='Name of the bundle. Must be unique and specific')
-        parser.add_argument('--cache', action='store_true',
-                            help='Cache inputs in RAM')
         parser.add_argument('--epochs', '-ep', type=int, default=100,
                             help='Number of epochs')
         parser.add_argument('--period', type=int, default=10,
