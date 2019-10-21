@@ -802,6 +802,6 @@ def get_tum_bt_config(dataset_root, stride):
 
 
 def get_tum_bt_bovw_config(dataset_root, _stride):
-    config = get_tum_config(dataset_root, None)
+    config = get_tum_bt_config(dataset_root, None)
     config['exp_name'] = 'tum_bt_bovw'
     return config
