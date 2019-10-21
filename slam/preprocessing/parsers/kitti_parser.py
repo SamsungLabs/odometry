@@ -54,10 +54,11 @@ class KITTIParser(ElementwiseParser):
                 if not line.startswith('P2:'):
                     continue
                 line_split = line.lstrip('P2:').split()
-                return {'f_x': float(line_split[0]),
-                        'f_y': float(line_split[5]),
-                        'c_x': float(line_split[2]),
-                        'c_y': float(line_split[6]),
+                P = np.array(line_split, dtype=float).reshape((3, 4))
+                return {'f_x': P[0, 0],
+                        'f_y': P[1, 1],
+                        'c_x': P[0, 2],
+                        'c_y': P[1, 2],
                         'baseline_distance': 0.54}
 
     @staticmethod
