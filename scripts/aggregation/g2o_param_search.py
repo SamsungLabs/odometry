@@ -16,7 +16,7 @@ class DisabledCV:
 
 
 def random_search(X, y, param_distributions, **kwargs):
-    rs = RandomizedSearchCV(G2OEstimator(), 
+    rs = RandomizedSearchCV(G2OEstimator(verbose=True), 
                             param_distributions,
                             cv=DisabledCV(),
                             refit=False,

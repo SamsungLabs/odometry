@@ -14,13 +14,14 @@ from scripts.aggregation import random_search
 
 
 def get_path(prefix, trajectory_name):
-    paths = glob(f'{prefix}/*/val/*{trajectory_name}.csv')
+    paths = list(Path(prefix).rglob(f'*{trajectory_name}.csv'))
+    paths = [path.as_posix() for path in paths]
     if len(paths) == 1:
         return paths[0]
     elif len(paths) > 1:
         return max(paths, key=lambda x: int(x[x.find('_val_RPE') - 3: x.find('_val_RPE')]))
     else:
-        return glob(f'{prefix}/test/test/*{trajectory_name}.csv')[0]
+        raise RuntimeError(f'Could not find trajectory {trajectory_name} in dir {prefix}') 
     
 
 def read_csv(path):
@@ -61,7 +62,7 @@ def get_gt_trajectory(trajectory_name):
     gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
     return gt_trajectory
 
-def main(trajectory_names, strides, pathes, n_jobs, n_iter):
+def main(trajectory_names, strides, pathes, n_jobs, n_iter, **kwargs):
     
     X = []
     y = []
@@ -76,21 +77,25 @@ def main(trajectory_names, strides, pathes, n_jobs, n_iter):
 
     strides = [int(stride) for stride in strides if stride != 'loops']
 
-    coefs = [
-        [1, 1, 1],
-        [1, 2, 4],
-        [1, 6, 12],
-        [1, 1, 1000000],
-        [1, 1000000, 1000000]
-    ]
+    if kwargs['coef']:
+        coefs = [kwargs['coef']]
+    else:
+        coefs = [
+            [1, 1, 1],
+            [1, 2, 4],
+            [1, 6, 12],
+            [1, 1, 1000000],
+            [1, 1000000, 1000000]
+        ]
 
     param_distributions = {
         'coef': [dict(zip(strides, c)) for c in coefs],
-        'coef_loop': [0, 1, 100, 300, 500], 
-        'loop_threshold': [50, 100], 
-        'rotation_scale': np.logspace(-10, 0, 11, base=2),
-        'max_iterations': [100, 1000]
+        'coef_loop': kwargs['coef_loop'] or [0, 1, 100, 300, 500], 
+        'loop_threshold': kwargs['loop_threshold'] or [50, 100], 
+        'rotation_scale': kwargs['rotation_scale'] or np.logspace(-10, 0, 11, base=2),
+        'max_iterations': kwargs['max_iterations'] or [100, 1000]
     }
+    print(param_distributions)
     random_search(X, y, param_distributions, n_jobs=n_jobs, n_iter=n_iter, verbose=True)
     
 if __name__ == '__main__':
@@ -100,5 +105,10 @@ if __name__ == '__main__':
     parser.add_argument('--pathes', type=str, nargs='+', required=True)
     parser.add_argument('--n_jobs', type=int, default=3)
     parser.add_argument('--n_iter', type=int, default=1)
+    parser.add_argument('--coef', type=int, nargs='*', default=None)
+    parser.add_argument('--coef_loop', type=int, nargs='*', default=None)
+    parser.add_argument('--loop_threshold', type=int, nargs='*', default=None)
+    parser.add_argument('--rotation_scale', type=int, nargs='*', default=None)
+    parser.add_argument('--max_iterations', type=int, nargs='*', default=None)
     args = parser.parse_args()
     main(**vars(args))

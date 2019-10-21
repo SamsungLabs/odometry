@@ -1,6 +1,7 @@
 import time
 import numpy as np
 from sklearn.base import BaseEstimator
+from collections import defaultdict
 
 import __init_path__
 import env
@@ -82,12 +83,26 @@ class G2OEstimator(BaseEstimator):
             print(f'Scoring {len(X)} trajectories...')
 
         scores = []
+        mean_metrics = defaultdict(list)
         for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
             metrics_dict = calculate_metrics(gt_trajectory, predicted_trajectory)
 
-            score = metrics_dict['ATE']
-            print(f'\t{i + 1}: {score}')
+            score = -metrics_dict['ATE']
+            print(f'\t{i + 1}')
+            
+            mean_metrics['ATE'].append(metrics_dict['ATE'])
+            mean_metrics['RMSE_r'].append(metrics_dict['RMSE_r'])
+            mean_metrics['RMSE_t'].append(metrics_dict['RMSE_t'])
+            mean_metrics['RPE_t'].append(metrics_dict['RPE_t'] / metrics_dict['RPE_divider']) 
+            mean_metrics['RPE_r'].append(metrics_dict['RPE_r'] / metrics_dict['RPE_divider'])
+
+            for k, v in metrics_dict.items():
+                print(f'    {k}: {v}')
+                
             scores.append(score)
+            
+        for k, v in metrics_dict.items():
+            print(f'Mean {k}: {np.mean(v)}')
 
         if sample_weight is not None:
             scores = [score * w for score, w in zip(scores, sample_weight)]
