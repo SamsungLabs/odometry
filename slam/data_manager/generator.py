@@ -321,7 +321,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                     col = 'path_to_optical_flow'
 
                     if self.gt_from_uniform_percentile is not None:
-                        random_gt = np.random.uniform(low=self.gt_low_bound, hight=self.gt_high_bound)
+                        random_gt = np.random.uniform(low=self.gt_low_bound, high=self.gt_high_bound)
                         rotation_vector = random_gt[:3]
                         translation_vector = random_gt[3:]
                     else:
