@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import RandomizedSearchCV
 
 from .g2o_estimator import G2OEstimator
@@ -26,4 +27,4 @@ def random_search(X, y, param_distributions, **kwargs):
     print(f'Best params: {rs.best_params_}')
     print(f'Best score: {rs.best_score_}')
 
-    return rs.cv_results_
+    return pd.DataFrame(rs.cv_results_)
