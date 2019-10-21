@@ -137,12 +137,13 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             assert self.generate_flow_by_rt_proba > 0.
             assert self.gt_from_uniform_percentile <= 100
             assert self.gt_from_uniform_percentile > 50
+            dof_columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
             self.gt_low_bound = np.percentile(
-                self.df[['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']],
+                self.df[dof_columns],
                 100 - self.gt_from_uniform_percentile,
                 axis=0)
             self.gt_high_bound = np.percentile(
-                self.df[['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']],
+                self.df[dof_columns],
                 self.gt_from_uniform_percentile,
                 axis=0)
 
