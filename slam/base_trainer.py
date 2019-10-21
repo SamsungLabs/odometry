@@ -29,6 +29,7 @@ class BaseTrainer:
                  no_cycle=False,
                  backend='numpy',
                  cuda=False,
+                 cuda_visible_devices=0,
                  per_process_gpu_memory_fraction=0.33,
                  use_mlflow=True,
                  seed=42,
@@ -89,7 +90,9 @@ class BaseTrainer:
         self.set_model_args()
         self.set_dataset_args()
 
-        set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
+        set_computation(self.seed,
+                        per_process_gpu_memory_fraction=per_process_gpu_memory_fraction,
+                        cuda_visible_devices=cuda_visible_devices)
 
         self.client = None
         self.experiment = None
