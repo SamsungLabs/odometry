@@ -53,12 +53,6 @@ if __name__ == '__main__':
     del args.gt_from_uniform_percentile
 
     args.train_generator_args = {
-        'intrinsics': Intrinsics(f_x=0.5792554391619662,
-                                 f_y=1.91185106382978721,
-                                 c_x=0.48927703464947625,
-                                 c_y=0.4925949468085106,
-                                 width=320,
-                                 height=96),
         'generate_flow_by_rt_proba': generate_flow_by_rt_proba,
         'gt_from_uniform_percentile': gt_from_uniform_percentile
     }

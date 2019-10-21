@@ -4,13 +4,12 @@ import numpy as np
 from pathlib import Path
 import keras_preprocessing.image as keras_image
 
-
 from slam.utils import (get_channels_num,
                         get_fill_fn,
                         load_image_arr,
                         resize_image_arr)
 
-from slam.linalg import create_optical_flow_from_rt
+from slam.linalg import Intrinsics, create_optical_flow_from_rt
 
 
 class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_image.Iterator):
@@ -124,28 +123,29 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.trajectory_id = trajectory_id
 
-        self.intrinsics = intrinsics
         self.generate_flow_by_rt_proba = generate_flow_by_rt_proba
 
         if self.generate_flow_by_rt_proba > 0.:
-            assert self.intrinsics is not None
             assert 'path_to_optical_flow' in self.x_cols
-            assert True in (col.endswith('depth') for col in self.image_cols)
+            assert any(col.endswith('depth') for col in self.image_cols)
 
         self.gt_from_uniform_percentile = gt_from_uniform_percentile
         if self.gt_from_uniform_percentile is not None:
             assert self.generate_flow_by_rt_proba > 0.
             assert self.gt_from_uniform_percentile <= 100
             assert self.gt_from_uniform_percentile > 50
-            dof_columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
-            self.gt_low_bound = np.percentile(
-                self.df[dof_columns],
-                100 - self.gt_from_uniform_percentile,
-                axis=0)
-            self.gt_high_bound = np.percentile(
-                self.df[dof_columns],
-                self.gt_from_uniform_percentile,
-                axis=0)
+            self.df_dofs = self.df[['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']]
+            self.df_intrinsics = self.df[['f_x', 'f_y', 'c_x', 'c_y']]
+
+            self.gt_low_high_bonds = (
+                np.percentile(
+                    self.df_dofs,
+                    100 - self.gt_from_uniform_percentile,
+                    axis=0),
+                np.percentile(
+                    self.df_dofs,
+                    self.gt_from_uniform_percentile,
+                    axis=0))
 
         super(ExtendedDataFrameIterator, self).__init__(self.samples,
                                                         batch_size,
@@ -322,16 +322,19 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                     col = 'path_to_optical_flow'
 
                     if self.gt_from_uniform_percentile is not None:
-                        random_gt = np.random.uniform(low=self.gt_low_bound, high=self.gt_high_bound)
+                        random_gt = np.random.uniform(*(self.gt_low_high_bonds))
                         rotation_vector = random_gt[:3]
                         translation_vector = random_gt[3:]
                     else:
                         targets_row_index = np.random.randint(len(self.df))
-                        rotation_vector = self.df[['euler_x', 'euler_y', 'euler_z']].values[targets_row_index]
-                        translation_vector = self.df[['t_x', 't_y', 't_z']].values[targets_row_index]
+                        dofs = self.df_dofs.iloc[targets_row_index].values
+                        rotation_vector, translation_vector = dofs[:3], dofs[3:]
+
+                    intrinsics_args = dict(self.df_intrinsics.iloc[df_row_index])
+                    intrinsics_args.update({'width': image_arr.shape[1], 'height': image_arr.shape[0]})
 
                     image_arr = create_optical_flow_from_rt(image_arr[...,0],
-                                                            self.intrinsics,
+                                                            Intrinsics(**intrinsics_args),
                                                             rotation_vector,
                                                             translation_vector)
 
