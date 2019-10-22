@@ -52,7 +52,7 @@ def rpe_r(X, y):
     return score(X, y, 'RPE_r')
 
 
-def random_search(X, y, groups, param_distributions, metric, **kwargs):
+def random_search(X, y, groups, param_distributions, **kwargs):
     
     score = {'ATE': make_scorer(ate, greater_is_better=False),
                'RMSE_t': make_scorer(rmse_t, greater_is_better=False),
@@ -60,7 +60,7 @@ def random_search(X, y, groups, param_distributions, metric, **kwargs):
                'RPE_t': make_scorer(rpe_t, greater_is_better=False),
                'RPE_r': make_scorer(rpe_r, greater_is_better=False)}
     
-    rs = RandomizedSearchCV(G2OEstimator(metric=metric, verbose=True), 
+    rs = RandomizedSearchCV(G2OEstimator(verbose=True), 
                             param_distributions,
                             cv=DisabledCV(),
                             refit=False,

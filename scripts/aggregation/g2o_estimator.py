@@ -19,8 +19,7 @@ class G2OEstimator(BaseEstimator):
                  rotation_scale=1,
                  max_iterations=100,
                  online=False,
-                 verbose=False,
-                 metric='ATE'):
+                 verbose=False):
         self.coef = coef
         self.coef_loop = coef_loop
         self.loop_threshold = loop_threshold
@@ -28,7 +27,6 @@ class G2OEstimator(BaseEstimator):
         self.max_iterations = max_iterations
         self.online = online
         self.verbose = verbose
-        self.metric = metric
 
     @property
     def mean_cols(self):
