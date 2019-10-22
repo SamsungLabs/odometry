@@ -126,8 +126,7 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
     result = random_search(X, y, groups, param_distributions, n_jobs=n_jobs, n_iter=n_iter, verbose=True)
 
     if output_path:
-        df = pd.DataFrame(result)
-        df.to_csv(output_path)
+        result.to_csv(output_path)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import time
 import numpy as np
 from collections import defaultdict
+import pandas as pd
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import make_scorer
 
@@ -67,4 +68,4 @@ def random_search(X, y, groups, param_distributions, metric, **kwargs):
                             **kwargs)
     rs.fit(X, y, groups)
 
-    return rs.cv_results_
+    return pd.DataFrame(rs.cv_results_)
