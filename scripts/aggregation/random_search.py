@@ -32,6 +32,7 @@ def get_trajectory_names(prefix):
     trajectory_names = list(val_trajectory_names) + list(test_trajectory_names)
     trajectory_names = [trajectory_name.stem for trajectory_name in trajectory_names]
     trajectory_names = ['_'.join(tajectory_name.split('_')[1:]) for tajectory_name in trajectory_names]  # Bug handling
+    assert len(trajectory_names) > 0
     return trajectory_names
 
 
@@ -123,6 +124,7 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
     }
 
     print(param_distributions)
+    print(f'Number of trajectories {len(X)}')
     result = random_search(X, y, groups, param_distributions, n_jobs=n_jobs, n_iter=n_iter, verbose=True)
 
     if output_path:

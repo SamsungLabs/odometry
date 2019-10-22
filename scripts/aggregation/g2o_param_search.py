@@ -21,6 +21,8 @@ class DisabledCV:
         return self.n_splits
 
 def score(y, preds, metric):
+    print(f'Scoring {len(y)} trajectories. Metric: {metric}')
+    start_time = time.time()
     scores = []
     for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
         metrics_dict = calculate_metrics(gt_trajectory, predicted_trajectory)
@@ -29,6 +31,7 @@ def score(y, preds, metric):
         scores.append(score)
     
     average_score = np.mean(scores)
+    print(f'Scoring completed in {time.time() - start_time:.3f} s\n') 
     return average_score    
        
     
