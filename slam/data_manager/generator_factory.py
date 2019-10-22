@@ -179,7 +179,7 @@ class GeneratorFactory:
         return ExtendedDataFrameIterator(
             dataframe,
             self.dataset_root,
-            ImageDataGenerator(**generator_args),
+            ImageDataGenerator(),
             x_col=self.x_col,
             y_col=self.y_col,
             image_col=self.image_col,
@@ -192,7 +192,7 @@ class GeneratorFactory:
             filter_invalid=filter_invalid,
             include_last=include_last,
             trajectory_id=trajectory_id,
-            *self.args, **self.kwargs)
+            *self.args, **{**self.kwargs, **generator_args})
 
     def _get_generators_list(self, dataframe, generator_args, trajectories, include_last=False):
 
@@ -226,7 +226,7 @@ class GeneratorFactory:
                                              include_last=include_last)
         else:
             return self._get_generator_from_dataframe(dataframe,
-                                                      self.train_generator_args,
+                                                      generator_args,
                                                       trajectory=as_is,
                                                       include_last=include_last)
 
