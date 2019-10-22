@@ -7,7 +7,7 @@ import __init_path__
 import env
 
 from slam.aggregation import GraphOptimizer
-from slam.evaluation import calculate_metrics
+from slam.evaluation import calculate_metrics, normalize_metrics
 
 
 class G2OEstimator(BaseEstimator):
@@ -19,7 +19,8 @@ class G2OEstimator(BaseEstimator):
                  rotation_scale=1,
                  max_iterations=100,
                  online=False,
-                 verbose=False):
+                 verbose=False,
+                 metric='ATE'):
         self.coef = coef
         self.coef_loop = coef_loop
         self.loop_threshold = loop_threshold
@@ -27,6 +28,7 @@ class G2OEstimator(BaseEstimator):
         self.max_iterations = max_iterations
         self.online = online
         self.verbose = verbose
+        self.metric = metric
 
     @property
     def mean_cols(self):
@@ -63,7 +65,9 @@ class G2OEstimator(BaseEstimator):
             print(f'Predicting for {len(X)} trajectories...')
 
         preds = []
-        for df in X:
+        for i, df in enumerate(X):
+            consecutive_ind = df['diff'] == 1
+            print(f'\t{i + 1}. Len {len(df[consecutive_ind])}')
             df_with_coef = df.apply(self._apply_g2o_coef, axis=1)
 
             g2o = GraphOptimizer(max_iterations=self.max_iterations, online=self.online)
@@ -74,43 +78,3 @@ class G2OEstimator(BaseEstimator):
         if self.verbose:
             print(f'Predicting completed in {time.time() - start_time:.3f} s\n') 
         return preds
-
-    def score(self, X, y, sample_weight=None):
-        preds = self.predict(X)
-
-        if self.verbose:
-            start_time = time.time()
-            print(f'Scoring {len(X)} trajectories...')
-
-        scores = []
-        mean_metrics = defaultdict(list)
-        for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
-            metrics_dict = calculate_metrics(gt_trajectory, predicted_trajectory)
-
-            score = -metrics_dict['ATE']
-            print(f'\t{i + 1}')
-            
-            mean_metrics['ATE'].append(metrics_dict['ATE'])
-            mean_metrics['RMSE_r'].append(metrics_dict['RMSE_r'])
-            mean_metrics['RMSE_t'].append(metrics_dict['RMSE_t'])
-            mean_metrics['RPE_t'].append(metrics_dict['RPE_t'] / metrics_dict['RPE_divider']) 
-            mean_metrics['RPE_r'].append(metrics_dict['RPE_r'] / metrics_dict['RPE_divider'])
-
-            for k, v in metrics_dict.items():
-                print(f'    {k}: {v}')
-                
-            scores.append(score)
-            
-        for k, v in metrics_dict.items():
-            print(f'Mean {k}: {np.mean(v)}')
-
-        if sample_weight is not None:
-            scores = [score * w for score, w in zip(scores, sample_weight)]
-
-        average_score = np.mean(scores)
-
-        if self.verbose:
-            print(f'Scoring completed in {time.time() - start_time:.3f} s')
-            print(f'Average score: {average_score}\n')
-
-        return average_score
