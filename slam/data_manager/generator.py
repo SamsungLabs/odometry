@@ -128,14 +128,15 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         if self.generate_flow_by_rt_proba > 0.:
             assert 'path_to_optical_flow' in self.x_cols
             assert any(col.endswith('depth') for col in self.image_cols)
+            self.dof_columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+            self.df_dofs = self.df[self.dof_columns]
+            self.df_intrinsics = self.df[['f_x', 'f_y', 'c_x', 'c_y']]
 
         self.gt_from_uniform_percentile = gt_from_uniform_percentile
         if self.gt_from_uniform_percentile is not None:
             assert self.generate_flow_by_rt_proba > 0.
             assert self.gt_from_uniform_percentile <= 100
             assert self.gt_from_uniform_percentile > 50
-            self.df_dofs = self.df[['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']]
-            self.df_intrinsics = self.df[['f_x', 'f_y', 'c_x', 'c_y']]
 
             self.gt_low_high_bonds = (
                 np.percentile(
@@ -322,13 +323,12 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                     col = 'path_to_optical_flow'
 
                     if self.gt_from_uniform_percentile is not None:
-                        random_gt = np.random.uniform(*(self.gt_low_high_bonds))
-                        rotation_vector = random_gt[:3]
-                        translation_vector = random_gt[3:]
+                        dofs = np.random.uniform(*(self.gt_low_high_bonds))
                     else:
                         targets_row_index = np.random.randint(len(self.df))
                         dofs = self.df_dofs.iloc[targets_row_index].values
-                        rotation_vector, translation_vector = dofs[:3], dofs[3:]
+
+                    rotation_vector, translation_vector = dofs[:3], dofs[3:]
 
                     intrinsics_args = dict(self.df_intrinsics.iloc[df_row_index])
                     intrinsics_args.update({'width': image_arr.shape[1], 'height': image_arr.shape[0]})
@@ -342,12 +342,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                         valid_samples[index_in_batch] = False
                         continue
 
-                    batch_y[self.y_cols.index('euler_x')][index_in_batch] = rotation_vector[0]
-                    batch_y[self.y_cols.index('euler_y')][index_in_batch] = rotation_vector[1]
-                    batch_y[self.y_cols.index('euler_z')][index_in_batch] = rotation_vector[2]
-                    batch_y[self.y_cols.index('t_x')][index_in_batch] = translation_vector[0]
-                    batch_y[self.y_cols.index('t_y')][index_in_batch] = translation_vector[1]
-                    batch_y[self.y_cols.index('t_z')][index_in_batch] = translation_vector[2]
+                    for dof_name, dof_value in zip(self.dof_columns, dofs):
+                        batch_y[self.y_cols.index(dof_name)][index_in_batch] = dof_value
 
                 if col in self.x_cols:
                     batch_x[self.x_cols.index(col)][index_in_batch] = image_arr
