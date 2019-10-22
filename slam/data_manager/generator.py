@@ -127,7 +127,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         if self.generate_flow_by_rt_proba > 0.:
             assert 'path_to_optical_flow' in self.x_cols
-            assert any(col.endswith('depth') for col in self.image_cols)
+            assert any([col.endswith('depth') for col in self.image_cols])
             self.dof_columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
             self.df_dofs = self.df[self.dof_columns]
             self.df_intrinsics = self.df[['f_x', 'f_y', 'c_x', 'c_y']]
