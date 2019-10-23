@@ -52,6 +52,10 @@ class DatasetPreparator:
                  matches_threshold=None,
                  intrinsics=None,
                  baseline_distance=None):
+
+        if self.indices_root:
+            assert matches_threshold is not None
+
         self.dataset_type = dataset_type
         self.dataset_root = dataset_root
         self.output_root = output_root
@@ -151,7 +155,9 @@ class DatasetPreparator:
                               'target_size': self.target_size,
                               'stride': self.stride,
                               'binocular_depth_checkpoint': self.binocular_depth_checkpoint,
-                              'baseline_distance': self.baseline_distance}
+                              'baseline_distance': self.baseline_distance,
+                              'matches_num': self.matches_threshold,
+                              'indices_root': self.indices_root}
             if self.intrinsics is not None:
                 dataset_config['intrinsics'] = (self.intrinsics.f_x,
                                                 self.intrinsics.f_y,
