@@ -76,20 +76,3 @@ class G2OEstimator(BaseEstimator):
         if self.verbose:
             print(f'Predicting completed in {time.time() - start_time:.3f} s\n') 
         return preds
-    
-    def score(self, X, y):
-        metric = 'ATE'
-        preds = self.predict(X)
-        print(f'Scoring {len(y)} trajectories. Metric: {metric}')
-        start_time = time.time()
-        scores = []
-        for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
-            metrics_dict = calculate_metrics(gt_trajectory, predicted_trajectory)
-            metrics_dict = normalize_metrics(metrics_dict)
-            score = metrics_dict[metric]
-            scores.append(score)
-
-        average_score = np.mean(scores)
-        print(f'Scoring completed in {time.time() - start_time:.3f} s\n') 
-        return average_score    
-       
