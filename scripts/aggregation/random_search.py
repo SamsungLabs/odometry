@@ -124,7 +124,7 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
     }
 
     print(param_distributions)
-    print(f'Number of trajectories {len(X)}')
+                        
     result = random_search(X, y, groups, param_distributions, n_jobs=n_jobs, n_iter=n_iter, verbose=True)
 
     if output_path:
