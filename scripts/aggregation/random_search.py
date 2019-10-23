@@ -124,8 +124,13 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
     }
 
     print(param_distributions)
+                           
+    if 'kitti' in paths[0]:
+        rpe_indices = 'kitti'
+    else:
+        rpe_indices = 'full'
                         
-    result = random_search(X, y, groups, param_distributions, n_jobs=n_jobs, n_iter=n_iter, verbose=True)
+    result = random_search(X, y, groups, param_distributions, rpe_indices=rpe_indices, n_jobs=n_jobs, n_iter=n_iter, verbose=True)
 
     if output_path:
         result.to_csv(output_path)

@@ -63,12 +63,12 @@ class DisabledCV:
     def get_n_splits(self, X, y, groups=None):
         return self.n_splits
 
-def _score(y, preds, metric):
+def _score(y, preds, metric, rpe_indices):
     print(f'Scoring {len(y)} trajectories. Metric: {metric}')
     start_time = time.time()
     scores = []
     for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
-        metrics_dict = calculate_metrics(gt_trajectory, predicted_trajectory)
+        metrics_dict = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices)
         metrics_dict = normalize_metrics(metrics_dict)
         scores.append(metrics_dict[metric])
     
@@ -77,24 +77,22 @@ def _score(y, preds, metric):
     return average_score
 
 
-def wrap_score(metric):
-    partial_score = partial(_score, metric=metric)
+def wrap_score(metric, rpe_indices):
+    partial_score = partial(_score, metric=metric, rpe_indices=rpe_indices)
     update_wrapper(partial_score, _score)
     return partial_score
 
 
-def random_search(X, y, groups, param_distributions, **kwargs):
-    
-#     scoring = {metric: make_scorer(score(metric), greater_is_better=False) 
-#                for metric in ('ATE', 'RMSE_t', 'RMSE_r', 'RPE_t', 'RPE_r')}
-
-    scoring = {metric: wrap_score(metric) for metric in ('ATE', 'RMSE_t', 'RMSE_r', 'RPE_t', 'RPE_r')}
+def random_search(X, y, groups, param_distributions, rpe_indices, **kwargs):
+  
+    scoring = {metric: wrap_score(metric, rpe_indices) for metric in ('ATE', 'RMSE_t', 'RMSE_r', 'RPE_t', 'RPE_r')}
     
     
     print(f'Number of predicted trajectories {len(X)}')
     print(f'Number of gt trajectories {len(y)}')
     print(f'Number of train trajectories {len(groups) - sum(groups)}')
     print(f'Number of test trajectories {sum(groups)}')
+    print(f'RPE indices: {rpe_indices}') 
 
     rs = RandomizedSearchCV(G2OEstimator(verbose=True), 
                             param_distributions,
