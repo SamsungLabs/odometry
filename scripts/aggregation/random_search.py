@@ -111,16 +111,22 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
         coefs.append(list(np.arange(1, len(strides) + 1, 1)))
         coefs.append(list(np.arange(1, len(strides)*2 + 1, 2)))
         coefs.append(list(np.arange(1, len(strides)*4 + 1, 4)))
-        for i in range(1, len(strides) - 1):
+        for i in range(1, len(strides)):
             c = [1] * (len(strides) - i) + [1000000] * i
             coefs.append(c)
+                           
+        for i in range(len(strides)):
+            c = [1000000] * (len(strides))
+            c[i] = 1
+            coefs.append(c)
+                         
 
     param_distributions = {
         'coef': [dict(zip(strides, c)) for c in coefs],
-        'coef_loop': kwargs['coef_loop'] or [0, 1, 100, 300, 500],
+        'coef_loop': kwargs['coef_loop'] or [1, 100, 300, 500, 1000000],
         'loop_threshold': kwargs['loop_threshold'] or [50, 100],
         'rotation_scale': kwargs['rotation_scale'] or np.logspace(-10, 0, 11, base=2),
-        'max_iterations': kwargs['max_iterations'] or [100, 1000]
+        'max_iterations': kwargs['max_iterations'] or [1000]
     }
 
     print(param_distributions)
