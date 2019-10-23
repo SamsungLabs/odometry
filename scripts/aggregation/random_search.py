@@ -69,9 +69,9 @@ def get_predicted_df(paths):
     predicted_df = pd.concat(df_list, ignore_index=True)
 
     if os.path.basename(os.path.dirname(paths['1'])) == 'val':
-        group_id = 1
-    elif os.path.basename(os.path.dirname(paths['1'])) == 'test':
         group_id = 0
+    elif os.path.basename(os.path.dirname(paths['1'])) == 'test':
+        group_id = 1
     else:
         raise RuntimeError(f'Unexpected parent dir of prediction {paths["1"]}. Parent dir must "val" or "test"')
 
