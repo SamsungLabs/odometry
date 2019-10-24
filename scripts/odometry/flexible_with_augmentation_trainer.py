@@ -31,14 +31,17 @@ class FlexibleWithAugmentationTrainer(BaseTrainer):
         parser = BaseTrainer.get_parser()
         parser.add_argument('--generate_flow_by_rt_proba', type=float, default=1)
         parser.add_argument('--gt_from_uniform_percentile', type=int, default=None)
+        parser.add_argument('--augment_with_rectangle_proba', type=float, default=0)
         return parser
 
     def log_params(self):
         super().log_params()
         mlflow.log_param('generate_flow_by_rt_proba',
-                         self.train_generator_args['generate_flow_by_rt_proba'])
+                         self.train_generator_args.get('generate_flow_by_rt_proba'))
         mlflow.log_param('gt_from_uniform_percentile',
-                         self.train_generator_args['gt_from_uniform_percentile'])
+                         self.train_generator_args.get('gt_from_uniform_percentile'))
+        mlflow.log_param('augment_with_rectangle_proba',
+                         self.train_generator_args.get('augment_with_rectangle_proba'))
 
 
 if __name__ == '__main__':
@@ -48,13 +51,16 @@ if __name__ == '__main__':
 
     generate_flow_by_rt_proba = args.generate_flow_by_rt_proba
     gt_from_uniform_percentile = args.gt_from_uniform_percentile
+    augment_with_rectangle_proba = args.augment_with_rectangle_proba
 
     del args.generate_flow_by_rt_proba
     del args.gt_from_uniform_percentile
+    del args.augment_with_rectangle_proba
 
     args.train_generator_args = {
         'generate_flow_by_rt_proba': generate_flow_by_rt_proba,
-        'gt_from_uniform_percentile': gt_from_uniform_percentile
+        'gt_from_uniform_percentile': gt_from_uniform_percentile,
+        'augment_with_rectangle_proba': augment_with_rectangle_proba
     }
 
     trainer = FlexibleWithAugmentationTrainer(**vars(args))
