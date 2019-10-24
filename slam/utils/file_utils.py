@@ -1,5 +1,4 @@
 import os
-import shutil
 
 
 def chmod(path):
@@ -31,4 +30,4 @@ def create_prediction_file_path(save_dir, trajectory_id, prediction_id='', subse
                              trajectory_id=trajectory_id,
                              prediction_id=prediction_id,
                              subset=subset,
-                             ext='csv')    
+                             ext='csv')

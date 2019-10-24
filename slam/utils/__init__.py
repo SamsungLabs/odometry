@@ -15,6 +15,7 @@ from .io_utils import convert_chw_to_hwc
 from .io_utils import get_channels_num
 from .io_utils import get_fill_fn
 from .io_utils import warp2d
+from .io_utils import read_csv
 
 from .visualization_utils import visualize_trajectory_with_gt
 from .visualization_utils import visualize_trajectory

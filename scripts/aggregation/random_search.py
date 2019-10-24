@@ -9,6 +9,14 @@ import env
 
 from slam.linalg import RelativeTrajectory
 from slam.aggregation import random_search
+from slam.utils import read_csv
+
+
+def get_epoch_from_dirname(dirname):
+    position = dirname.find('_val_RPE')
+    if position == -1:
+        raise RuntimeError(f'Could not find epoch number in {dirname}')
+    return int(dirname[position - 3: position])
 
 
 def get_path(prefix, trajectory_name):
@@ -17,43 +25,22 @@ def get_path(prefix, trajectory_name):
     if len(paths) == 1:
         return paths[0].as_posix()
     elif len(paths) > 1:
-        return max(paths,
-                   key=lambda x: int(x.parent.parent.name[x.parent.parent.name.find('_val_RPE') - 3: x.parent.parent.name.find('_val_RPE')])
-                  ).as_posix()
+        return max(paths, key=lambda x: get_epoch_from_dirname(x.parent.parent.name)).as_posix()
     else:
         raise RuntimeError(f'Could not find trajectory {trajectory_name} in dir {prefix}')
+
 
 def get_trajectory_names(prefix):
     val_dirs = list(Path(prefix).glob(f'*val*'))
     paths = [val_dir.as_posix() for val_dir in val_dirs]
-    last_dir = max(paths, key=lambda x: int(x[x.find('_val_RPE') - 3: x.find('_val_RPE')]))
+    last_dir = max(paths, key=lambda x: get_epoch_from_dirname(x))
     val_trajectory_names = Path(last_dir).joinpath('val').glob('*.csv')
     test_trajectory_names = Path(prefix).joinpath('test/test').glob('*.csv')
     trajectory_names = list(val_trajectory_names) + list(test_trajectory_names)
     trajectory_names = [trajectory_name.stem for trajectory_name in trajectory_names]
-    trajectory_names = ['_'.join(tajectory_name.split('_')[1:]) for tajectory_name in trajectory_names]  # Bug handling
+    trajectory_names = ['_'.join(trajectory_name.split('_')[1:]) for trajectory_name in trajectory_names]  # Bug handling
     assert len(trajectory_names) > 0
     return trajectory_names
-
-
-def read_csv(path):
-    df = pd.read_csv(path)
-    df.rename(columns={'path_to_rgb': 'from_path',
-                       'path_to_rgb_next': 'to_path'},
-              inplace=True)
-
-    stem_fn = lambda x: int(Path(x).stem)
-    df['to_index'] = df['to_path'].apply(stem_fn)
-    df['from_index'] = df['from_path'].apply(stem_fn)
-
-    df['diff'] = df['to_index'] - df['from_index']
-
-    mean_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
-    std_cols = [c + '_confidence' for c in mean_cols]
-
-    df = pd.concat((df, pd.DataFrame(columns=std_cols)), axis=1)
-    df.fillna(1., inplace=True)
-    return df
 
 
 def get_predicted_df(paths):
@@ -68,9 +55,10 @@ def get_predicted_df(paths):
 
     predicted_df = pd.concat(df_list, ignore_index=True)
 
-    if os.path.basename(os.path.dirname(paths['1'])) == 'val':
+    parent_dir = os.path.basename(os.path.dirname(paths['1']))
+    if parent_dir == 'val':
         group_id = 0
-    elif os.path.basename(os.path.dirname(paths['1'])) == 'test':
+    elif parent_dir == 'test':
         group_id = 1
     else:
         raise RuntimeError(f'Unexpected parent dir of prediction {paths["1"]}. Parent dir must "val" or "test"')
@@ -119,7 +107,6 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
             c = [1000000] * (len(strides))
             c[i] = 1
             coefs.append(c)
-                         
 
     param_distributions = {
         'coef': [dict(zip(strides, c)) for c in coefs],
@@ -136,7 +123,14 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
     else:
         rpe_indices = 'full'
                         
-    result = random_search(X, y, groups, param_distributions, rpe_indices=rpe_indices, n_jobs=n_jobs, n_iter=n_iter, verbose=True)
+    result = random_search(X,
+                           y,
+                           groups,
+                           param_distributions,
+                           rpe_indices=rpe_indices,
+                           n_jobs=n_jobs,
+                           n_iter=n_iter,
+                           verbose=True)
 
     if output_path:
         result.to_csv(output_path)

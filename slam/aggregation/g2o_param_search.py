@@ -1,14 +1,11 @@
 import time
-import sklearn
-from sklearn import model_selection
-import numpy as np
-from functools import partial, update_wrapper
-from collections import defaultdict
-import pandas as pd
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.metrics import make_scorer
-import numbers
 import copy
+import numbers
+import numpy as np
+import pandas as pd
+from sklearn import model_selection
+from sklearn.model_selection import RandomizedSearchCV
+from functools import partial, update_wrapper
 
 from .g2o_estimator import G2OEstimator
 from slam.evaluation import calculate_metrics, normalize_metrics
@@ -16,7 +13,7 @@ from slam.evaluation import calculate_metrics, normalize_metrics
 
 def _multimetric_score(estimator, X_test, y_test, scorers):
     """Return a dict of score for multimetric scoring.
-       Original functions calculated predic for every score. This function evaluate predict only one time"""
+       Original function calculates predict for every score. This function evaluate predict only one time"""
     print('Redeclaring __multimetric_score function')
     preds = estimator.predict(X_test)
     
@@ -53,8 +50,8 @@ class DisabledCV:
     def split(self, X, y, groups):
         if isinstance(groups, list):
             groups = np.array(groups)
-        elif not isinstance(groups, nd.array):
-            raise RuntimeError(f'groups has not array like type') 
+        elif not isinstance(groups, np.ndarray):
+            raise RuntimeError('groups has not array like type')
         train = np.where(groups == 0)[0]
         
         test_ind = groups == 1
@@ -68,6 +65,7 @@ class DisabledCV:
 
     def get_n_splits(self, X, y, groups=None):
         return self.n_splits
+
 
 def _score(y, preds, metric, rpe_indices):
     print(f'Scoring {len(y)} trajectories. Metric: {metric}')
@@ -92,15 +90,14 @@ def wrap_score(metric, rpe_indices):
 def random_search(X, y, groups, param_distributions, rpe_indices, **kwargs):
   
     scoring = {metric: wrap_score(metric, rpe_indices) for metric in ('ATE', 'RMSE_t', 'RMSE_r', 'RPE_t', 'RPE_r')}
-    
-    
+
     print(f'Number of predicted trajectories {len(X)}')
     print(f'Number of gt trajectories {len(y)}')
     print(f'Number of train trajectories {len(groups) - sum(groups)}')
     print(f'Number of test trajectories {sum(groups)}')
     print(f'RPE indices: {rpe_indices}') 
 
-    rs = RandomizedSearchCV(G2OEstimator(verbose=True), 
+    rs = RandomizedSearchCV(G2OEstimator(verbose=True),
                             param_distributions,
                             cv=DisabledCV(),
                             refit=False,
