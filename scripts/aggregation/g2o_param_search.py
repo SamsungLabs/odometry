@@ -8,6 +8,7 @@ import pandas as pd
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import make_scorer
 import numbers
+import copy
 
 from .g2o_estimator import G2OEstimator
 from slam.evaluation import calculate_metrics, normalize_metrics
@@ -55,7 +56,12 @@ class DisabledCV:
         elif not isinstance(groups, nd.array):
             raise RuntimeError(f'groups has not array like type') 
         train = np.where(groups == 0)[0]
-        test = np.where(groups == 1)[0]
+        
+        test_ind = groups == 1
+        if np.sum(test_ind) == 0:
+            test = copy.deepcopy(train)
+        else:
+            test = np.where(groups == 1)[0]
         print(f'train split {train}')
         print(f'test split {test}')
         yield (train, test)
