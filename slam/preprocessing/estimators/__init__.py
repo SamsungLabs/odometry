@@ -8,6 +8,8 @@ from .pwcnet_estimator import PWCNetEstimator
 
 from .pwcnet_feature_extractor import PWCNetFeatureExtractor
 
+from .binocular_depth_estimator import BinocularDepthEstimator
+
 #from .senet_estimator import SENetEstimator
 
 
@@ -15,5 +17,6 @@ __all__ = [
     'Quaternion2EulerEstimator',
     'Struct2DepthEstimator',
     'Global2RelativeEstimator',
-    'PWCNetEstimator'
+    'PWCNetEstimator',
+    'BinocularDepthEstimator'
 ]

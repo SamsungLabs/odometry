@@ -16,6 +16,8 @@ from .sequential_rt_trainer import SequentialRTTrainer
 
 from .flexible_with_confidence_trainer import FlexibleWithConfidenceTrainer
 
+from .flexible_with_augmentation_trainer import FlexibleWithAugmentationTrainer
+
 from .multiscale_trainer import MultiscaleTrainer
 
 from .multiscale_with_confidence_trainer import MultiscaleWithConfidenceTrainer
@@ -31,6 +33,7 @@ __all__ = [
     'SequentialRTTrainer',
     'ConfidenceTrainer',
     'FlexibleWithConfidenceTrainer',
+    'FlexibleWithAugmentationTrainer'
     'MultiscaleTrainer',
     'MultiscaleWithConfidenceTrainer',
 ]
