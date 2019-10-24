@@ -31,11 +31,6 @@ def get_default_dataset_parser():
     return parser
 
 
-def parse_intrinsics(args):
-    if not np.isnan(args.f_x):
-        return
-
-
 class DatasetPreparator:
     def __init__(self,
                  dataset_type,
@@ -49,9 +44,7 @@ class DatasetPreparator:
                  stride=1,
                  swap_angles=False,
                  indices_root=None,
-                 matches_threshold=None,
-                 intrinsics=None,
-                 baseline_distance=None):
+                 matches_threshold=None):
 
         if self.indices_root:
             assert matches_threshold is not None
@@ -68,8 +61,6 @@ class DatasetPreparator:
         self.swap_angles = swap_angles
         self.indices_root = indices_root
         self.matches_threshold = matches_threshold
-        self.intrinsics = intrinsics
-        self.baseline_distance = baseline_distance
 
     def _initialize_estimators(self):
 
@@ -89,12 +80,11 @@ class DatasetPreparator:
 
         if self.binocular_depth_checkpoint is not None:
             binocular_depth_estimator = estimators.BinocularDepthEstimator(
-                input_col=['path_to_rgb', 'path_to_rgb_right'],
+                input_col=['path_to_rgb', 'path_to_rgb_right',
+                           'f_x', 'f_y', 'c_x', 'c_y', 'baseline_distance'],
                 output_col='path_to_binocular_depth',
                 sub_dir='binocular_depth',
-                checkpoint=self.binocular_depth_checkpoint,
-                intrinsics=self.intrinsics,
-                baseline_distance=self.baseline_distance)
+                checkpoint=self.binocular_depth_checkpoint)
             single_frame_estimators.append(binocular_depth_estimator)
 
         cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
@@ -155,16 +145,8 @@ class DatasetPreparator:
                               'target_size': self.target_size,
                               'stride': self.stride,
                               'binocular_depth_checkpoint': self.binocular_depth_checkpoint,
-                              'baseline_distance': self.baseline_distance,
                               'matches_num': self.matches_threshold,
                               'indices_root': self.indices_root}
-            if self.intrinsics is not None:
-                dataset_config['intrinsics'] = (self.intrinsics.f_x,
-                                                self.intrinsics.f_y,
-                                                self.intrinsics.c_x,
-                                                self.intrinsics.c_y,
-                                                self.intrinsics.width,
-                                                self.intrinsics.height)
             json.dump(dataset_config, f)
 
         trajectories = [d.as_posix() for d in list(Path(self.dataset_root).rglob('*/**'))]

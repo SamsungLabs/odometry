@@ -19,7 +19,7 @@ class BaseTrainer:
                  leader_board,
                  run_name,
                  bundle_name,
-                 cache=False,
+                 cache=True,
                  batch_size=128,
                  epochs=100,
                  period=10,
@@ -29,13 +29,16 @@ class BaseTrainer:
                  no_cycle=False,
                  backend='numpy',
                  cuda=False,
+                 cuda_visible_devices=0,
                  per_process_gpu_memory_fraction=0.33,
                  use_mlflow=True,
                  seed=42,
                  stride=None,
                  min_frame_ind_diff=0,
                  max_frame_ind_diff=float('inf'),
-                 **kwargs):
+                 train_generator_args=None,
+                 val_generator_args=None,
+                 test_generator_args=None):
 
         self.tracking_uri = env.TRACKING_URI
         self.artifact_path = env.ARTIFACT_PATH
@@ -77,16 +80,22 @@ class BaseTrainer:
         self.target_size = self.config['target_size']
         self.placeholder = None
 
+        self.min_frame_ind_diff = min_frame_ind_diff
+        self.max_frame_ind_diff = max_frame_ind_diff
+
+        self.train_generator_args = train_generator_args
+        self.val_generator_args = val_generator_args
+        self.test_generator_args = test_generator_args
+
         self.set_model_args()
         self.set_dataset_args()
 
-        set_computation(self.seed, per_process_gpu_memory_fraction=per_process_gpu_memory_fraction)
+        set_computation(self.seed,
+                        per_process_gpu_memory_fraction=per_process_gpu_memory_fraction,
+                        cuda_visible_devices=cuda_visible_devices)
 
         self.client = None
         self.experiment = None
-
-        self.min_frame_ind_diff = min_frame_ind_diff
-        self.max_frame_ind_diff = max_frame_ind_diff
 
     def set_model_args(self):
         pass
@@ -142,6 +151,7 @@ class BaseTrainer:
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
         mlflow.log_param('epochs', self.epochs)
         mlflow.log_param('seed', self.seed)
+        mlflow.log_param('cache', self.cache)
         mlflow.log_param('avg', False)
 
     def end_run(self):
@@ -172,7 +182,10 @@ class BaseTrainer:
                                 test_strides=self.config['test_strides'],
                                 placeholder=self.placeholder,
                                 min_frame_ind_diff=self.min_frame_ind_diff,
-                                max_frame_ind_diff=self.max_frame_ind_diff)
+                                max_frame_ind_diff=self.max_frame_ind_diff,
+                                train_generator_args = self.train_generator_args,
+                                val_generator_args = self.val_generator_args,
+                                test_generator_args = self.test_generator_args)
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
@@ -266,10 +279,10 @@ class BaseTrainer:
         dataset = self.get_dataset()
 
         model_factory = self.get_model_factory(dataset.input_shapes)
-        model = model_factory.construct()
-        print(model.summary())
+        self.model = model_factory.construct()
+        print(self.model.summary())
 
-        self.fit_generator(model=model,
+        self.fit_generator(model=self.model,
                            dataset=dataset,
                            epochs=self.epochs,
                            evaluate=True)
@@ -287,8 +300,6 @@ class BaseTrainer:
                             help='Name of the run. Must be unique and specific')
         parser.add_argument('--bundle_name', '-bn', type=str, required=True,
                             help='Name of the bundle. Must be unique and specific')
-        parser.add_argument('--cache', action='store_true',
-                            help='Cache inputs in RAM')
         parser.add_argument('--epochs', '-ep', type=int, default=100,
                             help='Number of epochs')
         parser.add_argument('--period', type=int, default=10,

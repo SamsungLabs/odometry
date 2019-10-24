@@ -4,11 +4,12 @@ import numpy as np
 from pathlib import Path
 import keras_preprocessing.image as keras_image
 
-
 from slam.utils import (get_channels_num,
                         get_fill_fn,
                         load_image_arr,
                         resize_image_arr)
+
+from slam.linalg import Intrinsics, create_optical_flow_from_rt
 
 
 class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_image.Iterator):
@@ -40,7 +41,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  trajectory_id='',
                  include_last=False,
                  min_frame_ind_diff=0,
-                 max_frame_ind_diff=float('inf')):
+                 max_frame_ind_diff=float('inf'),
+                 intrinsics=None,
+                 generate_flow_by_rt_proba=0.,
+                 gt_from_uniform_percentile=None):
 
         if target_size == -1:
             path_to_first_image = os.path.join(directory, dataframe[image_col].iloc[0].values[0])
@@ -79,7 +83,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         image_col = image_col or []
         self.image_cols = [image_col] if isinstance(image_col, str) else image_col
 
-        assert set(self.image_cols) <= (set(self.x_cols) | set(self.y_cols))
         assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
 
         self.df[self.image_cols] = self.df[self.image_cols].astype(str)
@@ -119,6 +122,31 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             self.return_cols.extend([col + '_' + p for col in self.y_cols])
 
         self.trajectory_id = trajectory_id
+
+        self.generate_flow_by_rt_proba = generate_flow_by_rt_proba
+
+        if self.generate_flow_by_rt_proba > 0.:
+            assert 'path_to_optical_flow' in self.x_cols
+            assert any([col.endswith('depth') for col in self.image_cols])
+            self.dof_columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+            self.df_dofs = self.df[self.dof_columns]
+            self.df_intrinsics = self.df[['f_x', 'f_y', 'c_x', 'c_y']]
+
+        self.gt_from_uniform_percentile = gt_from_uniform_percentile
+        if self.gt_from_uniform_percentile is not None:
+            assert self.generate_flow_by_rt_proba > 0.
+            assert self.gt_from_uniform_percentile <= 100
+            assert self.gt_from_uniform_percentile > 50
+
+            self.gt_low_high_bonds = (
+                np.percentile(
+                    self.df_dofs,
+                    100 - self.gt_from_uniform_percentile,
+                    axis=0),
+                np.percentile(
+                    self.df_dofs,
+                    self.gt_from_uniform_percentile,
+                    axis=0))
 
         super(ExtendedDataFrameIterator, self).__init__(self.samples,
                                                         batch_size,
@@ -280,15 +308,43 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         # build batch of image data
         valid_samples = np.ones(len(index_array)).astype(bool)
         for index_in_batch, df_row_index in enumerate(index_array):
-            seed = np.random.randint(1000000)
             for col, fname in self.df_images.iloc[df_row_index].iteritems():
-                params = self.image_data_generator.get_random_transform(self.image_shapes[col], seed)
+                generate_flow_by_rt = self.generate_flow_by_rt_proba > np.random.uniform()
+
+                if col == 'path_to_optical_flow' and generate_flow_by_rt:
+                    continue
+
                 image_arr = self._get_preprocessed_image(fname, self.load_mode[col], self.preprocess_mode[col])
                 if image_arr is None:
                     valid_samples[index_in_batch] = False
                     continue
-                image_arr = self.image_data_generator.apply_transform(image_arr, params)
-                image_arr = self.image_data_generator.standardize(image_arr)
+
+                if col.endswith('depth') and generate_flow_by_rt:
+                    col = 'path_to_optical_flow'
+
+                    if self.gt_from_uniform_percentile is not None:
+                        dofs = np.random.uniform(*(self.gt_low_high_bonds))
+                    else:
+                        targets_row_index = np.random.randint(len(self.df))
+                        dofs = self.df_dofs.iloc[targets_row_index].values
+
+                    rotation_vector, translation_vector = dofs[:3], dofs[3:]
+
+                    intrinsics_args = dict(self.df_intrinsics.iloc[df_row_index])
+                    intrinsics_args.update({'width': image_arr.shape[1], 'height': image_arr.shape[0]})
+
+                    image_arr = create_optical_flow_from_rt(image_arr[...,0],
+                                                            Intrinsics(**intrinsics_args),
+                                                            rotation_vector,
+                                                            translation_vector)
+
+                    if image_arr is None:
+                        valid_samples[index_in_batch] = False
+                        continue
+
+                    for dof_name, dof_value in zip(self.dof_columns, dofs):
+                        batch_y[self.y_cols.index(dof_name)][index_in_batch] = dof_value
+
                 if col in self.x_cols:
                     batch_x[self.x_cols.index(col)][index_in_batch] = image_arr
                 if col in self.y_cols:

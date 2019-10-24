@@ -68,7 +68,7 @@ class NetworkEstimator(BaseEstimator):
         row[self.output_col] = output_path
         return row
 
-    def predict(self, batch, target_size=None):
+    def predict(self, batch):
         model_output = self._run_model_inference(batch)
         prediction = self._convert_model_output_to_prediction(model_output)
         return prediction
