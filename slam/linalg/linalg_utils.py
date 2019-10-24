@@ -30,14 +30,14 @@ def convert_euler_angles_to_rotation_matrix(euler_angles_xyz):
     yaw   = euler_angles_xyz[2]
     pitch = euler_angles_xyz[1]
     roll  = euler_angles_xyz[0]
-    
+
     cos_r = np.cos(roll)
     sin_r = np.sin(roll)
     cos_p = np.cos(pitch)
     sin_p = np.sin(pitch)
     cos_y = np.cos(yaw)
     sin_y = np.sin(yaw)
-    
+
     R_x = np.array([[ 1,      0,      0    ],
                     [ 0,      cos_r, -sin_r],
                     [ 0,      sin_r,  cos_r]])
@@ -72,7 +72,7 @@ def split_se3(se3):
 
 
 def euler_to_quaternion(euler_angles_xyz):
-    """euler_x,euler_y,euler_z in 
+    """euler_x,euler_y,euler_z in
        q_w, q_x, q_y, q_z out"""
     yaw   = euler_angles_xyz[2]
     pitch = euler_angles_xyz[1]
@@ -117,7 +117,7 @@ def get_covariance_matrix_from_euler_uncertainty(translation_xyz, euler_angles_x
     """get euler_x,euler_y,euler_z,
         output matrix 6x6 with t_x, t_y, t_z, euler_z (yaw), euler_y (pitch), euler_x (roll)"""
     return np.diag(np.hstack([translation_xyz, euler_angles_xyz[::-1]]))
-    
+
 
 def convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles_xyz, covariance_matrix_euler=np.eye(6)):
     """get  matrix 6x6 with t_x, t_y, t_z, euler_z, euler_y, euler_x (yaw, pitch, roll),
@@ -145,10 +145,29 @@ def convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles_xyz, covari
     derivatives = 0.5 * np.array([[ scc-ccs,  scs-csc,  css-scc],
                                   [-csc-scs, -ssc-ccs,  ccc+sss],
                                   [ scc-css,  ccc-sss,  ccs-ssc],
-                                  [ ccc+sss, -css-scc, -csc-scs]]) 
+                                  [ ccc+sss, -css-scc, -csc-scs]])
 
     jacobian = np.eye(7, 6)
     jacobian[3:, 3:] = derivatives
     covariance_matrix_quaternion = jacobian @ covariance_matrix_euler @ jacobian.T
 
     return covariance_matrix_quaternion
+
+
+def create_optical_flow_from_rt(depth, intrinsics, rotation_vector, translation_vector):
+    w, h = intrinsics.width, intrinsics.height
+    R = convert_euler_angles_to_rotation_matrix(rotation_vector)
+    t = translation_vector.reshape(3, -1)
+    meshgrid = np.meshgrid(np.arange(0., w), np.arange(0., h))
+    xyz_points = intrinsics.create_frustrum(*meshgrid, depth)
+    xyz_points_after_transform = R.T @ (xyz_points.reshape(3, -1) - t)
+    xyz_points_after_transform = xyz_points_after_transform.reshape((3, h, w))
+    if (xyz_points_after_transform[2] <= 0).any():
+        return None
+
+    xy_pixels_after_transform = intrinsics.backward(xyz_points_after_transform[:2] / xyz_points_after_transform[2])
+    flow = (xy_pixels_after_transform - np.c_[meshgrid])
+    flow = np.transpose(flow, (1, 2, 0))
+    flow[...,0] /= w
+    flow[...,1] /= h
+    return flow
