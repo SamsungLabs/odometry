@@ -7,6 +7,7 @@ from .linalg_utils import convert_euler_uncertainty_to_quaternion_uncertainty
 from .linalg_utils import get_covariance_matrix_from_euler_uncertainty
 from .linalg_utils import euler_to_quaternion
 from .linalg_utils import shortest_path_with_normalization
+from .linalg_utils import create_optical_flow_from_rt
 
 from .trajectory import GlobalTrajectory
 from .trajectory import RelativeTrajectory
@@ -28,5 +29,6 @@ __all__ = [
     'euler_to_quaternion',
     'shortest_path_with_normalization',
     'QuaternionWithTranslation'
-    'Intrinsics'
+    'Intrinsics',
+    'create_optical_flow_from_rt'
 ]

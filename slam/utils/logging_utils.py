@@ -35,7 +35,6 @@ def mlflow_logging(ignore: Tuple[str] = (), prefix: str = '', **kwargs):
         def wrapper(*args, **wrapper_kwargs):
 
             if not mlflow.active_run():
-                print("Not active run")
                 return func(*args, **wrapper_kwargs)
 
             arg_spec = inspect.getargspec(func)
