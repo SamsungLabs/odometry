@@ -129,4 +129,4 @@ if __name__ == '__main__':
     elif args.leader_board is not None and args.bundle_name is None:
         averager.average_experiment(args.leader_board)
     else:
-        averager.average_run(bundle_name=args.bundle_name, leader_board=args.leader_board)
+        averager.average_bundle(bundle_name=args.bundle_name, leader_board=args.leader_board)
