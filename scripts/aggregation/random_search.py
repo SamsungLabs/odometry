@@ -8,7 +8,7 @@ import __init_path__
 import env
 
 from slam.linalg import RelativeTrajectory
-from scripts.aggregation import random_search
+from slam.aggregation import random_search
 
 
 def get_path(prefix, trajectory_name):
