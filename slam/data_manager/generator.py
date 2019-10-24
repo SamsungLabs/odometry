@@ -44,7 +44,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  max_frame_ind_diff=float('inf'),
                  intrinsics=None,
                  generate_flow_by_rt_proba=0.,
-                 gt_from_uniform_percentile=None):
+                 gt_from_uniform_percentile=None,
+                 augment_with_rectangle_proba=0.):
 
         if target_size == -1:
             path_to_first_image = os.path.join(directory, dataframe[image_col].iloc[0].values[0])
@@ -147,6 +148,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                     self.df_dofs,
                     self.gt_from_uniform_percentile,
                     axis=0))
+
+        self.augment_with_rectangle_proba = augment_with_rectangle_proba
 
         super(ExtendedDataFrameIterator, self).__init__(self.samples,
                                                         batch_size,
@@ -308,9 +311,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         # build batch of image data
         valid_samples = np.ones(len(index_array)).astype(bool)
         for index_in_batch, df_row_index in enumerate(index_array):
+            generate_flow_by_rt = self.generate_flow_by_rt_proba > np.random.uniform()
             for col, fname in self.df_images.iloc[df_row_index].iteritems():
-                generate_flow_by_rt = self.generate_flow_by_rt_proba > np.random.uniform()
-
                 if col == 'path_to_optical_flow' and generate_flow_by_rt:
                     continue
 
@@ -337,10 +339,18 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                                                             Intrinsics(**intrinsics_args),
                                                             rotation_vector,
                                                             translation_vector)
-
                     if image_arr is None:
                         valid_samples[index_in_batch] = False
                         continue
+
+                    if self.augment_with_rectangle_proba > np.random.uniform():
+                        y1, x1 = np.random.uniform(low=(0, 0), high=image_arr[...,0].shape).astype(int)
+                        y2, x2 = np.random.uniform(low=(0, 0), high=image_arr[...,0].shape).astype(int)
+                        rectangle_to_fill = image_arr[min(y1, y2):max(y1, y2), min(x1, x2):max(x1, x2)]
+                        x11 = np.random.randint(low=0, high=image_arr.shape[1] - rectangle_to_fill.shape[1])
+                        y11 = np.random.randint(low=0, high=image_arr.shape[0] - rectangle_to_fill.shape[0])
+                        ractangle_fill_from = image_arr[y11:y11+rectangle_to_fill.shape[0], x11:x11+rectangle_to_fill.shape[1]]
+                        rectangle_to_fill[:] = ractangle_fill_from + np.random.uniform(-0.1, 0.1)
 
                     for dof_name, dof_value in zip(self.dof_columns, dofs):
                         batch_y[self.y_cols.index(dof_name)][index_in_batch] = dof_value
