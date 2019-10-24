@@ -28,6 +28,7 @@ def get_default_dataset_parser():
                         help='Path to directory with same structure as dataset. In trajectory subdirectories stored'
                              'df.csv files with new pair indices.')
     parser.add_argument('--matches_threshold', default=None, type=int)
+    parser.add_argument('--trajectories', default=None, type=str, nargs='+', help='Name of trajectories')
     return parser
 
 
@@ -44,7 +45,8 @@ class DatasetPreparator:
                  stride=1,
                  swap_angles=False,
                  indices_root=None,
-                 matches_threshold=None):
+                 matches_threshold=None,
+                 trajectories=None):
         self.dataset_type = dataset_type
         self.dataset_root = dataset_root
         self.output_root = output_root
@@ -57,6 +59,7 @@ class DatasetPreparator:
         self.swap_angles = swap_angles
         self.indices_root = indices_root
         self.matches_threshold = matches_threshold
+        self.trajectories = trajectories
 
     def _initialize_estimators(self):
 
@@ -143,8 +146,11 @@ class DatasetPreparator:
                               'binocular_depth_checkpoint': self.binocular_depth_checkpoint}
             json.dump(dataset_config, f)
 
-        trajectories = [d.as_posix() for d in list(Path(self.dataset_root).rglob('*/**'))]
-        trajectories.append(self.dataset_root)
+        if self.trajectories is None:
+            trajectories = [d.as_posix() for d in list(Path(self.dataset_root).rglob('*/**'))]
+            trajectories.append(self.dataset_root)
+        else:
+            trajectories = [os.path.join(self.dataset_root, trajectory) for trajectory in self.trajectories]
 
         counter = 0
 

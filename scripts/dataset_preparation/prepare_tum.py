@@ -24,5 +24,6 @@ if __name__ == '__main__':
                       depth_checkpoint=args.depth_checkpoint if args.depth else None,
                       binocular_depth_checkpoint=args.binocular_depth_checkpoint if args.binocular_depth else None,
                       indices_root=args.indices_root,
-                      matches_threshold=args.matches_threshold).prepare()
+                      matches_threshold=args.matches_threshold,
+                      trajectories=args.trajectories).prepare()
 
