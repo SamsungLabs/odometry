@@ -30,19 +30,22 @@ class MlflowLogger(keras.callbacks.Callback):
         logs = logs or {}
         self.epoch = epoch
 
-        if mlflow.active_run():
-            for key, value in dict({'epoch': epoch + 1, **logs}).items():
-                if key in self.ignore:
-                    continue
+        try:
+            if mlflow.active_run():
+                for key, value in dict({'epoch': epoch + 1, **logs}).items():
+                    if key in self.ignore:
+                        continue
 
-                name = self.alias.get(key, None) or key
-                if self.prefix:
-                    name = self.prefix + '_' + name
+                    name = self.alias.get(key, None) or key
+                    if self.prefix:
+                        name = self.prefix + '_' + name
 
-                mlflow.log_metric(name, float(value), step=epoch)
+                    mlflow.log_metric(name, float(value), step=epoch)
 
-            if self.save_artifacts:
-                mlflow.log_artifacts(self.run_dir, self.artifact_dir)
+                if self.save_artifacts:
+                    mlflow.log_artifacts(self.run_dir, self.artifact_dir)
+        except Exception as e:
+            print(e)
 
         return logs
 
