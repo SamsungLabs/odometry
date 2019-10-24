@@ -40,6 +40,7 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_MIXED_PATH,
                  'euroc_x_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
                  'euroc_x_bovw_sintel_g': env.EUROC_BOVW_SINTEL_GRAY_PATH,
                  'euroc_x_mixed_1_2_3_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
+                 'euroc_x_binocular_depth': env.EUROC_BINOCULAR_DEPTH_MIXED_PATH,
                  'saic_office': env.SAIC_OFFICE_PATH,
                  'retail_bot': env.RETAIL_BOT_PATH}
 
@@ -340,6 +341,10 @@ def get_euroc_x_bovw_sintel_g_config(dataset_root, _stride):
     config = get_euroc_x_config(dataset_root, None)
     config['exp_name'] = 'euroc_x_bovw_sintel_g'
     return config
+
+
+def get_euroc_x_binocular_depth_config(dataset_root, stride):
+    return get_euroc_x_config(dataset_root, stride, pwc_mode='sintel_g')
 
 
 def get_kitti_8_3_config(_dataset_root, _stride):
