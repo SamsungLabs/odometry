@@ -47,7 +47,7 @@ class DatasetPreparator:
                  matches_threshold=None,
                  trajectories=None):
 
-        if self.indices_root:
+        if indices_root:
             assert matches_threshold is not None
 
         self.dataset_type = dataset_type
