@@ -349,8 +349,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                         rectangle_to_fill = image_arr[min(y1, y2):max(y1, y2), min(x1, x2):max(x1, x2)]
                         x11 = np.random.randint(low=0, high=image_arr.shape[1] - rectangle_to_fill.shape[1])
                         y11 = np.random.randint(low=0, high=image_arr.shape[0] - rectangle_to_fill.shape[0])
-                        ractangle_fill_from = image_arr[y11:y11+rectangle_to_fill.shape[0], x11:x11+rectangle_to_fill.shape[1]]
-                        rectangle_to_fill[:] = ractangle_fill_from + np.random.uniform(-0.1, 0.1)
+                        rectangle_fill_from = image_arr[y11:y11+rectangle_to_fill.shape[0], x11:x11+rectangle_to_fill.shape[1]]
+                        rectangle_to_fill[:] = rectangle_fill_from + np.random.uniform(-0.1, 0.1)
 
                     for dof_name, dof_value in zip(self.dof_columns, dofs):
                         batch_y[self.y_cols.index(dof_name)][index_in_batch] = dof_value
