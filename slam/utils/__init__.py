@@ -40,12 +40,13 @@ __all__ = [
     'load_image_arr',
     'convert_hwc_to_chw',
     'convert_chw_to_hwc',
-    'get_channels_count',
+    'get_channels_num',
     'get_fill_fn',
     'warp2d',
     'visualize_trajectory_with_gt',
     'visualize_trajectory',
     'parse_video',
     'mlflow_logging',
-    'Toolbox'
+    'Toolbox',
+    'read_csv'
 ]

@@ -171,9 +171,8 @@ def read_csv(path):
                        'path_to_rgb_next': 'to_path'},
               inplace=True)
 
-    stem_fn = lambda x: int(Path(x).stem)
-    df['to_index'] = df['to_path'].apply(stem_fn)
-    df['from_index'] = df['from_path'].apply(stem_fn)
+    df['to_index'] = df['to_path'].apply(lambda x: int(Path(x).stem))
+    df['from_index'] = df['from_path'].apply(lambda x: int(Path(x).stem))
     df['diff'] = df['to_index'] - df['from_index']
 
     mean_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
