@@ -22,6 +22,8 @@ mlflow.set_tracking_uri(TRACKING_URI)
 
 TUM_PATH = '/dbstore/datasets/Odometry_team/tum_rgbd/'
 TUM_BOVW_PATH = '/dbstore/datasets/Odometry_team/tum_bovw_p2/'
+TUM_SINTEL_PATH = '/dbstore/datasets/Odometry_team/tum_sintel_mixed/'
+TUM_BOVW_SINTEL_PATH = '/dbstore/datasets/Odometry_team/tum_sintel_mixed/bovw'
 KITTI_PATH = '/dbstore/datasets/Odometry_team/KITTI_odometry_2012/'
 KITTI_MIXED_PATH = '/dbstore/datasets/Odometry_team/KITTI_odometry_2012_mixed/'
 KITTI_BOVW_PATH = '/dbstore/datasets/Odometry_team/KITTI_odometry_2012_bovw_p2/'

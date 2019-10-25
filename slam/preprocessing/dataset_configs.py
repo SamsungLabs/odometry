@@ -24,6 +24,8 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_MIXED_PATH,
                  'tum_fr3': env.TUM_PATH,
                  'tum': env.TUM_PATH,
                  'tum_bovw': env.TUM_BOVW_PATH,
+                 'tum_bt': env.TUM_SINTEL_PATH,  # Beyond Tracking split
+                 'tum_bt_bovw': env.TUM_BOVW_SINTEL_PATH,
                  'tum_debug': env.TUM_PATH,
                  'zju': env.ZJU_PATH,
                  'euroc': env.EUROC_MIXED_PATH,
@@ -724,4 +726,89 @@ def get_tum_config(dataset_root, stride):
 def get_tum_bovw_config(dataset_root, _stride):
     config = get_tum_config(dataset_root, None)
     config['exp_name'] = 'tum_bovw'
+    return config
+
+
+def get_tum_bt_config(dataset_root, stride):
+    """Beyond Tracking split"""
+    exp_name = 'tum_tb'
+    if stride is not None and stride > 1:
+        exp_name += f'_stride{stride}'
+
+    config = {'train_trajectories': ['rgbd_dataset_freiburg1_desk',
+                                     'rgbd_dataset_freiburg1_xyz',
+                                     'rgbd_dataset_freiburg1_360',
+                                     'rgbd_dataset_freiburg1_rpy',
+                                     'rgbd_dataset_freiburg1_teddy',
+                                     'rgbd_dataset_freiburg1_plant',
+                                     'rgbd_dataset_freiburg1_room',
+                                     'rgbd_dataset_freiburg1_desk2',
+                                     'rgbd_dataset_freiburg2_xyz',
+                                     'rgbd_dataset_freiburg2_rpy',
+                                     'rgbd_dataset_freiburg2_flowerbouquet_brownbackground',
+                                     'rgbd_dataset_freiburg2_coke',
+                                     'rgbd_dataset_freiburg2_metallic_sphere',
+                                     'rgbd_dataset_freiburg2_metallic_sphere2',
+                                     'rgbd_dataset_freiburg2_dishes',
+                                     'rgbd_dataset_freiburg2_flowerbouquet',
+                                     'rgbd_dataset_freiburg2_360_hemisphere',
+                                     'rgbd_dataset_freiburg3_checkerboard_large',
+                                     'rgbd_dataset_freiburg3_sitting_xyz',
+                                     'rgbd_dataset_freiburg3_long_office_household',
+                                     'rgbd_dataset_freiburg3_walking_xyz',
+                                     'rgbd_dataset_freiburg3_walking_static',
+                                     'rgbd_dataset_freiburg3_nostructure_notexture_far',
+                                     'rgbd_dataset_freiburg3_walking_halfsphere',
+                                     'rgbd_dataset_freiburg3_structure_texture_near',
+                                     'rgbd_dataset_freiburg3_sitting_halfsphere',
+                                     'rgbd_dataset_freiburg3_nostructure_texture_far',
+                                     'rgbd_dataset_freiburg3_walking_rpy',
+                                     'rgbd_dataset_freiburg3_cabinet',
+                                     'rgbd_dataset_freiburg3_structure_notexture_near',
+                                     'rgbd_dataset_freiburg3_teddy',
+                                     'rgbd_dataset_freiburg3_structure_texture_far_validation',
+                                     'rgbd_dataset_freiburg3_long_office_household_validation',
+                                     'rgbd_dataset_freiburg3_sitting_halfsphere_validation',
+                                     'rgbd_dataset_freiburg3_nostructure_texture_far_validation',
+                                     'rgbd_dataset_freiburg3_walking_halfsphere_validation',
+                                     'rgbd_dataset_freiburg3_nostructure_texture_near_withloop_validation',
+                                     'rgbd_dataset_freiburg3_nostructure_notexture_near_withloop_validation',
+                                     'rgbd_dataset_freiburg3_structure_notexture_far_validation',
+                                     ],
+              'val_trajectories': ['rgbd_dataset_freiburg3_sitting_xyz_validation',
+                                   'rgbd_dataset_freiburg3_walking_xyz_validation',
+                                   'rgbd_dataset_freiburg3_walking_static_validation',
+                                   'rgbd_dataset_freiburg3_nostructure_notexture_far_validation',
+                                   'rgbd_dataset_freiburg3_large_cabinet_validation',
+                                   'rgbd_dataset_freiburg3_structure_texture_near_validation',
+                                   'rgbd_dataset_freiburg3_sitting_static_validation',
+                                   'rgbd_dataset_freiburg3_walking_rpy_validation',
+                                   'rgbd_dataset_freiburg3_cabinet_validation',
+                                   'rgbd_dataset_freiburg3_structure_notexture_near_validation'],
+              'test_trajectories': ['rgbd_dataset_freiburg2_desk',
+                                    'rgbd_dataset_freiburg2_360_kidnap',
+                                    'rgbd_dataset_freiburg2_pioneer_slam3',
+                                    'rgbd_dataset_freiburg2_pioneer_360',
+                                    'rgbd_dataset_freiburg3_large_cabinet',
+                                    'rgbd_dataset_freiburg3_sitting_static',
+                                    'rgbd_dataset_freiburg3_nostructure_notexture_near_withloop',
+                                    'rgbd_dataset_freiburg3_nostructure_texture_near_withloop',
+                                    'rgbd_dataset_freiburg3_structure_notexture_far',
+                                    'rgbd_dataset_freiburg3_structure_texture_far'],
+              'exp_name': exp_name,
+              'target_size': (120, 160),
+              'source_size': (480, 640),
+              'depth_multiplicator': 1.0 / 5000,
+              'rpe_indices': 'full',
+              'train_strides': stride or 1,
+              'val_strides': stride or 1,
+              'test_strides': stride or 1,
+              }
+    config = add_stride_to_path(config, stride)
+    return config
+
+
+def get_tum_bt_bovw_config(dataset_root, _stride):
+    config = get_tum_bt_config(dataset_root, None)
+    config['exp_name'] = 'tum_bt_bovw'
     return config
