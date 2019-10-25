@@ -22,6 +22,8 @@ from .multiscale_trainer import MultiscaleTrainer
 
 from .multiscale_with_confidence_trainer import MultiscaleWithConfidenceTrainer
 
+from .pretrained_trainer import PretrainedTrainer
+
 
 __all__ = [
     'ResNet50Trainer',
@@ -36,4 +38,5 @@ __all__ = [
     'FlexibleWithAugmentationTrainer'
     'MultiscaleTrainer',
     'MultiscaleWithConfidenceTrainer',
+    'PretrainedTrainer'
 ]
