@@ -4,7 +4,6 @@ import logging
 import argparse
 from tqdm import tqdm
 from pathlib import Path
-import numpy as np
 
 import env
 
@@ -47,6 +46,10 @@ class DatasetPreparator:
                  indices_root=None,
                  matches_threshold=None,
                  trajectories=None):
+
+        if self.indices_root:
+            assert matches_threshold is not None
+
         self.dataset_type = dataset_type
         self.dataset_root = dataset_root
         self.output_root = output_root
@@ -143,7 +146,9 @@ class DatasetPreparator:
                               'optical_flow_checkpoint': self.optical_flow_checkpoint,
                               'target_size': self.target_size,
                               'stride': self.stride,
-                              'binocular_depth_checkpoint': self.binocular_depth_checkpoint}
+                              'binocular_depth_checkpoint': self.binocular_depth_checkpoint,
+                              'matches_num': self.matches_threshold,
+                              'indices_root': self.indices_root}
             json.dump(dataset_config, f)
 
         if self.trajectories is None:
