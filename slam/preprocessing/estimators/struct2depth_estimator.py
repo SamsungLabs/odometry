@@ -17,11 +17,11 @@ class Struct2DepthEstimator(NetworkEstimator):
         self.name = 'Struct2Depth'
 
     def _load_model(self):
-        assert self.height is not None and self.width is not None
+        assert self.input_size is not None
         self.model = struct2depth_net(is_training=False,
                                       batch_size=1,
-                                      img_height=self.height,
-                                      img_width=self.width,
+                                      img_height=self.input_size[0],
+                                      img_width=self.input_size[1],
                                       seq_length=3,
                                       architecture=RESNET,
                                       imagenet_norm=True,
@@ -33,7 +33,7 @@ class Struct2DepthEstimator(NetworkEstimator):
         saver.restore(self.sess, self.checkpoint)
 
     def _convert_image_to_model_input(self, image):
-        image = resize_image(image, target_size=(self.width, self.height))
+        image = resize_image(image, target_size=self.input_size)
         return np.array(image, dtype=np.float32) / 255.
 
     def _run_model_inference(self, model_input):
