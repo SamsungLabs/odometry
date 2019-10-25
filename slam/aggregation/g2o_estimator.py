@@ -1,13 +1,9 @@
 import time
-import numpy as np
 from sklearn.base import BaseEstimator
-from collections import defaultdict
 
-import __init_path__
-import env
 
 from slam.aggregation import GraphOptimizer
-from slam.evaluation import calculate_metrics, normalize_metrics
+from slam.evaluation import calculate_metrics, average_metrics
 
 
 class G2OEstimator(BaseEstimator):
@@ -19,7 +15,8 @@ class G2OEstimator(BaseEstimator):
                  rotation_scale=1,
                  max_iterations=100,
                  online=False,
-                 verbose=False):
+                 verbose=False,
+                 rpe_indices='full'):
         self.coef = coef
         self.coef_loop = coef_loop
         self.loop_threshold = loop_threshold
@@ -27,6 +24,7 @@ class G2OEstimator(BaseEstimator):
         self.max_iterations = max_iterations
         self.online = online
         self.verbose = verbose
+        self.rpe_indices = rpe_indices
 
     @property
     def mean_cols(self):
@@ -52,12 +50,12 @@ class G2OEstimator(BaseEstimator):
 
         row[self.std_cols] *= std_coef
         row[['euler_x_confidence', 'euler_y_confidence', 'euler_z_confidence']] *= self.rotation_scale
-        return row 
+        return row
 
     def fit(self, X, y, sample_weight=None):
         print(f'Running {self}\n')
 
-    def predict(self, X):
+    def predict(self, X, y):
         if self.verbose:
             start_time = time.time()
             print(f'Predicting for {len(X)} trajectories...')
@@ -73,6 +71,13 @@ class G2OEstimator(BaseEstimator):
             predicted_trajectory = g2o.get_trajectory()
             preds.append(predicted_trajectory)
 
+        records = list()
+        for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
+            record = calculate_metrics(gt_trajectory, predicted_trajectory, self.rpe_indices)
+            records.append(record)
+
+        averaged_metrics = average_metrics(records)
+
         if self.verbose:
-            print(f'Predicting completed in {time.time() - start_time:.3f} s\n') 
-        return preds
+            print(f'Predicting completed in {time.time() - start_time:.3f} s\n')
+        return averaged_metrics
