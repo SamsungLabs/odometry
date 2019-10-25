@@ -1,5 +1,4 @@
 import time
-import copy
 import numbers
 import numpy as np
 import pandas as pd
@@ -8,7 +7,7 @@ from sklearn.model_selection import RandomizedSearchCV
 from functools import partial, update_wrapper
 
 from .g2o_estimator import G2OEstimator
-from slam.evaluation import calculate_metrics, normalize_metrics
+from slam.evaluation import calculate_metrics, normalize_metrics, average_metrics
 
 
 def _multimetric_score(estimator, X_test, y_test, scorers):
@@ -56,7 +55,7 @@ class DisabledCV:
         
         test_ind = groups == 1
         if np.sum(test_ind) == 0:
-            test = copy.deepcopy(train)
+            test = [0]
         else:
             test = np.where(groups == 1)[0]
         print(f'train split {train}')
@@ -70,13 +69,13 @@ class DisabledCV:
 def _score(y, preds, metric, rpe_indices):
     print(f'Scoring {len(y)} trajectories. Metric: {metric}')
     start_time = time.time()
-    scores = []
+    records = list()
     for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
-        metrics_dict = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices)
-        metrics_dict = normalize_metrics(metrics_dict)
-        scores.append(metrics_dict[metric])
+        record = calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices)
+        records.append(record)
     
-    average_score = np.mean(scores)
+    averaged_metrics = average_metrics(records)
+    average_score = averaged_metrics[metric]
     print(f'Scoring completed in {time.time() - start_time:.3f} s\n') 
     return average_score
 
