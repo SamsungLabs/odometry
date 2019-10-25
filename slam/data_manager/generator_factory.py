@@ -230,34 +230,34 @@ class GeneratorFactory:
                                                       trajectory=as_is,
                                                       include_last=include_last)
 
-    def get_train_generator(self, as_is=False, as_list=False, include_last=False):
+    def get_train_generator(self, as_is=False, as_list=False, include_last=False, augment=True):
 
         df_train = self.df_train_as_is if as_is else self.df_train
 
         return self._get_generator(df_train,
-                                   self.train_generator_args,
+                                   self.train_generator_args if augment else {},
                                    self.train_trajectories,
                                    as_is=as_is,
                                    as_list=as_list,
                                    include_last=include_last)
 
-    def get_val_generator(self, as_is=True, as_list=False, include_last=False):
+    def get_val_generator(self, as_is=True, as_list=False, include_last=False, augment=True):
 
         df_val = self.df_val_as_is if as_is else self.df_val
 
         return self._get_generator(df_val,
-                                   self.val_generator_args,
+                                   self.val_generator_args if augment else {},
                                    self.val_trajectories,
                                    as_is=as_is,
                                    as_list=as_list,
                                    include_last=include_last)
 
-    def get_test_generator(self, as_is=True, as_list=False, include_last=False):
+    def get_test_generator(self, as_is=True, as_list=False, include_last=False, augment=True):
 
         df_test = self.df_test_as_is if as_is else self.df_test
 
         return self._get_generator(df_test,
-                                   self.test_generator_args,
+                                   self.test_generator_args if augment else {},
                                    self.test_trajectories,
                                    as_is=as_is,
                                    as_list=as_list,

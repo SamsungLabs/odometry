@@ -74,9 +74,9 @@ class Predict(keras.callbacks.Callback):
         self.last_prediction_id = None
         self.last_logs = None
 
-        self.train_generator = dataset.get_train_generator(as_is=self.evaluate)
-        self.val_generator = dataset.get_val_generator()
-        self.test_generator = dataset.get_test_generator()
+        self.train_generator = dataset.get_train_generator(as_is=self.evaluate, augment=False)
+        self.val_generator = dataset.get_val_generator(augment=False)
+        self.test_generator = dataset.get_test_generator(augment=False)
 
         self.df_train = dataset.df_train
         self.df_val = dataset.df_val
