@@ -6,8 +6,8 @@ import __init_path__
 import env
 
 
-DATASET_PATHS = {'kitti_8/3': env.KITTI_PATH,
-                 'kitti_4/6': env.KITTI_PATH,
+DATASET_PATHS = {'kitti_8/3': env.KITTI_MIXED_PATH,
+                 'kitti_4/6': env.KITTI_MIXED_PATH,
                  'kitti_4/6_mixed': env.KITTI_MIXED_PATH,
                  'kitti_4/6_mixed_1+2+4': env.KITTI_MIXED_PATH,
                  'kitti_4/6_bovw': env.KITTI_BOVW_PATH,
