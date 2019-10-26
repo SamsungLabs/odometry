@@ -10,7 +10,7 @@ import env
 from slam.linalg import RelativeTrajectory
 from slam.aggregation import random_search
 from slam.utils import read_csv
-
+from . import configs
 
 def get_epoch_from_dirname(dirname):
     position = dirname.find('_val_RPE')
@@ -43,25 +43,26 @@ def get_trajectory_names(prefix):
     return trajectory_names
 
 
-def get_predicted_df(paths):
+def get_predicted_df(multistride_paths):
     df_list = list()
-    for stride, path in paths.items():
-        df = read_csv(path)
+    for stride, monostride_paths in multistride_paths.items():
+        for path in monostride_paths:
+            df = read_csv(path)
 
-        if stride == 'loops':
-            df = df[df['diff'] > 49].reset_index()
+            if stride == 'loops':
+                df = df[df['diff'] > 49].reset_index()
 
-        df_list.append(df)
+            df_list.append(df)
 
     predicted_df = pd.concat(df_list, ignore_index=True)
 
-    parent_dir = os.path.basename(os.path.dirname(paths['1']))
+    parent_dir = os.path.basename(os.path.dirname(multistride_paths['1'][0]))
     if parent_dir == 'val':
         group_id = 0
     elif parent_dir == 'test':
         group_id = 1
     else:
-        raise RuntimeError(f'Unexpected parent dir of prediction {paths["1"]}. Parent dir must "val" or "test"')
+        raise RuntimeError(f'Unexpected parent dir of prediction {multistride_paths["1"][0]}. Parent dir must "val" or "test"')
 
     return predicted_df, group_id
 
@@ -72,8 +73,20 @@ def get_gt_trajectory(dataset_root, trajectory_name):
     return gt_trajectory
 
 
-def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwargs):
-    assert len(strides) == len(paths)
+def main(dataset_root,
+         strides,
+         paths,
+         n_jobs,
+         n_iter,
+         output_path=None,
+         config_type=None,
+         **kwargs):
+    config = None
+    if config_type is None:
+        assert len(strides) == len(paths)
+    else:
+        config = getattr(configs, config_type)
+
     X = []
     y = []
     groups = []
@@ -81,7 +94,13 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
     trajectory_names = get_trajectory_names(paths[0])
 
     for trajectory_name in trajectory_names:
-        trajectory_paths = {stride: get_path(prefix, trajectory_name) for stride, prefix in zip(strides, paths)}
+        if config is None:
+            trajectory_paths = {stride: [get_path(prefix, trajectory_name)] for stride, prefix in zip(strides, paths)}
+        else:
+            trajectory_paths = dict()
+            for k, v in config.items():
+                trajectory_paths[k] = [get_path(prefix, trajectory_name) for prefix in config[k]]
+
         predicted_df, group_id = get_predicted_df(trajectory_paths)
         gt_trajectory = get_gt_trajectory(dataset_root, trajectory_name)
 
@@ -139,9 +158,9 @@ def main(dataset_root, strides, paths, n_jobs, n_iter, output_path=None, **kwarg
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_root', type=str, required=True)
-    parser.add_argument('--strides', type=str, nargs='+', required=True)
-    parser.add_argument('--paths', type=str, nargs='+', required=True)
     parser.add_argument('--output_path', type=str, required=True)
+    parser.add_argument('--strides', type=str, nargs='+')
+    parser.add_argument('--paths', type=str, nargs='+')
     parser.add_argument('--n_jobs', type=int, default=3)
     parser.add_argument('--n_iter', type=int, default=1)
     parser.add_argument('--coef', type=int, nargs='*', default=None)
@@ -149,5 +168,18 @@ if __name__ == '__main__':
     parser.add_argument('--loop_threshold', type=int, nargs='*', default=None)
     parser.add_argument('--rotation_scale', type=float, nargs='*', default=None)
     parser.add_argument('--max_iterations', type=int, nargs='*', default=None)
+    parser.add_argument('--config_type',
+                        type=str,
+                        choices=['euroc',
+                                 'euroc_clr',
+                                 'euroc_mn',
+                                 'kitti',
+                                 'kitti_clr',
+                                 'kitti_mn',
+                                 'tum',
+                                 'tum_clr',
+                                 'tum_mn'],
+                        default=None)
     args = parser.parse_args()
+    assert (args.strides is not None and args.paths is not None) or args.config_type is not None
     main(**vars(args))
