@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator
 
 
 from slam.aggregation import GraphOptimizer
-from slam.evaluation import calculate_metrics, average_metrics
+from slam.evaluation import calculate_metrics, normalize_metrics, average_metrics
 
 
 class G2OEstimator(BaseEstimator):
@@ -74,6 +74,9 @@ class G2OEstimator(BaseEstimator):
         records = list()
         for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
             record = calculate_metrics(gt_trajectory, predicted_trajectory, self.rpe_indices)
+            print(f'Trajectory len: {len(gt_trajectory)}')
+            for k, v in normalize_metrics(record).items():
+                print(f'>>>{k}: {v}')
             records.append(record)
 
         averaged_metrics = average_metrics(records)
