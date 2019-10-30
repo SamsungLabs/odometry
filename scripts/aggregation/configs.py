@@ -221,3 +221,52 @@ euroc_all_mn = {'1': ['/Vol0/user/d.zhukov/Projects/odometry/experiments/euroc_x
                           '/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_bovw_sintel_g/a3ffbb74d7a24053b5ce9717add856e4/artifacts/flexible2_mn_b_2/predictions',
                           '/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_bovw_sintel_g/9cb45c441a004a8eb14ecb2790b20388/artifacts/flexible2_mn_b_3/predictions',
                           '/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_bovw_sintel_g/9d5e7ab69a2146faa24b6bf0396c9fc7/artifacts/flexible2_mn_b_4/predictions']}
+#
+# tum_all = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/c6026ec2435848ec9237d6c5e31a6f0e/artifacts/flexible_s1_b_1/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/b01edd47345d413289046725af9dfe43/artifacts/flexible_s1_b_2/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/e738047088b74e8181f4490672c96980/artifacts/flexible_s1_b_0/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/37e670527e6447fd8e779aa09226a7f3/artifacts/flexible_s1_b_4/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/be6f5dca0256470394d4d094e735869f/artifacts/flexible_s1_b_3/predictions'],
+#            '3': ['/dbstore/datasets/obotics/mlflow/odometry/artifacts/tum_bt/64af31adf66c49c980bebca44ea0da2c/artifacts/flexible_s3_b_1/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/b885be7ab61a454c8a0388ce1f9054f8/artifacts/flexible_s3_b_2/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/5832451102c34f9f8d9c34ef275e83e2/artifacts/flexible_s3_b_0/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/ea935d33ed1b40048293ecfbb120fbef/artifacts/flexible_s3_b_4/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/b44d1cef552f421cb901f8c9bbc75d1c/artifacts/flexible_s3_b_3/predictions'],
+#            '9': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/f167ec2f300940a99a647971f355968c/artifacts/flexible_s9_b_1/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/aed49d50a1c74237856a6373fdd46b46/artifacts/flexible_s9_b_0/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/36523814ba8c4c398ddcc6dd1efc5581/artifacts/flexible_s9_b_4/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/880eda3433a448ebb9f9ed0c279067c5/artifacts/flexible_s9_b_3/predictions',
+#                  '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/1c3757e96d4645409bc8903b0a797e20/artifacts/flexible_s9_b_2/predictions'],
+#            'loops': []}
+#
+# tum_all_clr = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/e17a537e03f94c35b9f9d41c7212c7dd/artifacts/flexible_clr_s1_b_0/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/8ac606474ff6452180f57da7c25ad7fd/artifacts/flexible_clr_s1_b_1/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/04b9999e2b3e4899b28063999d22960e/artifacts/flexible_clr_s1_b_2/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/460c365895a14f1e9c8e43da2ad0ad6f/artifacts/flexible_clr_s1_b_3/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/e6d5836bbff349e3ab1dfca5711be480/artifacts/flexible_clr_s1_b_4/predictions'],
+#                '3': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/67e0627bdcbf4140b484d494d4725ed8/artifacts/flexible_clr_s3_b_4/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/fa9c2d047ac642bf81df7382765c239c/artifacts/flexible_clr_s3_b_0/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/0c2b2f98ad0544d7b679c0db138b685e/artifacts/flexible_clr_s3_b_2/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/1dcae118ebab4f7993b12964eb23ab57/artifacts/flexible_clr_s3_b_1/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/ae471805e6b945a79bc23d2964069c27/artifacts/flexible_clr_s3_b_3/predictions'],
+#                '9': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/246c4232559548579ee18a0c6a54bff5/artifacts/flexible_clr_s9_b_4/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/2e38b6b5fa3446e2b64d1e6bddd7f49f/artifacts/flexible_clr_s9_b_3/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/66e6edcb51a249f79f8b634a906f472b/artifacts/flexible_clr_s9_b_1/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/74572bec64cc4374bf4431fbebc26488/artifacts/flexible_clr_s9_b_0/predictions',
+#                      '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/d0e98d271c7b451ea95ab7c8a614db55/artifacts/flexible_clr_s9_b_2/predictions']
+#                'loops': [
+#
+#                ]}
+#
+# tum_all_mn = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/b71806c8640c41029d736fcd733eadfd/artifacts/flexible_mn_s1_b_3/predictions',
+#                     '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/5ad727507d0f48a9a5c0bd63e7a62bfd/artifacts/flexible_mn_s1_b_2/predictions',
+#                     '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/f832228c5bb645c9a9830a21a7b23732/artifacts/flexible_mn_s1_b_0/predictions',
+#                     '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/eaa6d53e2e4b4802bedaf49014e7a948/artifacts/flexible_mn_s1_b_1/predictions',
+#                     '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/de047728aded46b4ba8047c0d836267f/artifacts/flexible_mn_s1_b_4/predictions'],
+#               '3': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/180bb70153324e75b96e7d82d7a0b5f8/artifacts/flexible_mn_s3_b_4/predictions',
+#                     '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/b006043fdfaf4f9890542dd05242c5d2/artifacts/flexible_mn_s3_b_3/predictions',
+#                     '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/c5faca1c7c43487489c477fa5156c816/artifacts/flexible_mn_s3_b_2/predictions',
+#                     '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/5f4c2ba133c4407996172b7ff747dd34/artifacts/flexible_mn_s3_b_1/predictions',
+#                     '/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/a56837dc48584573b4151b9f6055497c/artifacts/flexible_mn_s3_b_0/predictions'],
+#               '9': []
+#               }

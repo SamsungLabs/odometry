@@ -1,5 +1,6 @@
 import time
 from sklearn.base import BaseEstimator
+import pandas as pd
 
 
 from slam.aggregation import GraphOptimizer
@@ -37,6 +38,14 @@ class G2OEstimator(BaseEstimator):
     @property
     def all_cols(self):
         return ['from_index', 'to_index'] + self.mean_cols + self.std_cols
+
+    def log_params(self):
+        params = pd.DataFrame({'coef': self.coef,
+                               'coef_loop': self.coef_loop,
+                               'loop_threshold': self.loop_threshold,
+                               'rotation_scale': self.rotation_scale,
+                               'max_iterations': self.max_iterations})
+        return params
 
     def _apply_g2o_coef(self, row):
         diff = row['diff']

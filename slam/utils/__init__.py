@@ -26,6 +26,7 @@ from .logging_utils import mlflow_logging
 
 from .toolbox import Toolbox
 
+from .utils import is_int
 
 __all__ = [
     'set_computation',
@@ -48,5 +49,6 @@ __all__ = [
     'parse_video',
     'mlflow_logging',
     'Toolbox',
-    'read_csv'
+    'read_csv',
+    'is_int'
 ]
