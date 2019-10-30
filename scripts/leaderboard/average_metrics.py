@@ -96,6 +96,7 @@ class MetricAverager:
             return None, model_name
 
         metrics_columns = [col for col in df.columns if col.startswith('metrics.')]
+        metrics_columns = [col for col in metrics_columns if not col.endswith('std')]
         metrics = df[metrics_columns]
         mapping = {col: col.replace('metrics.', '') for col in metrics_columns}
         metrics.rename(columns=mapping, inplace=True)
