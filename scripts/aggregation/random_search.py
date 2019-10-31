@@ -1,106 +1,88 @@
-import numpy as np
-import argparse
+import numbers
+import pandas as pd
+from sklearn import model_selection
+from sklearn.model_selection import RandomizedSearchCV
+from functools import partial, update_wrapper
 
 import __init_path__
 import env
 
-
-from slam.aggregation import random_search
-from scripts.aggregation.base_search import (get_path,
-                                             get_gt_trajectory,
-                                             get_predicted_df,
-                                             get_trajectory_names,
-                                             get_group_id)
-
-from scripts.aggregation import configs
+from scripts.aggregation.base_search import Search, DisabledCV
+from slam.aggregation import G2OEstimator
 
 
-def get_coefs(vals, current_level, max_depth):
-    if current_level == max_depth:
-        coefs = list()
-        for v in vals:
-            coefs.append([v])
-        return coefs
-    else:
-        coefs = get_coefs(vals, current_level + 1, max_depth)
-        new_coefs = list()
-        for v in vals:
-            for c in coefs:
-                new_coefs.append([v] + c)
-        return new_coefs
+def _multimetric_score(estimator, X_test, y_test, scorers):
+    """Return a dict of score for multimetric scoring.
+       Original function calculates predict for every score. This function evaluate predict only one time"""
+
+    averaged_metrics = estimator.predict(X_test, y_test)
+
+    scores = {}
+    for name, scorer in scorers.items():
+        if y_test is None:
+            raise RuntimeError('Not supported')
+        else:
+            score = scorer(averaged_metrics)
+
+        if hasattr(score, 'item'):
+            try:
+                # e.g. unwrap memmapped scalars
+                score = score.item()
+            except ValueError:
+                # non-scalar?
+                pass
+
+        scores[name] = score
+
+        if not isinstance(score, numbers.Number):
+            raise ValueError("scoring must return a number, got %s (%s) "
+                             "instead. (scorer=%s)"
+                             % (str(score), type(score), name))
+    return scores
 
 
-def main(dataset_root,
-         config_type,
-         n_jobs,
-         n_iter,
-         output_path=None,
-         **kwargs):
-    config = getattr(configs, config_type)
-    trajectory_names = get_trajectory_names(config['1'][0])
-    strides = [int(stride) for stride in config.keys() if stride != 'loops']
-    if 'kitti' in config['1'][0]:
-        rpe_indices = 'kitti'
-    else:
-        rpe_indices = 'full'
+model_selection._validation._multimetric_score = _multimetric_score
 
-    X = []
-    y = []
-    groups = []
 
-    for trajectory_name in trajectory_names:
-        trajectory_paths = dict()
-        for k, v in config.items():
-            trajectory_paths[k] = [get_path(prefix, trajectory_name) for prefix in config[k]]
+class RandomSearch(Search):
 
-        predicted_df = get_predicted_df(trajectory_paths)
-        group_id = get_group_id(trajectory_paths)
-        gt_trajectory = get_gt_trajectory(dataset_root, trajectory_name)
+    def _score(self, averaged_metrics, metric):
+        average_score = averaged_metrics[metric]
+        return average_score
 
-        X.append(predicted_df)
-        y.append(gt_trajectory)
-        groups.append(group_id)
+    def wrap_score(self, metric):
+        partial_score = partial(self._score, metric=metric)
+        update_wrapper(partial_score, self._score)
+        return partial_score
 
-    coef_values = [1, 2, 4] + list(np.logspace(1, 6, num=6)) + [1e12]
-    if kwargs['coef']:
-        coefs = [kwargs['coef']]
-    else:
-        coefs = get_coefs(coef_values, 1, len(config.keys()) - 1)
+    def search(self,
+               X,
+               y,
+               groups,
+               param_distributions,
+               rpe_indices,
+               n_iter,
+               n_jobs=3,
+               verbose=True):
+        scoring = {metric: self.wrap_score(metric) for metric in ('ATE', 'RMSE_t', 'RMSE_r', 'RPE_t', 'RPE_r')}
 
-    param_distributions = {
-        'coef': [dict(zip(strides, c)) for c in coefs],
-        'coef_loop': kwargs['coef_loop'] or coef_values,
-        'loop_threshold': kwargs['loop_threshold'] or [50, 100],
-        'rotation_scale': kwargs['rotation_scale'] or np.logspace(-10, 0, 11, base=2),
-        'max_iterations': kwargs['max_iterations'] or [1000]
-    }
+        print(f'Number of predicted trajectories {len(X)}')
+        print(f'Number of gt trajectories {len(y)}')
+        print(f'Number of train trajectories {len(groups) - sum(groups)}')
+        print(f'Number of test trajectories {sum(groups)}')
+        print(f'RPE indices: {rpe_indices}')
 
-    print(param_distributions)
+        rs = RandomizedSearchCV(G2OEstimator(verbose=True, rpe_indices=rpe_indices),
+                                param_distributions,
+                                cv=DisabledCV(),
+                                refit=False,
+                                scoring=scoring)
+        rs.fit(X, y, groups)
 
-    result = random_search(X,
-                           y,
-                           groups,
-                           param_distributions,
-                           rpe_indices=rpe_indices,
-                           n_jobs=n_jobs,
-                           n_iter=n_iter,
-                           verbose=True)
-
-    if output_path:
-        result.to_csv(output_path)
+        return pd.DataFrame(rs.cv_results_)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_root', type=str, required=True)
-    parser.add_argument('--output_path', type=str, required=True)
-    parser.add_argument('--config_type', type=str, required=True)
-    parser.add_argument('--n_jobs', type=int, default=3)
-    parser.add_argument('--n_iter', type=int, default=1)
-    parser.add_argument('--coef', type=int, nargs='*', default=None)
-    parser.add_argument('--coef_loop', type=int, nargs='*', default=None)
-    parser.add_argument('--loop_threshold', type=int, nargs='*', default=None)
-    parser.add_argument('--rotation_scale', type=float, nargs='*', default=None)
-    parser.add_argument('--max_iterations', type=int, nargs='*', default=None)
+    parser = RandomSearch.get_default_parser()
     args = parser.parse_args()
-    main(**vars(args))
+    RandomSearch().start(**vars(args))
