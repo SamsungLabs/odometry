@@ -35,6 +35,7 @@ class GridSearch(Search):
         test_predict = estimator.predict(X[1], y[1])
         test_predict = {'test_' + k: [v] for k, v in test_predict.items()}
         result = pd.DataFrame({**params, **val_predict, **test_predict})
+        result['val_RPE'] = result['val_RPE_r'] * 2 + result['val_RPE_r']
         return result
 
     def get_best_params(self, results):
