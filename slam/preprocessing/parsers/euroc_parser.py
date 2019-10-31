@@ -78,10 +78,7 @@ class EuRoCParser(TUMParser):
         self.intrinsics_dict = self._load_calib()
 
     def _create_dataframe(self):
-        for df in self.dataframes:
-            print(df.shape)
         self.df = self.associate_dataframes(self.dataframes, self.timestamp_cols)
-        print(self.df.shape)
         self.df.path_to_rgb = self.image_dir_left + '/' + self.df.path_to_rgb
         self.df.path_to_rgb_right = self.image_dir_right + '/' + self.df.path_to_rgb_right
 
