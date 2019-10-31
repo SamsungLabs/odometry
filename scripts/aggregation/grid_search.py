@@ -36,7 +36,7 @@ class GridSearch(Search):
         params = estimator.log_params()
         val_predict = estimator.predict(X[0], y[0])
         val_predict = {'val_' + k: [v] for k, v in val_predict.items()}
-        test_predict = estimator.predict(X[1], y[0])
+        test_predict = estimator.predict(X[1], y[1])
         test_predict = {'test_' + k: [v] for k, v in test_predict.items()}
         result = pd.DataFrame({**params, **val_predict, **test_predict})
         return result
