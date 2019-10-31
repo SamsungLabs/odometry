@@ -20,10 +20,10 @@ class BinocularDepthEstimator(PWCNetEstimator):
                                 f_y=row[self.input_col[3]],
                                 c_x=row[self.input_col[4]],
                                 c_y=row[self.input_col[5]],
-                                width=final_optical_flow[0].shape[1],
-                                height=final_optical_flow[0].shape[0])
+                                width=final_optical_flow.shape[1],
+                                height=final_optical_flow.shape[0])
 
-        baseline_distance = row[self.input_col[6]]
+        baseline_distance = self.input_col[6]
 
         disparity = -final_optical_flow[..., 0] * intrinsics.width
         max_depth = intrinsics.f_x_scaled * baseline_distance
