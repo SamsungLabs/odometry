@@ -111,7 +111,6 @@ def get_zju_config(_dataset_root, _stride):
                                     'B3'],
               'exp_name': 'zju',
               'target_size': (120, 160),
-              'source_size': (480, 640),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               'train_strides': 1,
@@ -144,7 +143,7 @@ def get_euroc_config(_dataset_root, stride, pwc_mode=None):
               'test_trajectories': ['MH_05_difficult',
                                     'V2_02_medium'],
               'exp_name': exp_name,
-              'target_size': (120, 160),
+              'target_size': (120, 188),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               'train_strides': stride or 1,
@@ -178,7 +177,7 @@ def get_euroc_x_config(_dataset_root, stride, pwc_mode=None):
               'test_trajectories': ['V1_03_difficult',
                                     'V2_03_difficult'],
               'exp_name': exp_name,
-              'target_size': (120, 160),
+              'target_size': (120, 188),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               'train_strides': stride or 1,
@@ -235,7 +234,7 @@ def get_euroc_mixed_1_2_3_config(_dataset_root, _stride, pwc_mode=None):
                                     '3/V2_02_medium'
                                     ],
               'exp_name': exp_name,
-              'target_size': (120, 160),
+              'target_size': (120, 188),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               }
@@ -290,7 +289,7 @@ def get_euroc_x_mixed_1_2_3_config(_dataset_root, _stride, pwc_mode=None):
                                     '3/V2_03_difficult'
                                     ],
               'exp_name': exp_name,
-              'target_size': (120, 160),
+              'target_size': (120, 188),
               'depth_multiplicator': 1.0,
               'rpe_indices': 'full',
               }
@@ -799,7 +798,6 @@ def get_tum_bt_config(dataset_root, stride):
                                     'rgbd_dataset_freiburg3_structure_texture_far'],
               'exp_name': exp_name,
               'target_size': (120, 160),
-              'source_size': (480, 640),
               'depth_multiplicator': 1.0 / 5000,
               'rpe_indices': 'full',
               'train_strides': stride or 1,
