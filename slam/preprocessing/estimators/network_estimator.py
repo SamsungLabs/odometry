@@ -49,7 +49,7 @@ class NetworkEstimator(BaseEstimator):
         else:
             model_input = [[self._convert_image_to_model_input(
                     load_image(os.path.join(dataset_root, row[input_col])))
-                for input_col in self.input_col if input_col in row]]
+                for input_col in self.input_col]]
         return model_input
 
     def _save_model_prediction(self, model_output, row, dataset_root):
