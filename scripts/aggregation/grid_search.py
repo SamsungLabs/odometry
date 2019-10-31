@@ -63,13 +63,13 @@ class GridSearch(Search):
 
         stride = min(available_strides)
 
+        local_log = pd.DataFrame()
         for c in self.get_coef_values():
             best_params['coef'] = {**best_params['coef'], **{stride: c}}
             estimator = G2OEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
-            local_log = self.log_predict(estimator, X, y)
+            local_log = local_log.append(self.log_predict(estimator, X, y))
 
         child_log = self.find_best_coef(X, y, local_log)
-        parent_log = parent_log.append(local_log)
         parent_log = parent_log.append(child_log)
         return parent_log
 
@@ -107,9 +107,9 @@ class GridSearch(Search):
         y_split = ([y[ind] for ind in val_ind], [y[ind] for ind in test_ind])
 
         log = pd.DataFrame()
-        log = log.append(self.find_best_coef_loop(X_split, y_split, param_distributions, log))
-        log = log.append(self.find_best_coef(X_split, y_split, log))
-        log = log.append(self.find_best_rotation_scale(X_split, y_split, param_distributions, log))
+        log = self.find_best_coef_loop(X_split, y_split, param_distributions, log)
+        log = self.find_best_coef(X_split, y_split, log)
+        log = self.find_best_rotation_scale(X_split, y_split, param_distributions, log)
         self.visualize(X, y, log, trajectory_names)
         return log
 
