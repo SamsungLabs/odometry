@@ -155,6 +155,13 @@ def convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles_xyz, covari
 
 
 def create_optical_flow_from_rt(depth, intrinsics, rotation_vector, translation_vector):
+    rotation_vector, translation_vector = np.array(rotation_vector).copy(), np.array(translation_vector).copy()
+    rotation_vector[0] *= -1
+    translation_vector[0] *= -1
+    rotation_vector = rotation_vector[[1, 0, 2]]
+    translation_vector = translation_vector[[1, 0, 2]]
+
+
     w, h = intrinsics.width, intrinsics.height
     R = convert_euler_angles_to_rotation_matrix(rotation_vector)
     t = translation_vector.reshape(3, -1)
