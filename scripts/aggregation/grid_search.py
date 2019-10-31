@@ -20,16 +20,12 @@ class GridSearch(Search):
         self.strides = None
         self.rpe_indices = None
 
-    def get_coefs(self, vals, current_level, max_depth):
-        coefs = [[1, 1], [1, 2]]
-        return coefs
-
     @staticmethod
     def get_default_parser():
         parser = Search.get_default_parser()
         parser.add_argument('--rank_metric', type=str, choices=['ATE', 'RPE'])
         parser.add_argument('--vis_dir', type=str)
-        parser.add_argument('--best_stride', type=str, default='1')
+        parser.add_argument('--best_stride', type=int, default=1)
         return parser
 
     def log_predict(self, estimator, X, y):
@@ -59,17 +55,23 @@ class GridSearch(Search):
                 log = log.append(self.log_predict(estimator, X, y))
         return log
 
-    def find_best_coef(self, X, y, log):
-        best_params = self.get_best_params(log)
-        stride = min(list(set(best_params['coef']) - set(self.strides)))
+    def find_best_coef(self, X, y, parent_log):
+        best_params = self.get_best_params(parent_log)
+        available_strides = list(set(self.strides) - set(best_params['coef'].keys()))
+        if len(available_strides) == 0:
+            return parent_log
+
+        stride = min(available_strides)
 
         for c in self.get_coef_values():
             best_params['coef'] = {**best_params['coef'], **{stride: c}}
             estimator = G2OEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
-            log = log.append(self.log_predict(estimator, X, y))
+            local_log = self.log_predict(estimator, X, y)
 
-        log = log.append(self.find_best_coef(X, y, log))
-        return log
+        child_log = self.find_best_coef(X, y, local_log)
+        parent_log = parent_log.append(local_log)
+        parent_log = parent_log.append(child_log)
+        return parent_log
 
     def find_best_rotation_scale(self, X, y, param_distributions, log):
         best_params = self.get_best_params(log)
