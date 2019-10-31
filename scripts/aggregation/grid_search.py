@@ -9,19 +9,84 @@ from slam.aggregation import G2OEstimator
 
 
 class GridSearch(Search):
+    def __init__(self, vis_dir,
+                 rank_metric,
+                 best_stride,
+                 **kwargs):
+        self.vis_dir = vis_dir
+        self.rank_column = f'val_{rank_metric}'
+        self.best_stride = best_stride
+        self.rpe_indices = None
+        self.strides = None
+        self.rpe_indices = None
+
+    def get_coefs(self, vals, current_level, max_depth):
+        coefs = [[1, 1], [1, 2]]
+        return coefs
+
     @staticmethod
     def get_default_parser():
         parser = Search.get_default_parser()
-        parser.add_argument('rank_metric', type=str, choices=['ATE', 'RPE'])
+        parser.add_argument('--rank_metric', type=str, choices=['ATE', 'RPE'])
+        parser.add_argument('--vis_dir', type=str)
+        parser.add_argument('--best_stride', type=str, default='1')
         return parser
 
-    def log_predict(self, estimator, X_val, y_val, X_test, y_test):
-        result = estimator.log_params()
-        predict = estimator.predict(X_val, y_val)
-        result = result.append(pd.DataFrame({'val_' + k: v for k, v in predict.items()}))
-        predict = estimator.predict(X_test, y_test)
-        result = result.append(pd.DataFrame({'test_' + k: v for k, v in predict.items()}))
+    def log_predict(self, estimator, X, y):
+        params = estimator.log_params()
+        val_predict = estimator.predict(X[0], y[0])
+        val_predict = {'val_' + k: [v] for k, v in val_predict.items()}
+        test_predict = estimator.predict(X[1], y[0])
+        test_predict = {'test_' + k: [v] for k, v in test_predict.items()}
+        result = pd.DataFrame({**params, **val_predict, **test_predict})
         return result
+
+    def get_best_params(self, results):
+        best_run_ind = np.argmin(results[self.rank_column].values)
+        return dict(results.iloc[best_run_ind])
+
+    def find_best_coef_loop(self, X, y, param_distributions, log):
+        for c in self.get_coef_values():
+            for threshold in param_distributions['loop_threshold']:
+                estimator = G2OEstimator(coef={self.best_stride: 1},
+                                         coef_loop=c,
+                                         loop_threshold=threshold,
+                                         rotation_scale=param_distributions['rotation_scale'][0],
+                                         max_iterations=param_distributions['max_iterations'][0],
+                                         rpe_indices=self.rpe_indices,
+                                         verbose=True
+                                         )
+                log = log.append(self.log_predict(estimator, X, y))
+        return log
+
+    def find_best_coef(self, X, y, log):
+        best_params = self.get_best_params(log)
+        stride = min(list(set(best_params['coef']) - set(self.strides)))
+
+        for c in self.get_coef_values():
+            best_params['coef'] = {**best_params['coef'], **{stride: c}}
+            estimator = G2OEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
+            log = log.append(self.log_predict(estimator, X, y))
+
+        log = log.append(self.find_best_coef(X, y, log))
+        return log
+
+    def find_best_rotation_scale(self, X, y, param_distributions, log):
+        best_params = self.get_best_params(log)
+        for rotation_scale in param_distributions['rotation_scale'][1:]:
+            best_params['rotation_scale'] = rotation_scale
+            estimator = G2OEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
+            log = log.append(self.log_predict(estimator, X, y))
+        return log
+
+    def visualize(self, X, y, log, trajectory_names):
+        best_params = self.get_best_params(log)
+        estimator = G2OEstimator(**best_params,
+                                 rpe_indices=self.rpe_indices,
+                                 verbose=True,
+                                 vis_dir=self.vis_dir)
+
+        estimator.predict(X, y, visualize=True, trajectory_names=trajectory_names)
 
     def search(self,
                X,
@@ -29,63 +94,25 @@ class GridSearch(Search):
                groups,
                param_distributions,
                rpe_indices,
-               n_iter,
-               n_jobs=3,
-               verbose=True,
+               trajectory_names=None,
                **kwargs):
 
-        loop_coefs = param_distributions['coef_loop']
-        stride_coefs = param_distributions['coef']
+        self.rpe_indices = rpe_indices
+        self.strides = param_distributions['coef'][0].keys()
 
-        assert len(loop_coefs) == 1 or len(stride_coefs) == 1
+        val_ind, test_ind = next(DisabledCV().split(X, y, groups))
+        X_split = ([X[ind] for ind in val_ind], [X[ind] for ind in test_ind])
+        y_split = ([y[ind] for ind in val_ind], [y[ind] for ind in test_ind])
 
-        val_ind, test_ind = DisabledCV().split(X, y, groups)
-        X_val = [X[ind] for ind in val_ind]
-        y_val = [y[ind] for ind in val_ind]
-        X_test = [X[ind] for ind in test_ind]
-        y_test = [y[ind] for ind in test_ind]
-
-        result = pd.DataFrame()
-        if isinstance(loop_coefs, list) and len(loop_coefs) > 1:
-            for c in loop_coefs:
-                for threshold in param_distributions['loop_threshold']:
-                    estimator = G2OEstimator(coef=stride_coefs[0],
-                                             coef_loop=c,
-                                             loop_threshold=threshold,
-                                             rotation_scale=param_distributions['rotation_scale'][0],
-                                             max_iterations=param_distributions['max_iterations'][0],
-                                             rpe_indices=rpe_indices,
-                                             verbose=True
-                                             )
-                    result = result.append(self.log_predict(estimator, X_val, y_val, X_test, y_test))
-        else:
-            for coefs in param_distributions:
-                estimator = G2OEstimator(coef=coefs,
-                                         coef_loop= param_distributions['coef_loop'][0],
-                                         loop_threshold=param_distributions['loop_threshold'][0],
-                                         rotation_scale=param_distributions['rotation_scale'][0],
-                                         max_iterations=param_distributions['max_iterations'][0],
-                                         rpe_indices=rpe_indices,
-                                         verbose=True)
-
-                result = result.append(self.log_predict(estimator, X_val, y_val, X_test, y_test))
-
-        key = 'val' + kwargs['rank_metric']
-        best_run_ind = np.argmin(result[key].values)
-        for rotation_scale in param_distributions['rotation_scale']:
-            estimator = G2OEstimator(coef=result['coef'].values[best_run_ind],
-                                     coef_loop=result['coef_loop'].values[best_run_ind],
-                                     loop_threshold=result['loop_threshold'].values[best_run_ind],
-                                     rotation_scale=rotation_scale,
-                                     max_iterations=result['max_iterations'].values[best_run_ind],
-                                     rpe_indices=rpe_indices,
-                                     verbose=True)
-            result = result.append(self.log_predict(estimator, X_val, y_val, X_test, y_test))
-
-        return result
+        log = pd.DataFrame()
+        log = log.append(self.find_best_coef_loop(X_split, y_split, param_distributions, log))
+        log = log.append(self.find_best_coef(X_split, y_split, log))
+        log = log.append(self.find_best_rotation_scale(X_split, y_split, param_distributions, log))
+        self.visualize(X, y, log, trajectory_names)
+        return log
 
 
 if __name__ == '__main__':
     parser = GridSearch.get_default_parser()
     args = parser.parse_args()
-    GridSearch.start(**vars(args))
+    GridSearch(args.vis_dir, args.rank_metric, args.best_stride).start(**vars(args))

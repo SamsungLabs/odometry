@@ -40,6 +40,10 @@ class DisabledCV:
 class Search:
 
     @staticmethod
+    def get_coef_values():
+        return [1., 2., 4.] + list(np.logspace(1, 6, num=6)) + [1e12]
+
+    @staticmethod
     def get_default_parser():
         parser = argparse.ArgumentParser()
         parser.add_argument('--dataset_root', type=str, required=True)
@@ -59,7 +63,7 @@ class Search:
         gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
         return gt_trajectory
 
-    def get_predicted_df(self, multistride_paths: Dict[str]):
+    def get_predicted_df(self, multistride_paths):
         df_list = list()
         for stride, monostride_paths in multistride_paths.items():
             for path in monostride_paths:
@@ -165,7 +169,7 @@ class Search:
             y.append(gt_trajectory)
             groups.append(group_id)
 
-        coef_values = [1, 2, 4] + list(np.logspace(1, 6, num=6)) + [1e12]
+        coef_values = self.get_coef_values()
         if kwargs['coef']:
             coefs = [kwargs['coef']]
         else:
@@ -188,7 +192,9 @@ class Search:
                              rpe_indices=rpe_indices,
                              n_jobs=n_jobs,
                              n_iter=n_iter,
-                             verbose=True)
+                             verbose=True,
+                             trajectory_names=trajectory_names,
+                             **kwargs)
 
         if output_path:
             result.to_csv(output_path)
