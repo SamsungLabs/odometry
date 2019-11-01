@@ -201,10 +201,9 @@ euroc_best_mn = {'1': ['/Vol0/user/d.zhukov/Projects/odometry/experiments/euroc_
                  '4': ['/Vol0/user/d.zhukov/Projects/odometry/experiments/euroc_x_sintel_g/flexible2_mn_s4_b_1/predictions'],
                  'loops': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_bovw_sintel_g/082a48b2a1e84d20b259e476339f1365/artifacts/flexible2_mn_b_1/predictions']}
 
-euroc_best_mn_mixed = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_mixed_1_2_3_sintel_g/76912ccd90f74dbbb529840dc4dd6104/artifacts/flexible2_mn_b_1/predictions'],
+euroc_best_mixed_mn = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_mixed_1_2_3_sintel_g/76912ccd90f74dbbb529840dc4dd6104/artifacts/flexible2_mn_b_1/predictions'],
                        '2': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_mixed_1_2_3_sintel_g/76912ccd90f74dbbb529840dc4dd6104/artifacts/flexible2_mn_b_1/predictions'],
                        '3': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_mixed_1_2_3_sintel_g/76912ccd90f74dbbb529840dc4dd6104/artifacts/flexible2_mn_b_1/predictions'],
-                       '4': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_mixed_1_2_3_sintel_g/76912ccd90f74dbbb529840dc4dd6104/artifacts/flexible2_mn_b_1/predictions'],
                        'loops': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_bovw_sintel_g/082a48b2a1e84d20b259e476339f1365/artifacts/flexible2_mn_b_1/predictions']}
 
 euroc_all_mn = {'1': ['/Vol0/user/d.zhukov/Projects/odometry/experiments/euroc_x_sintel_g/flexible2_s1_mn_b_0/predictions',
