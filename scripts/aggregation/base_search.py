@@ -9,7 +9,6 @@ from scripts.aggregation import configs
 from slam.utils import is_int
 from slam.utils import read_csv
 
-
 from slam.linalg import RelativeTrajectory
 
 
@@ -58,12 +57,14 @@ class Search:
         parser.add_argument('--max_iterations', type=int, nargs='*', default=None)
         return parser
 
-    def get_gt_trajectory(self, dataset_root, trajectory_name):
+    @staticmethod
+    def get_gt_trajectory(dataset_root, trajectory_name):
         gt_df = pd.read_csv(os.path.join(dataset_root, trajectory_name, 'df.csv'))
         gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
         return gt_trajectory
 
-    def get_predicted_df(self, multistride_paths):
+    @staticmethod
+    def get_predicted_df(multistride_paths):
         df_list = list()
         for stride, monostride_paths in multistride_paths.items():
             for path in monostride_paths:
@@ -74,7 +75,8 @@ class Search:
         predicted_df = pd.concat(df_list, ignore_index=True)
         return predicted_df
 
-    def get_group_id(self, multistride_paths):
+    @staticmethod
+    def get_group_id(multistride_paths):
         parent_dir = os.path.basename(os.path.dirname(multistride_paths['1'][0]))
         if parent_dir == 'val':
             group_id = 0
@@ -106,21 +108,53 @@ class Search:
         assert len(trajectory_names) > 0
         return handled_trajectory_names
 
-    def get_epoch_from_dirname(self, dirname):
+    @staticmethod
+    def get_epoch_from_dirname(dirname):
         position = dirname.find('_val_RPE')
         if position == -1:
             raise RuntimeError(f'Could not find epoch number in {dirname}')
         return int(dirname[position - 3: position])
 
-    def get_path(self,  prefix, trajectory_name):
-        paths = list(Path(prefix).rglob(f'*{trajectory_name}.csv'))
+    @staticmethod
+    def is_test(paths):
+        check = np.zeros(len(paths))
+        for index, path in enumerate(paths):
+            if path.parent.parent is 'test':
+                check[index] = True
+            else:
+                check[index] = False
+        test = np.sum(check) == len(paths)
+        val = np.sum(check) == 0
 
+        if test:
+            return True
+        elif val:
+            return False
+        else:
+            raise RuntimeError('Seems like test trajectories are in validation')
+
+    @staticmethod
+    def get_test_trajectory_path(paths):
         if len(paths) == 1:
             return paths[0].as_posix()
-        elif len(paths) > 1:
-            return max(paths, key=lambda x: self.get_epoch_from_dirname(x.parent.parent.name)).as_posix()
         else:
+            raise RuntimeError('Found more than one trajectory in test')
+
+    def get_val_trajectory_path(self, paths):
+        return max(paths, key=lambda x: self.get_epoch_from_dirname(x.parent.parent.name)).as_posix()
+
+    def get_path(self, prefix, trajectory_name, stride):
+        paths = list(Path(prefix).rglob(f'{stride}_{trajectory_name}.csv'))
+        if len(paths) == 0:
+            paths = list(Path(prefix).rglob(f'*{trajectory_name}.csv'))
+
+        if len(paths) == 0:
             raise RuntimeError(f'Could not find trajectory {trajectory_name} in dir {prefix}')
+
+        if self.is_test(paths):
+            return self.get_test_trajectory_path(paths)
+        else:
+            return self.get_val_trajectory_path(paths)
 
     def get_coefs(self, vals, current_level, max_depth):
         if current_level == max_depth:
@@ -158,8 +192,8 @@ class Search:
 
         for trajectory_name in trajectory_names:
             trajectory_paths = dict()
-            for k, v in config.items():
-                trajectory_paths[k] = [self.get_path(prefix, trajectory_name) for prefix in config[k]]
+            for stride in config.keys():
+                trajectory_paths[stride] = [self.get_path(prefix, trajectory_name, stride) for prefix in config[stride]]
 
             predicted_df = self.get_predicted_df(trajectory_paths)
             group_id = self.get_group_id(trajectory_paths)
@@ -183,8 +217,6 @@ class Search:
             'max_iterations': kwargs['max_iterations'] or [1000]
         }
 
-        print(param_distributions)
-
         result = self.search(X,
                              y,
                              groups,
@@ -207,5 +239,7 @@ class Search:
                rpe_indices,
                n_iter,
                n_jobs=3,
-               verbose=True):
+               verbose=True,
+               trajectory_names=None,
+               **kwargs):
         raise RuntimeError('This is the method of abstract class')
