@@ -19,6 +19,18 @@ tum_best_mn = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_b
                '9': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt/05c343d9b2df43c7893be931c5cadb49/artifacts/flexible_mn_s9_b_2/predictions'],
                'loops': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_bt_bovw/ebd5116a98584a4db58043ecd6d4cd55/artifacts/flexible_mn_b_2/predictions']}
 
+tum_deeptam_best_clr = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_deeptam/0a323533acef4e6190361ad167404603/artifacts/flexible_clr_s1_b_3/predictions'],
+                        '2': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_deeptam/2c4e854354b84dbcaa5c4a7172c17d7f/artifacts/flexible_clr_s2_b_3/predictions'],
+                        '3': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_deeptam/9256db7f124b4754932af441b4b241d4/artifacts/flexible_clr_s3_b_2/predictions'],
+                        '4': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_deeptam/ef785fc5d36d41029e945c915e9e3c43/artifacts/flexible_clr_s4_b_1/predictions'],
+                        'loops': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_deeptam_bovw/d0273278859747448666d3095d58156a/artifacts/flexible_clr_b_4/predictions']}
+
+tum_joined_best_clr = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_joined/74513aa4c39b4fc8ad6135e46f431223/artifacts/flexible_clr_s1_b_0/predictions'],
+                       '2': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_joined/fc6f1561b0de4d07a7947ccab5f2c3b2/artifacts/flexible_clr_s2_b_0/predictions'],
+                       '3': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_joined/43597989f341404b8e14b93c3b4c3f47/artifacts/flexible_clr_s3_b_0/predictions'],
+                       '4': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/tum_joined/60b1847d9cf047a5a2e5bcfe39877024/artifacts/flexible_clr_s4_b_3/predictions'],
+                       'loops': ['']}
+
 kitti_best = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/kitti_4_6/3d0b493b672a4407affe283e18ee7fbb/artifacts/flexible_baselene_s1_b_0/predictions'],
               '2': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/kitti_4_6/f4162332bcd54f3080a5b92e7bdd7a6f/artifacts/flexible_baselene_s2_b_1/predictions'],
               '4': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/kitti_4_6/b9cdbb7e4f564f8b873394b273fa905e/artifacts/flexible_baselene_s4_b_3/predictions'],
