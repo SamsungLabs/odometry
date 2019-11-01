@@ -146,6 +146,8 @@ euroc_best_clr = {'1': ['/Vol0/user/d.zhukov/Projects/odometry/experiments/euroc
                   'loops': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_bovw_sintel_g/49b3118a87bb43119338886b3aced735/artifacts/flexible2_clr_b_2/predictions']}
 
 euroc_best_mixed_clr = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_mixed_1_2_3_sintel_g/3d2078ebc2cc4e5997f012db880fe33f/artifacts/flexible2_clr_b_2/predictions'],
+                        '2': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_mixed_1_2_3_sintel_g/3d2078ebc2cc4e5997f012db880fe33f/artifacts/flexible2_clr_b_2/predictions'],
+                        '3': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_mixed_1_2_3_sintel_g/3d2078ebc2cc4e5997f012db880fe33f/artifacts/flexible2_clr_b_2/predictions'],
                         'loops': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_bovw_sintel_g/49b3118a87bb43119338886b3aced735/artifacts/flexible2_clr_b_2/predictions']}
 
 euroc_best_clr_p01 = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_binocular_depth/3930e11d5d064503a20107e288de6100/artifacts/depth_aug_proba01_b_4/predictions'],
