@@ -119,7 +119,7 @@ class Search:
     def is_test(paths):
         check = np.zeros(len(paths))
         for index, path in enumerate(paths):
-            if path.parent.parent is 'test':
+            if path.parent.parent.name == 'test':
                 check[index] = True
             else:
                 check[index] = False
