@@ -167,8 +167,8 @@ class DatasetPreparator:
 
                 indices_path = os.path.join(self.indices_root, trajectory_name + '.csv') if self.indices_root else ''
 
-                if not os.path.exists(indices_path):
-                    logger.info(f'Indices file {indices_path} not found')
+                if self.indices_root is not None and not os.path.exists(indices_path):
+                    raise RuntimeError(f'Indices file {indices_path} not found')
 
                 logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}.'
                             f'Indices path: {indices_path}')
