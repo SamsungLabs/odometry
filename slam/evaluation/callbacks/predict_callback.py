@@ -234,6 +234,7 @@ class Predict(keras.callbacks.Callback):
             assert subset == tasks[index]['subset']
 
         total_metrics = {subset + '_' + k: v for k, v in average_metrics(records).items()}
+        print(total_metrics)
         return tasks, total_metrics
 
     def _is_best(self, logs):
