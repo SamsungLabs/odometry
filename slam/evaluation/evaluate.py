@@ -1,6 +1,8 @@
 import numpy as np
+import pandas as pd
 from functools import partial
 from collections import OrderedDict
+from copy import copy
 
 from slam.utils import Toolbox
 
@@ -218,11 +220,26 @@ def calculate_metrics(gt_trajectory, predicted_trajectory, rpe_indices='full',
     return metrics
 
 
-def normalize_metrics(metrics):
-    normalized_metrics = OrderedDict()
-    for metric_name in metrics:
-        normalized_metrics[metric_name] = metrics[metric_name]
+def calculate_loops_metrics(gt_df, predicted_df, loop_threshold):
+    df_merged = pd.merge(gt_df, predicted_df, on=('to_index', 'from_index'))
+    index_difference = df_merged.to_index - df_merged.from_index
+    loops_df = df_merged[index_difference >= loop_threshold].reset_index(drop=True)
+    if not len(loops_df):
+        return {'loops_MAE_t': 0, 'loops_MAE_r': 0}
+    translation_dofs = ['t_x', 't_y', 't_z']
+    rotation_dofs = ['euler_x', 'euler_y', 'euler_z']
 
+    loop_metrics_intermediate = {}
+    for dof in translation_dofs + rotation_dofs:
+        loop_metrics_intermediate[f'loops_MAE_{dof}'] = \
+            np.abs((loops_df[f'{dof}_x'] - loops_df[f'{dof}_y']).values).mean()
+    loop_metrics[f'loops_MAE_t'] = np.mean([loop_metrics_intermediate[f'loops_MAE_{dof}'] for dof in translation_dofs])
+    loop_metrics[f'loops_MAE_r'] = np.mean([loop_metrics_intermediate[f'loops_MAE_{dof}'] for dof in rotation_dofs])
+    return loop_metrics
+
+
+def normalize_metrics(metrics):
+    normalized_metrics = copy(metrics)
     normalized_metrics['RPE_t'] /= normalized_metrics['RPE_divider']
     normalized_metrics['RPE_r'] /= normalized_metrics['RPE_divider']
     del normalized_metrics['RPE_divider']
@@ -234,7 +251,8 @@ def average_metrics(records):
         return dict()
 
     averaged_metrics = OrderedDict()
-    for metric_name in ('ATE', 'RMSE_t', 'RMSE_r'):
+
+    for metric_name in ('ATE', 'RMSE_t', 'RMSE_r', 'loops_MAE_t', 'loops_MAE_r'):
         averaged_metrics[metric_name] = np.mean([record[metric_name] for record in records])
 
     for metric_name in ('RPE_t', 'RPE_r', 'RPE_divider'):
