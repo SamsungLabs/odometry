@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_root', type=str,
                         default=os.path.join(env.DATASET_PATH, 'EuRoC')),
     args = parser.parse_args()
-    width = 160
+    width = 188
     height = 120
 
     DatasetPreparator(dataset_type='EuRoC',
