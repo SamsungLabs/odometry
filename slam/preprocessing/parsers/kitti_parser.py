@@ -31,7 +31,7 @@ class KITTIParser(ElementwiseParser):
 
         trajectory_id = os.path.basename(src_dir)
         dataset_root = os.path.dirname(src_dir)
-        self.pose_filepath = os.path.join(os.path.dirname(dataset_root), '..', 'poses', '{}.txt'.format(trajectory_id))
+        self.pose_filepath = os.path.join(os.path.dirname(dataset_root), 'poses', '{}.txt'.format(trajectory_id))
         if not os.path.exists(self.pose_filepath):
             self.pose_filepath = None
 
