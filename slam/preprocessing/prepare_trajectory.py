@@ -49,7 +49,9 @@ def create_pair_indices(single_frame_df, stride):
 
 def load_pair_indices(path, matches_threshold):
     df = pd.read_csv(path)
-    if matches_threshold is not None:
+    if 'matches_num' not in df.columns:
+        print('WARNING: matches_num not in df.columns')
+    if matches_threshold is not None and 'matches_num' in df.columns:
         df = df[np.isnan(df['matches_num'].values) | (df['matches_num'] >= matches_threshold)]
     return df[['from_index', 'to_index']].values
 
@@ -64,7 +66,7 @@ def transform_single_frame_df_to_paired(single_frame_df, pair_indices=None):
 
 def prepare_trajectory(root,
                        parser,
-                       single_frame_estimators=None, 
+                       single_frame_estimators=None,
                        pair_frames_estimators=None,
                        stride=1,
                        path_to_pair_indices=None,
