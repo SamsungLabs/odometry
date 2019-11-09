@@ -12,6 +12,28 @@ from slam.utils import (get_channels_num,
 from slam.linalg import Intrinsics, create_optical_flow_from_rt
 
 
+def get_proba_fn(mode, proba=None, steps=None):
+    if callable(proba):
+        proba_fn = proba
+    if mode == 'constant':
+        proba_fn = lambda x: proba
+    elif mode == 'linear':
+        proba_fn = lambda x: float(x / steps)
+    elif mode == 'exp':
+        proba_fn = lambda x: np.exp(1 - (steps + 1) / (x + 1))
+    elif mode == 'r_linear':
+        proba_fn = lambda x: 1 - float(x / steps)
+    elif mode == 'r_exp':
+        proba_fn = lambda x: np.exp(1 - (steps + 1) / (x + 1))
+    else:
+        raise ValueError(f'Unknown mode option: "{mode}"')
+    return proba_fn
+
+
+def sample_coordinates(image_size):
+    return np.random.uniform(low=(0, 0), high=image_size).astype(int)
+
+
 class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_image.Iterator):
     def __init__(self,
                  dataframe,
@@ -43,9 +65,14 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  min_frame_ind_diff=0,
                  max_frame_ind_diff=float('inf'),
                  intrinsics=None,
-                 generate_flow_by_rt_proba=0.,
-                 gt_from_uniform_percentile=None,
-                 augment_with_rectangle_proba=0.):
+                 generate_flow_by_rt_proba=0,
+                 generate_flow_by_rt_mode='constant',
+                 generate_distribution=None,
+                 generate_percentile=None,
+                 augment_with_rectangle_proba=0,
+                 augment_with_rectangle_mode='constant',
+                 epochs=100,
+                 **kwargs):
 
         if target_size == -1:
             path_to_first_image = os.path.join(directory, dataframe[image_col].iloc[0].values[0])
@@ -75,17 +102,22 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.dtype = dtype
         self.samples = len(self.df)
 
+        super(ExtendedDataFrameIterator, self).__init__(self.samples,
+                                                        batch_size,
+                                                        shuffle,
+                                                        seed)
+
         self.x_cols = [x_col] if isinstance(x_col, str) else x_col
         self.y_cols = [y_col] if isinstance(y_col, str) else y_col
+        assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
+
+        self.return_cols = self.y_cols[:]
 
         weight_col = weight_col or []
         self.w_cols = [weight_col] if isinstance(weight_col, str) else weight_col
 
         image_col = image_col or []
         self.image_cols = [image_col] if isinstance(image_col, str) else image_col
-
-        assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
-
         self.df[self.image_cols] = self.df[self.image_cols].astype(str)
         self.df_images = self.df[self.image_cols]
 
@@ -106,55 +138,60 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.fill_flow_fn = get_fill_fn(fill_flow_method, nan_value=np.nan, mean=0, std=1)
         self.fill_depth_fn = get_fill_fn(fill_depth_method, nan_value=0)
-
         self.depth_multiplicator = depth_multiplicator
-
-        self.cached_images = None
-        self.set_cache(cached_images)
-        self.max_memory_consumption = max_memory_consumption
-        self.stop_caching = False
-
         self.filter_invalid = filter_invalid
 
-        self.return_cols = self.y_cols[:]
+        self.trajectory_id = trajectory_id
 
         self.placeholder = placeholder or []
         for p in self.placeholder:
             self.return_cols.extend([col + '_' + p for col in self.y_cols])
 
-        self.trajectory_id = trajectory_id
+        self.dof_columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+        self.df_dofs = self.df[self.dof_columns]
 
-        self.generate_flow_by_rt_proba = generate_flow_by_rt_proba
+        # augmentation
+        self.generate_flow_by_rt_proba_fn = get_proba_fn(generate_flow_by_rt_mode,
+                                                         generate_flow_by_rt_proba,
+                                                         steps=len(self) * epochs)
+        self.generate_distribution = generate_distribution
+        self.generate_percentile = generate_percentile
 
-        if self.generate_flow_by_rt_proba > 0.:
+        if self.generate_distribution is not None:
             assert 'path_to_optical_flow' in self.x_cols
             assert any([col.endswith('depth') for col in self.image_cols])
-            self.dof_columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
-            self.df_dofs = self.df[self.dof_columns]
-            self.df_intrinsics = self.df[['f_x', 'f_y', 'c_x', 'c_y']]
+            intrinsics_cols = ['f_x', 'f_y', 'c_x', 'c_y']
+            self.df_intrinsics = self.df[intrinsics_cols]
 
-        self.gt_from_uniform_percentile = gt_from_uniform_percentile
-        if self.gt_from_uniform_percentile is not None:
-            assert self.generate_flow_by_rt_proba > 0.
-            assert self.gt_from_uniform_percentile <= 100
-            assert self.gt_from_uniform_percentile > 50
+            if self.generate_distribution == 'uniform':
+                assert self.generate_percentile <= 100
+                assert self.generate_percentile > 50
+                self.gt_low_high_bounds = (
+                    np.percentile(self.df_dofs, 100 - self.generate_percentile, axis=0),
+                    np.percentile(self.df_dofs, self.generate_percentile, axis=0))
 
-            self.gt_low_high_bonds = (
-                np.percentile(
-                    self.df_dofs,
-                    100 - self.gt_from_uniform_percentile,
-                    axis=0),
-                np.percentile(
-                    self.df_dofs,
-                    self.gt_from_uniform_percentile,
-                    axis=0))
+                print('Params of uniform distribution:')
+                for i, col in enumerate(self.dof_columns):
+                    print('\t', col, self.gt_low_high_bounds[0][i], self.gt_low_high_bounds[1][i])
 
-        self.augment_with_rectangle_proba = augment_with_rectangle_proba
+            elif self.generate_distribution == 'normal':
+                self.mean_std = list(zip(self.df_dofs.mean(axis=0), self.df_dofs.std(axis=0)))
+                print('Params of normal distribution:')
+                for i, col in enumerate(self.dof_columns):
+                    print('\t', col, self.mean_std[i])
+            else:
+                raise ValueError(f'Unknown distribution: "{self.generate_distribution}"')
 
-        super(ExtendedDataFrameIterator, self).__init__(self.samples,
-                                                        batch_size,
-                                                        shuffle,
-                                                        seed)
+        self.augment_with_rectangle_proba_fn = get_proba_function(augment_with_rectangle_mode,
+                                                                  augment_with_rectangle_proba,
+                                                                  steps=len(self) * epochs)
+
+        self.batches_seen = 0
+
+        self.cached_images = None
+        self.set_cache(cached_images)
+        self.max_memory_consumption = max_memory_consumption
+        self.stop_caching = False
 
     @property
     def channel_counts(self):
@@ -285,7 +322,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         return image_arr.copy()
 
-    def _init_batch(self, cols, index_array):
+    def _init_batch(self, cols, index_array, add_placeholder=False):
         batch = []
 
         for col in cols:
@@ -295,7 +332,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             else:
                 values = self.df[col].values[index_array]
 
-                if col in self.y_cols and self.placeholder:
+                if add_placeholder:
                     ones = np.ones((len(values), len(self.placeholder)))
                     values = np.concatenate([np.expand_dims(values, -1), ones], axis=1)
 
@@ -305,13 +342,18 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
     def _get_batches_of_transformed_samples(self, index_array):
         batch_x = self._init_batch(self.x_cols, index_array)
-        batch_y = self._init_batch(self.y_cols, index_array)
+        batch_y = self._init_batch(self.y_cols, index_array, add_placeholder=len(self.placeholder) > 0)
         batch_w = self._init_batch(self.w_cols, index_array)
+
+        generate_flow_by_rt_proba = self.generate_flow_by_rt_proba_fn(self.batches_seen)
+        if generate_flow_by_rt_proba > 0:
+            print(f'batch #{self.batches_seen} / {len(self)}: p={generate_flow_by_rt_proba}')
 
         # build batch of image data
         valid_samples = np.ones(len(index_array)).astype(bool)
         for index_in_batch, df_row_index in enumerate(index_array):
-            generate_flow_by_rt = self.generate_flow_by_rt_proba > np.random.uniform()
+            generate_flow_by_rt = generate_flow_by_rt_proba > np.random.uniform()
+
             for col, fname in self.df_images.iloc[df_row_index].iteritems():
                 if col == 'path_to_optical_flow' and generate_flow_by_rt:
                     continue
@@ -324,8 +366,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                 if col.endswith('depth') and generate_flow_by_rt:
                     col = 'path_to_optical_flow'
 
-                    if self.gt_from_uniform_percentile is not None:
-                        dofs = np.random.uniform(*(self.gt_low_high_bonds))
+                    if self.generate_distribution == 'uniform':
+                        dofs = np.random.uniform(*(self.gt_low_high_bounds))
+                    elif self.generate_distribution == 'normal':
+                        dofs = np.array([np.random.normal(loc=mean, scale=std) for mean, std in self.mean_std])
                     else:
                         targets_row_index = np.random.randint(len(self.df))
                         dofs = self.df_dofs.iloc[targets_row_index].values
@@ -335,7 +379,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                     intrinsics_args = dict(self.df_intrinsics.iloc[df_row_index])
                     intrinsics_args.update({'width': image_arr.shape[1], 'height': image_arr.shape[0]})
 
-                    image_arr = create_optical_flow_from_rt(image_arr[...,0],
+                    image_arr = create_optical_flow_from_rt(image_arr[..., 0],
                                                             Intrinsics(**intrinsics_args),
                                                             rotation_vector,
                                                             translation_vector)
@@ -343,14 +387,19 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                         valid_samples[index_in_batch] = False
                         continue
 
-                    if self.augment_with_rectangle_proba > np.random.uniform():
-                        y1, x1 = np.random.uniform(low=(0, 0), high=image_arr[...,0].shape).astype(int)
-                        y2, x2 = np.random.uniform(low=(0, 0), high=image_arr[...,0].shape).astype(int)
-                        rectangle_to_fill = image_arr[min(y1, y2):max(y1, y2), min(x1, x2):max(x1, x2)]
-                        x11 = np.random.randint(low=0, high=image_arr.shape[1] - rectangle_to_fill.shape[1])
-                        y11 = np.random.randint(low=0, high=image_arr.shape[0] - rectangle_to_fill.shape[0])
-                        rectangle_fill_from = image_arr[y11:y11+rectangle_to_fill.shape[0], x11:x11+rectangle_to_fill.shape[1]]
-                        rectangle_to_fill[:] = rectangle_fill_from + np.random.uniform(-0.1, 0.1)
+                    augment_with_rectangle_proba = self.augment_with_rectangle_proba_fn(self.batches_seen)
+                    if augment_with_rectangle_proba > np.random.uniform():
+                        y1, x1 = sample_coordinates(image_arr[..., 0].shape)
+                        y2, x2 = sample_coordinates(image_arr[..., 0].shape)
+
+                        y_dst, x_dst = min(y1, y2), min(x1, x2)
+                        h, w = abs(y1 - y2), abs(x1 - x2)
+
+                        y_src, x_src = sample_coordinates((image_arr.shape[0] - h, image_arr.shape[1] - w))
+                        rectangle_src = image_arr[y_src:y_src + h, x_src:x_src + w]
+
+                        noise = np.random.uniform(-0.1, 0.1)
+                        image_arr[y_dst:y_dst + h, x_dst:x_dst + w] = rectangle_src + noise
 
                     for dof_name, dof_value in zip(self.dof_columns, dofs):
                         batch_y[self.y_cols.index(dof_name)][index_in_batch] = dof_value
@@ -365,6 +414,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         if np.sum(valid_samples) < 0.5 * len(index_array):
             print('Batch is too small: {} samples'.format(np.sum(valid_samples)))
+
+        self.batches_seen += 1
 
         if batch_w:
             batch_w = [batch_w[0][valid_samples] for target in batch_y]
