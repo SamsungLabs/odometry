@@ -32,3 +32,11 @@ class Intrinsics:
         xy_pixels = np.c_[[x_pixels, y_pixels]]
         xy_frustrum = self.forward(xy_pixels) * depth
         return np.concatenate([xy_frustrum, np.expand_dims(depth, axis=0)])
+
+    def __repr__(self):
+        s = [f'f_x={self.f_x}, f_y={self.f_y}',
+             f'c_x={self.c_x}, c_y={self.c_y}',
+             f'f_x_scaled={self.f_x_scaled}, f_y_scaled={self.f_y_scaled}',
+             f'c_x_scaled={self.c_x_scaled}, c_y_scaled={self.c_y_scaled}',
+             f'width={self.width}, height={self.height}']
+        return '\n'.join(s)
