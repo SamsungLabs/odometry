@@ -9,7 +9,7 @@ import keras
 from pathlib import Path
 from keras import backend as K
 
-from slam.evaluation import calculate_metrics, average_metrics, normalize_metrics
+from slam.evaluation import calculate_metrics, average_metrics, normalize_metrics, calculate_loops_metrics
 from slam.linalg import RelativeTrajectory
 from slam.utils import (visualize_trajectory_with_gt,
                         visualize_trajectory,
@@ -29,6 +29,10 @@ def process_single_task(args):
                                            rpe_indices=rpe_indices,
                                            backend=backend,
                                            cuda=cuda)
+
+    trajectory_metrics.update(
+        calculate_loops_metrics(args['gt_df'], args['df'], args['loop_threshold']))
+
     return trajectory_metrics
 
 
@@ -184,7 +188,9 @@ class Predict(keras.callbacks.Callback):
                           'subset': subset,
                           'rpe_indices': self.rpe_indices,
                           'backend': self.backend,
-                          'cuda': self.cuda})
+                          'cuda': self.cuda,
+                          'gt_df': gt.iloc[indices],
+                          'loop_threshold': 50})
 
         return tasks
 
