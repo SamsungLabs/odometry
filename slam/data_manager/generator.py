@@ -182,9 +182,9 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
             else:
                 raise ValueError(f'Unknown distribution: "{self.generate_distribution}"')
 
-        self.augment_with_rectangle_proba_fn = get_proba_function(augment_with_rectangle_mode,
-                                                                  augment_with_rectangle_proba,
-                                                                  steps=len(self) * epochs)
+        self.augment_with_rectangle_proba_fn = get_proba_fn(augment_with_rectangle_mode,
+                                                            augment_with_rectangle_proba,
+                                                            steps=len(self) * epochs)
 
         self.batches_seen = 0
 
