@@ -5,7 +5,7 @@ import numpy as np
 
 from pyquaternion import Quaternion
 
-from slam.preprocessing.estimators.base_estimator import BaseEstimator
+from .base_estimator import BaseEstimator
 from slam.linalg import convert_rotation_matrix_to_euler_angles
 
 

@@ -1,4 +1,3 @@
-import mlflow
 import numpy as np
 import tensorflow as tf
 
@@ -6,8 +5,8 @@ from submodules.tf_models.research.struct2depth.model import Model as struct2dep
 from submodules.tf_models.research.struct2depth.nets import RESNET
 from submodules.tf_models.research.struct2depth.util import get_vars_to_save_and_restore
 
+from .network_estimator import NetworkEstimator
 from slam.utils import resize_image
-from slam.preprocessing.estimators.network_estimator import NetworkEstimator
 
 
 class Struct2DepthEstimator(NetworkEstimator):

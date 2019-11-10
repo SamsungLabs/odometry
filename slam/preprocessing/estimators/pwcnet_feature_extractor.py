@@ -10,7 +10,7 @@ from tensorflow.python.client import device_lib
 from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
 from submodules.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
 
-from slam.preprocessing.estimators.pwcnet_estimator import PWCNetEstimator
+from .pwcnet_estimator import PWCNetEstimator
 from slam.utils import resize_image
 
 

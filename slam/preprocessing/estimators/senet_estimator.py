@@ -1,11 +1,10 @@
-
 import os
 import tqdm
 import numpy as np
 import torch
 
 from submodules.depth_pred import senet_model as se_net
-from slam.preprocessing.estimators.network_estimator import NetworkEstimator
+from .network_estimator import NetworkEstimator
 
 
 class SENetEstimator(NetworkEstimator):
