@@ -37,7 +37,8 @@ class DatasetPreparator:
                  dataset_root,
                  output_root,
                  target_size,
-                 optical_flow_checkpoint,
+                 undistort=False,
+                 optical_flow_checkpoint=None,
                  depth_checkpoint=None,
                  binocular_depth_checkpoint=None,
                  pwc_features=False,
@@ -54,6 +55,7 @@ class DatasetPreparator:
         self.dataset_root = dataset_root
         self.output_root = output_root
         self.target_size = target_size
+        self.undistort = undistort
         self.optical_flow_checkpoint = optical_flow_checkpoint
         self.depth_checkpoint = depth_checkpoint
         self.binocular_depth_checkpoint = binocular_depth_checkpoint
@@ -71,6 +73,19 @@ class DatasetPreparator:
         quaternion2euler_estimator = estimators.Quaternion2EulerEstimator(input_col=['q_w', 'q_x', 'q_y', 'q_z'],
                                                                           output_col=['euler_x', 'euler_y', 'euler_z'])
         single_frame_estimators.append(quaternion2euler_estimator)
+
+        if self.undistort:
+            undistortion_estimator = estimators.UndistortionEstimator(
+                input_col=['path_to_rgb', 'K', 'D', 'R', 'P'],
+                output_col='path_to_rgb',
+                sub_dir='rgb_undistorted')
+            single_frame_estimators.append(undistortion_estimator)
+
+            undistortion_estimator_right = estimators.UndistortionEstimator(
+                input_col=['path_to_rgb_right', 'K_right', 'D_right', 'R_right', 'P'],
+                output_col='path_to_rgb_right',
+                sub_dir='rgb_undistorted_right')
+            single_frame_estimators.append(undistortion_estimator_right)
 
         if self.depth_checkpoint is not None:
             struct2depth_estimator = estimators.Struct2DepthEstimator(input_col='path_to_rgb',
