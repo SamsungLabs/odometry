@@ -1,7 +1,9 @@
 import os
 import numpy as np
 import pandas as pd
+import yaml
 from PIL import Image
+from collections import Iterable
 
 from slam.preprocessing.parsers.tum_parser import TUMParser
 
@@ -23,17 +25,13 @@ class EuRoCParser(TUMParser):
                                           rgb_txt_path=rgb_txt_path,
                                           cols=['path_to_rgb'])
 
-        self.image_dir_left = os.path.join(self.src_dir, 'cam0', 'data')
-        if not os.path.exists(self.image_dir_left):
-            raise RuntimeError(f'Could not find image sub dir for trajectory: {self.image_dir_left}')
-
-        self.image_dir_right = os.path.join(self.src_dir, 'cam1', 'data')
-        if not os.path.exists(self.image_dir_right):
-            raise RuntimeError(f'Could not find image sub dir for trajectory: {self.image_dir_right}')
+        self.image_dir = os.path.join(self.src_dir, 'cam0', 'data')
+        if not os.path.exists(self.image_dir):
+            raise RuntimeError(f'Could not find image sub dir for trajectory: {self.image_dir}')
 
         self.calib_txt_path = os.path.join(self.src_dir, 'cam0/sensor.yaml')
         if not os.path.exists(self.calib_txt_path):
-            raise RuntimeError(f'Could not find calib.txt for trajectory: {self.calib_txt_path}')
+            raise RuntimeError(f'Could not find monocular calibration file for trajectory: {self.calib_txt_path}')
 
         self.name = 'EuRoCParser'
 
@@ -51,21 +49,58 @@ class EuRoCParser(TUMParser):
 
     def _load_calib(self):
         calib = dict()
+
         with open(self.calib_txt_path) as calib_fp:
-            lines = [line.strip() for line in calib_fp.readlines()]
+            data_left = yaml.load(calib_fp)
 
-            for i, line in enumerate(lines):
-                if line.startswith('data:'):
-                    extrinsics_str = ''.join([line.lstrip('data: ')] + lines[i+1:i+4])
-                    extrinsics = np.array(eval(extrinsics_str)).reshape(4, 4)
-                    translation_between_cameras = extrinsics[:3, 3]
-                    baseline_distance = np.linalg.norm(translation_between_cameras)
-                    calib['baseline_distance'] = baseline_distance
+        with open(self.calib_txt_path.replace('cam0', 'cam1')) as calib_fp:
+            data_right = yaml.load(calib_fp)
 
-                if line.startswith('intrinsics:'):
-                    f_x, f_y, c_x, c_y = eval(line.lstrip('intrinsics: '))
-                    calib.update({'f_x': f_x, 'f_y': f_y, 'c_x': c_x, 'c_y': c_y})
+        D_left = np.array(data_left['distortion_coefficients']) / 16.
+        D_right = np.array(data_right['distortion_coefficients']) / 16.
+        T_left = np.array(data_left['T_BS']['data']).reshape((4, 4))
+        T_right = np.array(data_right['T_BS']['data']).reshape((4, 4))
 
+        baseline_distance = np.linalg.norm((np.linalg.inv(T_left) @ T_right)[:3, 3])
+        calib['baseline_distance'] = baseline_distance
+
+        calib['D'] = D_left
+        calib['D_right'] = D_right
+        calib['T_body_cam'] = T_left
+
+        # stereo
+        K = np.array([[458.654, 0.0, 367.215],
+                      [0.0, 457.296, 248.375],
+                      [0.0, 0.0, 1.0]])
+        R = np.array([[0.999966347530033, -0.001422739138722922, 0.008079580483432283],
+                      [0.001365741834644127, 0.9999741760894847, 0.007055629199258132],
+                      [-0.008089410156878961, -0.007044357138835809, 0.9999424675829176]])
+        P = np.array([[435.2046959714599, 0, 367.4517211914062],
+                      [0, 435.2046959714599, 252.2008514404297],
+                      [0, 0, 1]])
+
+        K_right = np.array([[457.587, 0.0, 379.999],
+                            [0.0, 456.134, 255.238],
+                            [0.0, 0.0, 1]])
+        R_right = np.array([[0.9999633526194376, -0.003625811871560086, 0.007755443660172947],
+                            [0.003680398547259526, 0.9999684752771629, -0.007035845251224894],
+                            [-0.007729688520722713, 0.007064130529506649, 0.999945173484644]])
+
+        width, height = data_left['resolution']
+        stereo_intrinsics_dict = {
+            'f_x': P[0, 0] / width,
+            'f_y': P[1, 1] / height,
+            'c_x': P[0, 2] / width,
+            'c_y': P[1, 2] / height,
+        }
+
+        calib.update(stereo_intrinsics_dict)
+        calib['K'] = K
+        calib['R'] = R
+        calib['P'] = P
+
+        calib['K_right'] = K_right
+        calib['R_right'] = R_right
         return calib
 
     def _load_rgb_right_txt(self):
@@ -75,18 +110,15 @@ class EuRoCParser(TUMParser):
     def _load_data(self):
         self.dataframes = [self._load_rgb_txt(), self._load_rgb_right_txt(), self._load_gt_txt()]
         self.timestamp_cols = ['timestamp_rgb', 'timestamp_rgb_right', 'timestamp_gt']
-        self.intrinsics_dict = self._load_calib()
+        self.calib = self._load_calib()
 
     def _create_dataframe(self):
         self.df = self.associate_dataframes(self.dataframes, self.timestamp_cols)
-        self.df.path_to_rgb = self.image_dir_left + '/' + self.df.path_to_rgb
-        self.df.path_to_rgb_right = self.image_dir_right + '/' + self.df.path_to_rgb_right
+        self.df.path_to_rgb = self.image_dir + '/' + self.df.path_to_rgb
+        self.df.path_to_rgb_right = self.image_dir.replace('cam0', 'cam1') + '/' + self.df.path_to_rgb_right
 
-        width, height = Image.open(os.path.join(self.src_dir, self.df.path_to_rgb.values[0])).size
-        self.intrinsics_dict['f_x'] /= width
-        self.intrinsics_dict['f_y'] /= height
-        self.intrinsics_dict['c_x'] /= width
-        self.intrinsics_dict['c_y'] /= height
-
-        for k, v in self.intrinsics_dict.items():
-            self.df[k] = v
+        for k, v in self.calib.items():
+            if isinstance(v, Iterable):
+                self.df[k] = [v for _ in range(len(self.df))]
+            else:
+                self.df[k] = v
