@@ -19,6 +19,7 @@ if __name__ == '__main__':
                       dataset_root=args.dataset_root,
                       output_root=args.output_dir,
                       target_size=(height, width),
+                      undistort=True,
                       optical_flow_checkpoint=args.of_checkpoint,
                       stride=args.stride,
                       depth_checkpoint=args.depth_checkpoint if args.depth else None,
