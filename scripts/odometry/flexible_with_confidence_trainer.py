@@ -12,9 +12,9 @@ class FlexibleWithConfidenceTrainer(ConfidenceTrainer):
 
     def set_model_args(self):
         self.construct_model_fn = partial(construct_flexible_model,
-                                          return_confidence=True)
+                                          confidence_mode=self.confidence_mode)
         self.lr = 0.001
-        self.loss = 'huber'
+        self.loss = 'mae'
         self.scale_rotation = 50
 
     def set_dataset_args(self):

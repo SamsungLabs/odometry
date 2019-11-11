@@ -2,8 +2,10 @@ from functools import partial
 
 import numpy as np
 import tensorflow as tf
-from keras.layers import Layer, Dense, concatenate, multiply
+from keras import backend as K
+from keras.layers import Layer, Dense, Activation, concatenate, multiply
 from keras.regularizers import l2
+from keras import activations
 
 from slam.linalg import convert_euler_angles_to_rotation_matrix
 from .functions import grid_sample
@@ -13,29 +15,32 @@ from .functions import concat
 def construct_outputs(inputs,
                       regularization=0,
                       scale=None,
-                      return_confidence=False):
+                      confidence_mode=None):
     outputs = []
 
     for i, output_name in enumerate(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z')):
         x = inputs[i]
 
-        output = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(x)
+        output_i = Dense(1, kernel_regularizer=l2(regularization), name=output_name)(x)
 
         if scale is not None:
-            s = scale[i] if isinstance(scale, list) else scale
-            output = multiply([output, s])
+            scale_i = scale[i] if isinstance(scale, list) else scale
+            output_i = multiply([output_i, scale_i])
 
-        returned_values = [output]
+        returned_values = [output_i]
 
         if scale is not None:
-            returned_values.append(s)
+            returned_values.append(scale_i)
 
-        if return_confidence:
-            confidence = Dense(1,
-                               kernel_regularizer=l2(regularization),
-                               kernel_initializer='glorot_normal',
-                               trainable=False)(x)
-            returned_values.append(confidence)
+        if confidence_mode is not None:
+            sigma_i = Dense(1,
+                            kernel_regularizer=l2(regularization),
+                            kernel_initializer='glorot_normal',
+                            trainable=False)(x)
+            if confidence_mode == 'std':
+                sigma_i = Activation('softplus')(sigma_i)
+
+            returned_values.append(sigma_i)
 
         output = concat(returned_values)
         outputs.append(output)
