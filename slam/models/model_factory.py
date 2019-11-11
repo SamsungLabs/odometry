@@ -1,4 +1,6 @@
 import mlflow
+from functools import partial
+from collections.abc import Iterable
 
 import tensorflow as tf
 import keras
@@ -55,19 +57,27 @@ class ModelFactory:
                  lr=0.001,
                  loss=mean_squared_error,
                  scale_rotation=1.,
-                 scale_translation=1.):
-
+                 scale_translation=1.,
+                 optimizer='adam'):
         self.model = None
         self.construct_graph_fn = construct_graph_fn
         self.input_shapes = input_shapes
         self.lr = lr
+        self.optimizer = optimizer
         self.loss_fn = self._get_loss_function(loss)
         self.loss = [self.loss_fn] * 6
-        self.loss_weights = [scale_rotation] * 3 + [scale_translation] * 3
+        if not isinstance(scale_rotation, Iterable):
+            scale_rotation = [scale_rotation] * 3
+        if not isinstance(scale_translation, Iterable):
+            scale_translation = [scale_translation] * 3
+        self.loss_weights = list(scale_rotation) + list(scale_translation)
         self.metrics = dict(zip(('euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z'), [rmse] * 6))
 
     def _get_optimizer(self):
-        return Adam(lr=self.lr, amsgrad=True)
+        if self.optimizer == 'adam':
+            return Adam(lr=self.lr, amsgrad=True)
+        else:
+            raise ValueError(f'Unknown optimizer: {self.optimizer}')
 
     @staticmethod
     def _get_loss_function(loss):
@@ -93,10 +103,9 @@ class ModelFactory:
             raise ValueError
 
     def _compile(self):
-        self.optimizer = self._get_optimizer()
         self.model.compile(loss=self.loss,
                            loss_weights=self.loss_weights,
-                           optimizer=self.optimizer,
+                           optimizer=self._get_optimizer(),
                            metrics=self.metrics)
 
     def construct(self):
@@ -116,6 +125,7 @@ class ModelWithDecoderFactory(ModelFactory):
                  input_shapes=((60, 80, 3), (60, 80, 3)),
                  lr=0.001,
                  loss=mean_squared_error,
+                 optim='adam',
                  scale_rotation=1.,
                  scale_translation=1.,
                  flow_loss_weight=1.,
@@ -124,6 +134,7 @@ class ModelWithDecoderFactory(ModelFactory):
                          input_shapes=input_shapes,
                          lr=lr,
                          loss=loss,
+                         optim=optim,
                          scale_rotation=scale_rotation,
                          scale_translation=scale_translation)
         self.loss.append(flow_reconstruction_loss)

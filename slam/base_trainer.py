@@ -3,7 +3,7 @@ import shutil
 import mlflow
 import datetime
 import argparse
-from keras.callbacks import ReduceLROnPlateau, TerminateOnNaN
+from keras.callbacks import ReduceLROnPlateau, TerminateOnNaN, EarlyStopping
 
 import env
 
@@ -22,11 +22,15 @@ class BaseTrainer:
                  cache=True,
                  batch_size=128,
                  epochs=100,
+                 optimizer='adam',
+                 lr=1e-3,
                  period=10,
                  save_best_only=False,
                  min_lr=1e-5,
                  reduce_factor=0.5,
-                 no_cycle=False,
+                 early_stopping=False,
+                 cyclic_lr=True,
+                 cyclic_args=None,
                  backend='numpy',
                  cuda=False,
                  cuda_visible_devices=0,
@@ -56,19 +60,24 @@ class BaseTrainer:
         self.cache = cache
         self.batch_size = batch_size
         self.epochs = epochs
+        self.optimizer = optimizer
+        self.lr = lr
         self.period = period
         self.save_best_only = save_best_only
         self.min_lr = min_lr
         self.reduce_factor = reduce_factor
-        self.cyclic_lr = not no_cycle
+        self.early_stopping = early_stopping
+        self.cyclic_lr = cyclic_lr
+        self.cyclic_args = cyclic_args
         self.backend = backend
         self.cuda = cuda
         self.use_mlflow = use_mlflow
         self.seed = seed
+        self.min_frame_ind_diff = min_frame_ind_diff
+        self.max_frame_ind_diff = max_frame_ind_diff
         self.max_to_visualize = None
 
         self.construct_model_fn = None
-        self.lr = None
         self.loss = None
         self.scale_rotation = None
 
@@ -105,7 +114,6 @@ class BaseTrainer:
 
     def set_run_dir(self):
         self.run_dir = os.path.join(self.project_path, 'experiments', self.experiment_dir, self.run_name)
-
         if os.path.exists(self.run_dir):
             shutil.rmtree(self.run_dir)
         os.makedirs(self.run_dir)
@@ -151,7 +159,6 @@ class BaseTrainer:
         mlflow.log_param('starting_time', datetime.datetime.now().isoformat())
         mlflow.log_param('epochs', self.epochs)
         mlflow.log_param('seed', self.seed)
-        mlflow.log_param('cache', self.cache)
         mlflow.log_param('avg', False)
 
     def end_run(self):
@@ -192,20 +199,27 @@ class BaseTrainer:
                             input_shapes=input_shapes,
                             lr=self.lr,
                             loss=self.loss,
+                            optimizer=self.optimizer,
                             scale_rotation=self.scale_rotation)
 
-    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
+    def get_callbacks(self,
+                      model,
+                      dataset,
+                      evaluate=True,
+                      save_dir=None,
+                      prefix=None,
+                      save_metric='val_loss'):
         callbacks = []
 
         terminate_on_nan_callback = TerminateOnNaN()
         callbacks.append(terminate_on_nan_callback)
+
         save_dir = os.path.join(self.run_dir, save_dir or '.')
-        monitor = 'val_RPE_t' if evaluate else 'val_loss'
 
         predict_callback = Predict(model=model,
                                    dataset=dataset,
                                    save_dir=save_dir,
-                                   monitor=monitor,
+                                   monitor=save_metric,
                                    period=self.period,
                                    save_best_only=self.save_best_only,
                                    evaluate=evaluate,
@@ -221,7 +235,7 @@ class BaseTrainer:
             os.makedirs(weights_dir, exist_ok=True)
             weights_filename = predict_callback.template + '.hdf5'
             weights_path = os.path.join(weights_dir, weights_filename)
-            checkpoint_callback = ModelCheckpoint(monitor=monitor,
+            checkpoint_callback = ModelCheckpoint(monitor=save_metric,
                                                   filepath=weights_path,
                                                   save_best_only=self.save_best_only,
                                                   mode='min',
@@ -232,11 +246,18 @@ class BaseTrainer:
         callbacks.append(reduce_lr_callback)
 
         if self.cyclic_lr:
-            lr_scheduler = CyclicLR(base_lr=self.lr * 0.1, max_lr=self.lr, step_size=1000, mode='exp_range')
+            lr_scheduler = CyclicLR(base_lr=self.lr * 0.1, max_lr=self.lr, **self.cyclic_args)
             callbacks.append(lr_scheduler)
 
         terminate_on_lr_callback = TerminateOnLR(min_lr=self.min_lr)
         callbacks.append(terminate_on_lr_callback)
+
+        if self.early_stopping:
+            early_stopping_callback = EarlyStopping(monitor='val_loss',
+                                                    patience=5,
+                                                    verbose=10,
+                                                    restore_best_weights=True)
+            callbacks.append(early_stopping_callback)
 
         if self.use_mlflow:
             mlflow_callback = MlflowLogger(alias={'loss': 'train_loss'},
@@ -250,14 +271,22 @@ class BaseTrainer:
             print(callback)
         return callbacks
 
-    def fit_generator(self, model, dataset, epochs, evaluate=True, save_dir=None, prefix=None):
+    def fit_generator(self,
+                      model,
+                      dataset,
+                      epochs,
+                      evaluate=True,
+                      save_dir=None,
+                      prefix=None,
+                      save_metric='val_loss'):
         train_generator = dataset.get_train_generator()
         val_generator = dataset.get_val_generator()
         callbacks = self.get_callbacks(model,
                                        dataset,
                                        evaluate=evaluate,
                                        save_dir=save_dir,
-                                       prefix=prefix)
+                                       prefix=prefix,
+                                       save_metric=save_metric)
 
         model.fit_generator(train_generator,
                             steps_per_epoch=len(train_generator),
@@ -285,7 +314,7 @@ class BaseTrainer:
         self.fit_generator(model=self.model,
                            dataset=dataset,
                            epochs=self.epochs,
-                           evaluate=True)
+                           save_metric='val_RPE_t')
 
         if self.use_mlflow:
             self.end_run()
@@ -302,6 +331,10 @@ class BaseTrainer:
                             help='Name of the bundle. Must be unique and specific')
         parser.add_argument('--epochs', '-ep', type=int, default=100,
                             help='Number of epochs')
+        parser.add_argument('--optimizer', '-opt', type=str, default='adam', choices=['adam', 'radam'],
+                            help='Number of epochs')
+        parser.add_argument('--lr', '-lr', type=float, default=1e-3,
+                            help='Learning rate to start with')
         parser.add_argument('--period', type=int, default=10,
                             help='Evaluate / checkpoint period'
                                  '(set to -1 for not saving weights and intermediate results)')
@@ -311,12 +344,22 @@ class BaseTrainer:
                             help='Threshold value for learning rate in stopping criterion')
         parser.add_argument('--reduce_factor', type=float, default=0.5,
                             help='Reduce factor for learning rate')
-        parser.add_argument('--no_cycle', action='store_true',
-                            help='Disable cyclic learning rate')
+        parser.add_argument('--early_stopping', action='store_true')
+
+        parser.add_argument('--cyclic_lr', '--clr', type=lambda x: bool(eval(x)), default=True,
+                            help='Use cyclic learning rate (default: True)')
+        parser.add_argument('--cyclic_args', type=lambda x: dict(eval(x)),
+                            default={'step_size': 1000,
+                                     'mode': 'triangular',
+                                     'gamma': 1.0,
+                                     'scale': None,
+                                     'freeze_epoch': None})
+
         parser.add_argument('--backend', type=str, default='numpy', choices=['numpy', 'torch'],
                             help='Backend used for evaluation')
         parser.add_argument('--cuda', action='store_true',
                             help='Use GPU for evaluation (only for backend=="torch")')
+
         parser.add_argument('--seed', type=int, default=42,
                             help='Random seed')
         parser.add_argument('--stride', type=int, default=None)
