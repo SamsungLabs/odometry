@@ -15,6 +15,7 @@ from .io_utils import convert_chw_to_hwc
 from .io_utils import get_channels_num
 from .io_utils import get_fill_fn
 from .io_utils import warp2d
+from .io_utils import read_csv
 
 from .visualization_utils import visualize_trajectory_with_gt
 from .visualization_utils import visualize_trajectory
@@ -25,6 +26,7 @@ from .logging_utils import mlflow_logging
 
 from .toolbox import Toolbox
 
+from .utils import is_int
 
 __all__ = [
     'set_computation',
@@ -39,12 +41,14 @@ __all__ = [
     'load_image_arr',
     'convert_hwc_to_chw',
     'convert_chw_to_hwc',
-    'get_channels_count',
+    'get_channels_num',
     'get_fill_fn',
     'warp2d',
     'visualize_trajectory_with_gt',
     'visualize_trajectory',
     'parse_video',
     'mlflow_logging',
-    'Toolbox'
+    'Toolbox',
+    'read_csv',
+    'is_int'
 ]

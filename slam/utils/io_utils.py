@@ -1,9 +1,11 @@
 from functools import partial
 
-import numpy as np
-import scipy
-import PIL
 import cv2
+import PIL
+import scipy
+import numpy as np
+import pandas as pd
+from pathlib import Path
 
 import torch
 import torch.nn.functional as F
@@ -161,3 +163,21 @@ def get_fill_fn(method='random', **kwargs):
         return fill_with_median
     else:
         return fill_with_zeros
+
+
+def read_csv(path):
+    df = pd.read_csv(path)
+    df.rename(columns={'path_to_rgb': 'from_path',
+                       'path_to_rgb_next': 'to_path'},
+              inplace=True)
+
+    df['to_index'] = df['to_path'].apply(lambda x: int(Path(x).stem))
+    df['from_index'] = df['from_path'].apply(lambda x: int(Path(x).stem))
+    df['diff'] = df['to_index'] - df['from_index']
+
+    mean_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+    std_cols = [c + '_confidence' for c in mean_cols]
+
+    df = pd.concat((df, pd.DataFrame(columns=std_cols)), axis=1)
+    df.fillna(1., inplace=True)
+    return df

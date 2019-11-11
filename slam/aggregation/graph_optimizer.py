@@ -35,7 +35,7 @@ class GraphOptimizer(BaseAggregator):
         vertex = self.create_vertex(np.eye(3), np.zeros(3), index=0)
         self.optimizer.add_vertex(vertex)
         self.current_pose = np.identity(6)
-    
+
     def load(self, path):
         optimizer.load(path)
         print(f'Loaded {len(optimizer.vertices())} vertices')
@@ -45,7 +45,7 @@ class GraphOptimizer(BaseAggregator):
 
         if self.online:
             self.optimize()
-        
+
         return raw_trajectory
 
     def __len__(self):
@@ -56,8 +56,7 @@ class GraphOptimizer(BaseAggregator):
         for _, row in df.iterrows():
 
             is_adjustment_measurements = (row.to_index - row.from_index) == 1
-
-            if is_adjustment_measurements:
+            if is_adjustment_measurements and row.to_index == len(self):
                 current_pose = self.update_current_pose(row)
                 index = len(self.optimizer.vertices())
                 vertex = self.create_vertex(current_pose.quaternion.rotation_matrix, current_pose.translation, index)
