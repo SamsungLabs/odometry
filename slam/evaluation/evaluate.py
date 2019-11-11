@@ -233,6 +233,7 @@ def calculate_loops_metrics(gt_df, predicted_df, loop_threshold):
     for dof in translation_dofs + rotation_dofs:
         loop_metrics_intermediate[f'loops_MAE_{dof}'] = \
             np.abs((loops_df[f'{dof}_x'] - loops_df[f'{dof}_y']).values).mean()
+    loop_metrics = {}
     loop_metrics[f'loops_MAE_t'] = np.mean([loop_metrics_intermediate[f'loops_MAE_{dof}'] for dof in translation_dofs])
     loop_metrics[f'loops_MAE_r'] = np.mean([loop_metrics_intermediate[f'loops_MAE_{dof}'] for dof in rotation_dofs])
     return loop_metrics
