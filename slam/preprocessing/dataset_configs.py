@@ -43,6 +43,8 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_MIXED_PATH,
                  'euroc_x_mixed_1_2_3_sintel_g': env.EUROC_SINTEL_GRAY_MIXED_PATH,
                  'euroc_x_binocular_depth': env.EUROC_BINOCULAR_DEPTH_MIXED_PATH,
                  'euroc_x_bovw_binocular_depth': env.EUROC_BINOCULAR_DEPTH_BOVW_PATH,
+                 'euroc_x_undistorted': env.EUROC_UNDISTORTED_MIXED_PATH,
+                 'euroc_x_bovw_undistorted': env.EUROC_UNDISTORTED_BOVW_PATH,
                  'saic_office': env.SAIC_OFFICE_PATH,
                  'retail_bot': env.RETAIL_BOT_PATH}
 
@@ -347,6 +349,16 @@ def get_euroc_x_binocular_depth_config(dataset_root, stride):
 def get_euroc_x_bovw_binocular_depth_config(dataset_root, _stride):
     config = get_euroc_x_config(dataset_root, None)
     config['exp_name'] = 'euroc_x_bovw_binocular_depth'
+    return config
+
+
+def get_euroc_x_undistorted_config(dataset_root, stride):
+    return get_euroc_x_config(dataset_root, stride, pwc_mode='sintel_g')
+
+
+def get_euroc_x_bovw_undistorted_config(dataset_root, _stride):
+    config = get_euroc_x_config(dataset_root, None)
+    config['exp_name'] = 'euroc_x_bovw_undistorted'
     return config
 
 
