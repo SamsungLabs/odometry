@@ -10,7 +10,7 @@ from pathlib import Path
 from keras import backend as K
 
 from slam.evaluation import calculate_metrics, average_metrics, normalize_metrics, calculate_loops_metrics
-from slam.linalg import RelativeTrajectory
+from slam.linalg import RelativeTrajectory, GlobalTrajectory, convert
 from slam.utils import (visualize_trajectory_with_gt,
                         visualize_trajectory,
                         create_vis_file_path,
@@ -19,19 +19,22 @@ from slam.utils import (visualize_trajectory_with_gt,
 
 
 def process_single_task(args):
+    predicted_df = args['predicted_df']
+    gt_df = args['gt_df']
     gt_trajectory = args['gt']
     predicted_trajectory = args['predicted']
     rpe_indices = args['rpe_indices']
     backend = args['backend']
     cuda = args['cuda']
+    loop_threshold = args['loop_threshold']
     trajectory_metrics = calculate_metrics(gt_trajectory,
                                            predicted_trajectory,
                                            rpe_indices=rpe_indices,
                                            backend=backend,
                                            cuda=cuda)
 
-    trajectory_metrics.update(
-        calculate_loops_metrics(args['gt_df'], args['df'], args['loop_threshold']))
+    loops_metrics = calculate_loops_metrics(gt_df, predicted_df, loop_threshold)
+    trajectory_metrics.update(loops_metrics)
 
     return trajectory_metrics
 
@@ -87,6 +90,7 @@ class Predict(keras.callbacks.Callback):
         self.df_test = dataset.df_test
 
         self.y_cols = self.train_generator.y_cols[:]
+        self.dof_cols = self.train_generator.dof_cols[:]
 
     def _create_trajectory(self, df):
         df['to_index'] = df['path_to_rgb_next'].apply(lambda x: int(Path(x).stem))
@@ -94,7 +98,7 @@ class Predict(keras.callbacks.Callback):
         index_difference = df.to_index - df.from_index
         min_stride = np.min(index_difference.values)
         consecutive_df = df[index_difference == min_stride].reset_index(drop=True)
-        return RelativeTrajectory.from_dataframe(consecutive_df[self.y_cols]).to_global()
+        return RelativeTrajectory.from_dataframe(consecutive_df[self.dof_cols]).to_global()
 
     def _create_prediction_file_path(self, trajectory_id, subset, prediction_id):
         return create_prediction_file_path(trajectory_id=trajectory_id,
@@ -177,11 +181,24 @@ class Predict(keras.callbacks.Callback):
         predictions = self._predict_generator(generator)
 
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
-            predicted_df = predictions.iloc[indices]
-            predicted_trajectory = self._create_trajectory(predicted_df)
-            gt_trajectory = self._create_trajectory(gt.iloc[indices]) if self.evaluate else None
+            predicted_df = predictions.iloc[indices].copy()
+            gt_df = gt.iloc[indices].copy()
 
-            tasks.append({'df': predicted_df,
+            if 'T_cam_body' in gt_df.columns:
+                T_cam_body = gt_df['T_cam_body'].values[0]
+
+                for index, row in predicted_df.iterrows():
+                    predicted_dofs = row[self.dof_cols].values
+                    predicted_df.loc[index, self.dof_cols] = convert(predicted_dofs, T=T_cam_body)
+
+                    gt_dofs = gt_df.loc[index, self.dof_cols].values
+                    gt_df.loc[index, self.dof_cols] = convert(gt_dofs, T=T_cam_body)
+
+            predicted_trajectory = self._create_trajectory(predicted_df)
+            gt_trajectory = self._create_trajectory(gt_df) if self.evaluate else None
+
+            tasks.append({'predicted_df': predicted_df,
+                          'gt_df': gt_df,
                           'predicted': predicted_trajectory,
                           'gt': gt_trajectory,
                           'id': trajectory_id,
@@ -189,7 +206,6 @@ class Predict(keras.callbacks.Callback):
                           'rpe_indices': self.rpe_indices,
                           'backend': self.backend,
                           'cuda': self.cuda,
-                          'gt_df': gt.iloc[indices],
                           'loop_threshold': 50})
 
         return tasks
@@ -199,7 +215,7 @@ class Predict(keras.callbacks.Callback):
 
         counter = Counter()
         for task in tasks:
-            predicted_df = task['df']
+            predicted_df = task['predicted_df']
             trajectory_id = task['id']
             subset = task['subset']
 
@@ -250,6 +266,9 @@ class Predict(keras.callbacks.Callback):
         return is_best
 
     def on_epoch_end(self, epoch, logs=None):
+        if logs is None:
+            prediction_id = self.last_prediction_id
+
         logs = logs or {}
 
         self.epoch = epoch
@@ -268,13 +287,12 @@ class Predict(keras.callbacks.Callback):
 
             prediction_id = self.template.format(epoch=epoch + 1, **logs)
 
-            if not self.save_best_only or self._is_best(logs):
+            if not self.evaluate or not self.save_best_only or self._is_best(logs):
                 self._save_tasks(train_tasks + val_tasks, prediction_id, self.max_to_visualize)
                 self.epochs_since_last_predict = 0
                 self.last_prediction_id = prediction_id
 
         self.last_logs = logs
-
         return logs
 
     def on_train_end(self, logs=None):
@@ -282,7 +300,8 @@ class Predict(keras.callbacks.Callback):
         if self.save_best_only:
             self.template = 'final'
 
-        reuse = self.epochs_since_last_predict == 0 and self.last_prediction_id is not None
+        reuse = ((self.epochs_since_last_predict == 0 and self.last_prediction_id is not None)
+                 or not self.evaluate)
         if reuse:
             logs = self.last_logs
             final_prediction_id = self.template.format(epoch=self.epoch, **logs)
