@@ -254,9 +254,11 @@ def average_metrics(records):
     averaged_metrics = OrderedDict()
 
     for metric_name in ('ATE', 'RMSE_t', 'RMSE_r', 'loops_MAE_t', 'loops_MAE_r'):
-        averaged_metrics[metric_name] = np.mean([record[metric_name] for record in records])
+        if metric_name in records[0]:
+            averaged_metrics[metric_name] = np.mean([record[metric_name] for record in records])
 
     for metric_name in ('RPE_t', 'RPE_r', 'RPE_divider'):
-        averaged_metrics[metric_name] = np.sum([record[metric_name] for record in records])
+        if metric_name in records[0]:
+            averaged_metrics[metric_name] = np.sum([record[metric_name] for record in records])
 
     return normalize_metrics(averaged_metrics)
