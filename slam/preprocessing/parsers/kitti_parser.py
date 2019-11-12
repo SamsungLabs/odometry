@@ -87,7 +87,7 @@ class KITTIParser(ElementwiseParser):
                       'c_x': P_rect_20[0, 2],
                       'c_y': P_rect_20[1, 2]})
         calib['baseline_distance'] = baseline_distance
-        calib['T_body_cam'] = T_cam2_velo
+        calib['T_body_cam'] = T2
         return calib
 
     @staticmethod
