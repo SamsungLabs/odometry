@@ -56,7 +56,6 @@ def undistort_image(image, K, D, R, P):
            3x3 1-channel, or vector: 3x1/1x3 1-channel or 1x1 3-channel
         P: New camera matrix (3x3) or new projection matrix (3x4)
     """
-    #print('K', K, 'D', D, 'R', R, 'P', P)
     height, width = image.shape[:2]
     map_x, map_y = cv2.fisheye.initUndistortRectifyMap(K, D.reshape(4, 1), R, P, (width, height), cv2.CV_32FC1)
     undistorted_image = cv2.remap(image, map_x, map_y,
