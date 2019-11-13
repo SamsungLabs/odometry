@@ -2,7 +2,7 @@ import os
 import subprocess
 import cv2
 
-from slam.utils.io_utils import save_image
+from .image_utils import save_image
 
 
 def create_image_filename(index):

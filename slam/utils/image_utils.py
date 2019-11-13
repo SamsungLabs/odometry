@@ -44,6 +44,26 @@ def load_image(image_filepath, target_size=None):
     return image
 
 
+def undistort_image(image, K, D, R, P):
+    """
+    Computes undistortion and rectification maps for image transform by cv::remap().
+    Parameters:
+        K: Camera matrix=[[fx,  0, cx],
+                          [ 0, fy, cy], 
+                          [ 0,  0,  1]].
+        D: Input vector of distortion coefficients (k1, k2, k3, k4).
+        R: Rectification transformation in the object space: 
+           3x3 1-channel, or vector: 3x1/1x3 1-channel or 1x1 3-channel
+        P: New camera matrix (3x3) or new projection matrix (3x4)
+    """
+    height, width = image.shape[:2]
+    map_x, map_y = cv2.fisheye.initUndistortRectifyMap(K, D.reshape(4, 1), R, P, (width, height), cv2.CV_32FC1)
+    undistorted_image = cv2.remap(image, map_x, map_y,
+                                  interpolation=cv2.INTER_LINEAR,
+                                  borderMode=cv2.BORDER_CONSTANT)
+    return undistorted_image
+
+
 def resize_image_arr(image_arr, target_size, data_format, mode):
     if image_arr.shape[:-1] == target_size:
         return image_arr

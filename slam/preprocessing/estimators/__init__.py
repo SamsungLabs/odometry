@@ -10,6 +10,8 @@ from .pwcnet_feature_extractor import PWCNetFeatureExtractor
 
 from .binocular_depth_estimator import BinocularDepthEstimator
 
+from .undistortion_estimator import UndistortionEstimator
+
 #from .senet_estimator import SENetEstimator
 
 
@@ -18,5 +20,6 @@ __all__ = [
     'Struct2DepthEstimator',
     'Global2RelativeEstimator',
     'PWCNetEstimator',
-    'BinocularDepthEstimator'
+    'BinocularDepthEstimator',
+    'UndistortionEstimator',
 ]

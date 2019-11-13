@@ -5,17 +5,17 @@ from .file_utils import chmod
 from .file_utils import create_vis_file_path
 from .file_utils import create_prediction_file_path
 
-from .io_utils import resize_image
-from .io_utils import save_image
-from .io_utils import load_image
-from .io_utils import resize_image_arr
-from .io_utils import load_image_arr
-from .io_utils import convert_hwc_to_chw
-from .io_utils import convert_chw_to_hwc
-from .io_utils import get_channels_num
-from .io_utils import get_fill_fn
-from .io_utils import warp2d
-from .io_utils import read_csv
+from .image_utils import resize_image
+from .image_utils import save_image
+from .image_utils import load_image
+from .image_utils import undistort_image
+from .image_utils import resize_image_arr
+from .image_utils import load_image_arr
+from .image_utils import convert_hwc_to_chw
+from .image_utils import convert_chw_to_hwc
+from .image_utils import get_channels_num
+from .image_utils import get_fill_fn
+from .image_utils import warp2d
 
 from .visualization_utils import visualize_trajectory_with_gt
 from .visualization_utils import visualize_trajectory
@@ -37,6 +37,7 @@ __all__ = [
     'resize_image',
     'save_image',
     'load_image',
+    'undistort_image',
     'resize_image_arr',
     'load_image_arr',
     'convert_hwc_to_chw',
