@@ -13,6 +13,10 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_MIXED_PATH,
                  'kitti_4/6_bovw': env.KITTI_BOVW_PATH,
                  'kitti_4_6_binocular_depth': env.KITTI_BINOCULAR_DEPTH_MIXED_PATH,
                  'kitti_4_6_bovw_binocular_depth': env.KITTI_BINOCULAR_DEPTH_BOVW_PATH,
+                 'kitti_4/6_binocular_depth': env.KITTI_BINOCULAR_DEPTH_MIXED_PATH,
+                 'kitti_4/6_bovw_binocular_depth': env.KITTI_BINOCULAR_DEPTH_BOVW_PATH,
+                 'kitti_4/6_T': env.KITTI_T_MIXED_PATH,
+                 'kitti_4/6_bovw_T': env.KITTI_T_BOVW_PATH,
                  'discoman_v10': env.DISCOMAN_V10_PATH,
                  'discoman_v10_mixed': env.DISCOMAN_V10_MIXED_PATH,
                  'discoman_v10_bovw': env.DISCOMAN_V10_BOVW_PATH,
@@ -484,6 +488,18 @@ def get_kitti_4_6_binocular_depth_config(dataset_root, stride):
 def get_kitti_4_6_bovw_binocular_depth_config(dataset, _stride):
     config = get_kitti_4_6_config(dataset, None)
     config['exp_name'] = 'kitti_4/6_binocular_depth_bovw'
+    return config
+
+
+def get_kitti_4_6_T_config(dataset_root, stride):
+    config = get_kitti_4_6_config(dataset_root, stride)
+    config['exp_name'] = 'kitti_4/6_T'
+    return config
+
+
+def get_kitti_4_6_bovw_T_config(dataset, _stride):
+    config = get_kitti_4_6_config(dataset, None)
+    config['exp_name'] = 'kitti_4/6_T_bovw'
     return config
 
 
