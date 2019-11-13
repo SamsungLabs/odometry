@@ -49,17 +49,46 @@ class KITTIParser(ElementwiseParser):
                 self.pose_matrices.append(t_w_cam0)
 
     def _load_calib(self):
+        data = dict()
+
         with open(self.calib_txt) as calib_fp:
             for line in calib_fp:
-                if not line.startswith('P2:'):
-                    continue
-                line_split = line.lstrip('P2:').split()
-                P = np.array(line_split, dtype=float).reshape((3, 4))
-                return {'f_x': P[0, 0],
-                        'f_y': P[1, 1],
-                        'c_x': P[0, 2],
-                        'c_y': P[1, 2],
-                        'baseline_distance': 0.54}
+                key = line.split(':')[0]
+                line_split = line.lstrip(f'{key}:').split()
+                data[key] = np.array(line_split, dtype=float).reshape((3, 4))
+
+        # Create 3x4 projection matrices
+        P_rect_20 = np.reshape(data['P2'], (3, 4))
+        P_rect_30 = np.reshape(data['P3'], (3, 4))
+
+        # Compute the rectified extrinsics from cam0 to camN
+        T2 = np.eye(4)
+        T2[0, 3] = P_rect_20[0, 3] / P_rect_20[0, 0]
+        T3 = np.eye(4)
+        T3[0, 3] = P_rect_30[0, 3] / P_rect_30[0, 0]
+
+        # Compute the velodyne to rectified camera coordinate transforms
+        T_cam0_velo = np.reshape(data['Tr'], (3, 4))
+        T_cam0_velo = np.vstack([T_cam0_velo, [0, 0, 0, 1]])
+        T_cam2_velo = T2.dot(T_cam0_velo)
+        T_cam3_velo = T3.dot(T_cam0_velo)
+
+        # Compute the stereo baselines in meters by projecting the origin of
+        # each camera frame into the velodyne frame and computing the distances
+        # between them
+        p_cam = np.array([0, 0, 0, 1])
+        p_velo2 = np.linalg.inv(T_cam2_velo).dot(p_cam)
+        p_velo3 = np.linalg.inv(T_cam3_velo).dot(p_cam)
+        baseline_distance = np.linalg.norm(p_velo3 - p_velo2)
+
+        calib = dict()
+        calib.update({'f_x': P_rect_20[0, 0],
+                      'f_y': P_rect_20[1, 1],
+                      'c_x': P_rect_20[0, 2],
+                      'c_y': P_rect_20[1, 2]})
+        calib['baseline_distance'] = baseline_distance
+        calib['T_body_cam'] = T2
+        return calib
 
     @staticmethod
     def _construct_image_filepaths(image_dir):
@@ -70,12 +99,12 @@ class KITTIParser(ElementwiseParser):
         self.image_filepaths = self._construct_image_filepaths(self.image_dir_left)
         self.image_right_filepaths = self._construct_image_filepaths(self.image_dir_right)
 
-        self.intrinsics_dict = self._load_calib()
+        self.calib = self._load_calib()
         width, height = Image.open(self.image_filepaths[0]).size
-        self.intrinsics_dict['f_x'] /= width
-        self.intrinsics_dict['f_y'] /= height
-        self.intrinsics_dict['c_x'] /= width
-        self.intrinsics_dict['c_y'] /= height
+        self.calib['f_x'] /= width
+        self.calib['f_y'] /= height
+        self.calib['c_x'] /= width
+        self.calib['c_y'] /= height
 
         if self.pose_filepath:
             self._load_poses()
@@ -107,6 +136,6 @@ class KITTIParser(ElementwiseParser):
             parsed_item.update(OrderedDict(zip(['q_w', 'q_x', 'q_y', 'q_z'], self.get_quaternion(item))))
             parsed_item.update(OrderedDict(zip(['t_x', 't_y', 't_z'], self.get_translation(item))))
 
-        parsed_item.update(self.intrinsics_dict)
+        parsed_item.update(self.calib)
 
         return parsed_item
