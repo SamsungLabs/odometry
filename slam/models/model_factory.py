@@ -132,12 +132,29 @@ class ModelWithDecoderFactory(ModelFactory):
 
 class ModelWithConfidenceFactory(ModelFactory):
 
-    def freeze(self, lr=0.001):
+    def __init__(self,
+                 construct_graph_fn,
+                 confidence_mode='log_std',
+                 confidence_lr=0.001,
+                 **kwargs):
+        self.confidence_mode = confidence_mode
+        self.confidence_lr = confidence_lr
+        print(f'Confidence: mode={self.confidence_mode}, lr={self.confidence_lr}')
+        mlflow.log_param('confidence_mode', self.confidence_mode)
+        mlflow.log_param('confidence_lr', self.confidence_lr)
+
+        super().__init__(construct_graph_fn=construct_graph_fn,
+                         **kwargs)
+
+    def freeze(self):
         for layer in self.model.layers:
             layer.trainable = not layer.trainable
 
-        self.loss = confidence_error
-        self.lr = lr
+        def confidence_loss(y_true, y_pred):
+            return confidence_error(y_true, y_pred, mode=self.confidence_mode)
+
+        self.loss = confidence_loss
+        self.lr = self.confidence_lr
         self._compile()
         for layer in self.model.layers:
             print(f'{layer.name:<30} {layer.trainable}')

@@ -1,12 +1,17 @@
-from keras.layers import Flatten
+import tensorflow as tf
+import keras.backend as K
+from keras.layers import Flatten, Lambda, Reshape, Activation, multiply
 
-from slam.models.layers import (chunk,
+from slam.models.layers import (activ,
+                                chunk,
                                 concat,
                                 conv2d,
                                 gated_conv2d,
                                 dense,
                                 construct_outputs,
-                                transform_inputs)
+                                transform_inputs,
+                                add_grid)
+
 from slam.utils import mlflow_logging
 
 
@@ -18,6 +23,7 @@ def construct_encoder(inputs,
                       kernel_initializer='glorot_normal',
                       use_gated_convolutions=False,
                       use_batch_norm=False):
+
     conv = gated_conv2d if use_gated_convolutions else conv2d
 
     layers = len(strides)
@@ -25,18 +31,20 @@ def construct_encoder(inputs,
         dilation_rates = [1] * layers
 
     assert layers == len(dilation_rates) and layers == len(kernel_sizes)
-    for i in range(layers):
-        inputs = conv(inputs,
-                      64,
-                      kernel_size=kernel_sizes[i],
-                      strides=strides[i],
-                      dilation_rate=dilation_rates[i],
-                      padding='same',
-                      batch_norm=use_batch_norm and i == 0,
-                      activation=activation,
-                      kernel_initializer=kernel_initializer)
 
-    flatten = Flatten()(inputs)
+    x = inputs
+    for i in range(layers):
+        x = conv(x,
+                  64,
+                  kernel_size=kernel_sizes[i],
+                  strides=strides[i],
+                  dilation_rate=dilation_rates[i],
+                  padding='same',
+                  batch_norm=use_batch_norm and i == 0,
+                  activation=activation,
+                  kernel_initializer=kernel_initializer)
+
+    flatten = Flatten()(x)
     return flatten
 
 
@@ -57,7 +65,7 @@ def construct_flexible_model(inputs,
                              channel_wise=False,
                              concat_scale_to_fc=False,
                              multiply_outputs_by_scale=False,
-                             return_confidence=False):
+                             confidence_mode=None):
 
     inputs, scale = transform_inputs(inputs,
                                      transform=transform,
@@ -118,5 +126,5 @@ def construct_flexible_model(inputs,
     outputs = construct_outputs(fc,
                                 regularization=regularization,
                                 scale=scale if multiply_outputs_by_scale else None,
-                                return_confidence=return_confidence)
+                                confidence_mode=confidence_mode)
     return outputs
