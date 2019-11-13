@@ -16,7 +16,7 @@ class FlexibleWithAugmentationTrainer(BaseTrainer):
         self.scale_rotation = 50
 
     def set_dataset_args(self):
-        self.x_col = ['path_to_optical_flow']
+        self.x_col = ['path_to_optical_flow', 'path_to_binocular_depth']
         self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         self.image_col = ['path_to_optical_flow', 'path_to_binocular_depth']
         self.load_mode = ['flow_xy', 'depth']
