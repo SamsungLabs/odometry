@@ -64,7 +64,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  include_last=False,
                  min_frame_ind_diff=0,
                  max_frame_ind_diff=float('inf'),
-                 intrinsics=None,
                  generate_flow_by_rt_proba=0,
                  generate_flow_by_rt_mode='constant',
                  generate_distribution=None,
@@ -107,8 +106,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                                                         shuffle,
                                                         seed)
 
-        self.x_cols = [x_col] if isinstance(x_col, str) else x_col
-        self.y_cols = [y_col] if isinstance(y_col, str) else y_col
+        self.x_cols = [x_col] if isinstance(x_col, str) else x_col.copy()
+        self.y_cols = [y_col] if isinstance(y_col, str) else y_col.copy()
         assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
 
         self.return_cols = self.y_cols[:]
@@ -147,8 +146,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         for p in self.placeholder:
             self.return_cols.extend([col + '_' + p for col in self.y_cols])
 
-        self.dof_columns = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
-        self.df_dofs = self.df[self.dof_columns]
+        self.dof_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+        self.df_dofs = self.df[self.dof_cols]
 
         # augmentation
         self.generate_flow_by_rt_proba_fn = get_proba_fn(generate_flow_by_rt_mode,
@@ -171,13 +170,13 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                     np.percentile(self.df_dofs, self.generate_percentile, axis=0))
 
                 print('Params of uniform distribution:')
-                for i, col in enumerate(self.dof_columns):
+                for i, col in enumerate(self.dof_cols):
                     print('\t', col, self.gt_low_high_bounds[0][i], self.gt_low_high_bounds[1][i])
 
             elif self.generate_distribution == 'normal':
                 self.mean_std = list(zip(self.df_dofs.mean(axis=0), self.df_dofs.std(axis=0)))
                 print('Params of normal distribution:')
-                for i, col in enumerate(self.dof_columns):
+                for i, col in enumerate(self.dof_cols):
                     print('\t', col, self.mean_std[i])
             else:
                 raise ValueError(f'Unknown distribution: "{self.generate_distribution}"')
@@ -401,7 +400,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                         noise = np.random.uniform(-0.1, 0.1)
                         image_arr[y_dst:y_dst + h, x_dst:x_dst + w] = rectangle_src + noise
 
-                    for dof_name, dof_value in zip(self.dof_columns, dofs):
+                    for dof_name, dof_value in zip(self.dof_cols, dofs):
                         batch_y[self.y_cols.index(dof_name)][index_in_batch] = dof_value
 
                 if col in self.x_cols:
