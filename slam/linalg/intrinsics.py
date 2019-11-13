@@ -16,6 +16,8 @@ class Intrinsics:
         self.width = width
         self.height = height
 
+        self.pixels = np.c_[np.meshgrid(np.arange(0., self.width), np.arange(0., self.height))]
+
     def forward(self, xy):
         xy_processed = xy.copy()
         xy_processed[0] = (xy[0] - self.c_x_scaled) / self.f_x_scaled
@@ -28,10 +30,15 @@ class Intrinsics:
         xy_processed[1] = xy[1] * self.f_y_scaled + self.c_y_scaled
         return xy_processed
 
-    def create_frustrum(self, x_pixels, y_pixels, depth):
-        xy_pixels = np.c_[[x_pixels, y_pixels]]
-        xy_frustrum = self.forward(xy_pixels) * depth
-        return np.concatenate([xy_frustrum, np.expand_dims(depth, axis=0)])
+    def to_pixels(self, points):
+        xy_points = points[:2]
+        z_points = points[2]
+        return self.backward(xy_points / z_points)
+
+    def to_points(self, depth):
+        xy_points = self.forward(self.pixels) * depth
+        z_points = depth[None]
+        return np.concatenate([xy_points, z_points])
 
     def __repr__(self):
         s = [f'f_x={self.f_x}, f_y={self.f_y}',

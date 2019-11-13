@@ -155,19 +155,39 @@ def convert_euler_uncertainty_to_quaternion_uncertainty(euler_angles_xyz, covari
 
 
 def create_optical_flow_from_rt(depth, intrinsics, rotation_vector, translation_vector):
-    w, h = intrinsics.width, intrinsics.height
+    width, height = intrinsics.width, intrinsics.height
+
+    rotation_vector = np.array(rotation_vector, dtype=np.float64).copy()
+    translation_vector = np.array(translation_vector, dtype=np.float64).copy()
+
     R = convert_euler_angles_to_rotation_matrix(rotation_vector)
     t = translation_vector.reshape(3, -1)
-    meshgrid = np.meshgrid(np.arange(0., w), np.arange(0., h))
-    xyz_points = intrinsics.create_frustrum(*meshgrid, depth)
+    xyz_points = intrinsics.to_points(depth)
+
     xyz_points_after_transform = R.T @ (xyz_points.reshape(3, -1) - t)
-    xyz_points_after_transform = xyz_points_after_transform.reshape((3, h, w))
+    xyz_points_after_transform = xyz_points_after_transform.reshape((3, height, width))
     if (xyz_points_after_transform[2] <= 0).any():
         return None
 
-    xy_pixels_after_transform = intrinsics.backward(xyz_points_after_transform[:2] / xyz_points_after_transform[2])
-    flow = (xy_pixels_after_transform - np.c_[meshgrid])
+    xy_pixels_after_transform = intrinsics.to_pixels(xyz_points_after_transform)
+
+    flow = xy_pixels_after_transform - intrinsics.pixels
     flow = np.transpose(flow, (1, 2, 0))
-    flow[...,0] /= w
-    flow[...,1] /= h
+    flow[..., 0] /= width
+    flow[..., 1] /= height
     return flow
+
+
+def convert(dofs, T):
+    rotation_vector, translation_vector = dofs[:3], dofs[3:]
+
+    rotation_vector = np.array(rotation_vector, dtype=np.float64).copy()
+    translation_vector = np.array(translation_vector, dtype=np.float64).copy()
+
+    rotation_matrix = convert_euler_angles_to_rotation_matrix(rotation_vector)
+    se3 = form_se3(rotation_matrix, translation_vector)
+    rotation_matrix_T, translation_vector_T = split_se3(np.linalg.inv(T) @ se3 @ T)
+    rotation_vector_T = convert_rotation_matrix_to_euler_angles(rotation_matrix_T)
+
+    dofs_T = np.concatenate([rotation_vector_T, translation_vector_T])
+    return dofs_T

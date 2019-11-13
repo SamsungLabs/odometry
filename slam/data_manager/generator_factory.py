@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import warnings
 import pickle
@@ -9,6 +10,7 @@ import pandas as pd
 from keras_preprocessing.image import ImageDataGenerator
 
 from slam.data_manager.generator import ExtendedDataFrameIterator
+from slam.linalg import RelativeTrajectory, GlobalTrajectory, convert
 from slam.utils import mlflow_logging
 
 
@@ -48,6 +50,7 @@ class GeneratorFactory:
         self.x_col = list(x_col)
         self.y_col = list(y_col)
         self.image_col = list(image_col)
+        self.dof_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
 
         self.weight_fn = weight_fn
         self.weight_col = 'weight' if self.weight_fn is not None else None
@@ -134,6 +137,23 @@ class GeneratorFactory:
             if self.weight_col:
                 current_df[self.weight_col] = current_df.apply(self.weight_fn, axis=1)
                 current_df[self.weight_col] /= current_df[self.weight_col].mean()
+
+            if 'T_body_cam' in current_df.columns:
+                assert current_df['T_body_cam'].nunique() == 1
+
+                T_body_cam_as_str = current_df['T_body_cam'].values[0]
+                T_body_cam = np.array(re.sub(r'\n|\[|\]', '', T_body_cam_as_str).strip().split(), dtype=float)
+                T_body_cam = T_body_cam.reshape((4, 4))
+                T_cam_body = np.linalg.inv(T_body_cam)
+
+                current_df['T_body_cam'] = [T_body_cam] * len(current_df)
+                current_df['T_cam_body'] = [T_cam_body] * len(current_df)
+
+                for index, row in current_df.iterrows():
+                    dofs = row[self.dof_col].values
+                    current_df.loc[index, self.dof_col] = convert(dofs, T=T_body_cam)
+                    dofs_converted_back = convert(current_df.loc[index, self.dof_col].values, T=T_cam_body)
+                    assert np.allclose(np.array(dofs).astype(float), dofs_converted_back)
 
             df = current_df if df is None else df.append(current_df, sort=False)
 
