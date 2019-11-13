@@ -3,7 +3,7 @@ import shutil
 import copy
 import numpy as np
 
-from slam.preprocessing.estimators.base_estimator import BaseEstimator
+from .base_estimator import BaseEstimator
 from slam.linalg import (form_se3,
                          split_se3,
                          get_relative_se3_matrix,

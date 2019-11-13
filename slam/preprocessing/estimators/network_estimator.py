@@ -1,8 +1,8 @@
 import os
 import numpy as np
 
+from .base_estimator import BaseEstimator
 from slam.utils import load_image
-from slam.preprocessing.estimators.base_estimator import BaseEstimator
 
 
 class NetworkEstimator(BaseEstimator):
@@ -74,5 +74,4 @@ class NetworkEstimator(BaseEstimator):
         return prediction
 
     def __repr__(self):
-        return '{}Estimator(dir={}, input_col={}, output_col={}, checkpoint={})'.format(
-            self.name, self.dir, self.input_col, self.output_col, self.checkpoint)
+        return f'{self.name}Estimator(dir={self.dir}, input_col={self.input_col}, output_col={self.output_col}, checkpoint={self.checkpoint})'

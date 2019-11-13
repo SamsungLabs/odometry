@@ -1,9 +1,7 @@
-import numpy as np
 import os
+import numpy as np
 
-from slam.preprocessing.estimators import PWCNetEstimator
-from slam.utils import resize_image, resize_image_arr
-from slam.linalg import Intrinsics
+from .pwcnet_estimator import PWCNetEstimator
 
 
 class BinocularDepthEstimator(PWCNetEstimator):
@@ -16,19 +14,14 @@ class BinocularDepthEstimator(PWCNetEstimator):
     def _convert_model_output_to_prediction(self, optical_flow, row):
         final_optical_flow = super()._convert_model_output_to_prediction(optical_flow)
 
-        intrinsics = Intrinsics(f_x=row[self.input_col[2]],
-                                f_y=row[self.input_col[3]],
-                                c_x=row[self.input_col[4]],
-                                c_y=row[self.input_col[5]],
-                                width=final_optical_flow[0].shape[1],
-                                height=final_optical_flow[0].shape[0])
-
+        f_x = row[self.input_col[2]]
         baseline_distance = row[self.input_col[6]]
+        width = final_optical_flow[0].shape[1]
 
-        disparity = -final_optical_flow[..., 0] * intrinsics.width
-        max_depth = intrinsics.f_x_scaled * baseline_distance
+        disparity = -final_optical_flow[..., 0] * width
+        max_depth = f_x * width * baseline_distance
         depth = np.full_like(final_optical_flow[..., 0], max_depth).astype(float)
-        depth[disparity > 0] = (intrinsics.f_x_scaled * baseline_distance) / disparity[disparity > 0]
+        depth[disparity > 0] = (f_x * width * baseline_distance) / disparity[disparity > 0]
         return depth.clip(max=max_depth)
 
     def _create_output_filename(self, row):

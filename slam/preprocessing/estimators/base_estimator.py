@@ -1,9 +1,3 @@
-import os
-import shutil
-import copy
-import numpy as np
-
-
 class BaseEstimator:
 
     def __init__(self,
@@ -28,4 +22,4 @@ class BaseEstimator:
         pass
 
     def __repr__(self):
-        return '{}Estimator(input_col={}, output_col={})'.format(self.name, self.input_col, self.output_col)
+        return f'{self.name}Estimator(input_col={self.input_col}, output_col={self.output_col})'
