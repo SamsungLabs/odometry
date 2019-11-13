@@ -166,6 +166,8 @@ def create_optical_flow_from_rt(depth, intrinsics, rotation_vector, translation_
 
     xyz_points_after_transform = R.T @ (xyz_points.reshape(3, -1) - t)
     xyz_points_after_transform = xyz_points_after_transform.reshape((3, height, width))
+    if (xyz_points_after_transform[2] <= 0).any():
+        return None
 
     xy_pixels_after_transform = intrinsics.to_pixels(xyz_points_after_transform)
 
