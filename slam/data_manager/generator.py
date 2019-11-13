@@ -178,6 +178,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                 print('Params of normal distribution:')
                 for i, col in enumerate(self.dof_cols):
                     print('\t', col, self.mean_std[i])
+            elif self.generate_distribution == 'same':
+                print('Generate flow from the same ground truth motion')
             else:
                 raise ValueError(f'Unknown distribution: "{self.generate_distribution}"')
 
@@ -369,6 +371,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                         dofs = np.random.uniform(*(self.gt_low_high_bounds))
                     elif self.generate_distribution == 'normal':
                         dofs = np.array([np.random.normal(loc=mean, scale=std) for mean, std in self.mean_std])
+                    elif self.generate_distribution == 'same':
+                        dofs = self.df_dofs.iloc[df_row_index].values
                     else:
                         targets_row_index = np.random.randint(len(self.df))
                         dofs = self.df_dofs.iloc[targets_row_index].values
