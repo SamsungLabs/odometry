@@ -172,7 +172,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                 print('Params of uniform distribution:')
                 for i, col in enumerate(self.dof_cols):
                     print('\t', col, self.gt_low_high_bounds[0][i], self.gt_low_high_bounds[1][i])
-
             elif self.generate_distribution == 'normal':
                 self.mean_std = list(zip(self.df_dofs.mean(axis=0), self.df_dofs.std(axis=0)))
                 print('Params of normal distribution:')
@@ -371,11 +370,16 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                         dofs = np.random.uniform(*(self.gt_low_high_bounds))
                     elif self.generate_distribution == 'normal':
                         dofs = np.array([np.random.normal(loc=mean, scale=std) for mean, std in self.mean_std])
+                    elif self.generate_distribution == 'student':
+                        dofs = np.array([np.random.standard_t(4) / 1.4136 * std + mean
+                                         for mean, std in self.mean_std])
                     elif self.generate_distribution == 'same':
                         dofs = self.df_dofs.iloc[df_row_index].values
-                    else:
+                    elif self.generate_distribution == 'shuffle':
                         targets_row_index = np.random.randint(len(self.df))
                         dofs = self.df_dofs.iloc[targets_row_index].values
+                    else:
+                        raise f'{self.generate_distribution} generate_distribution is not supported'
 
                     rotation_vector, translation_vector = dofs[:3], dofs[3:]
 

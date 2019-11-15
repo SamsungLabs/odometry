@@ -30,7 +30,7 @@ class FlexibleWithAugmentationTrainer(BaseTrainer):
                             choices=['constant', 'exp', 'linear', 'r_exp', 'r_linear'], default='constant')
         parser.add_argument('--generate_percentile', '-q', type=int, default=None)
         parser.add_argument('--generate_distribution', '--distr',
-                            choices=[None, 'uniform', 'normal', 'same'], type=str, default=None)
+                            choices=[None, 'uniform', 'normal', 'student', 'shuffle', 'same'], type=str, default=None)
         parser.add_argument('--augment_with_rectangle_proba', type=float, default=0)
         parser.add_argument('--augment_with_rectangle_mode', type=str,
                             choices=['constant', 'exp', 'linear', 'r_exp', 'r_linear'], default='constant')
