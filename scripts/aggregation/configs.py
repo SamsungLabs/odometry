@@ -175,6 +175,203 @@ euroc_best_clr_p1 = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts
                       'loops': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_bovw_binocular_depth/55fe53816de3485cbacd6bc5aa9c462c/artifacts/depth_aug_proba1_b_1/predictions']}
 
 
+euroc_clr_undistorted_p1 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s1_vicon_proba1_shuffled_b_0/predictions'],
+                  '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s2_vicon_proba1_shuffled_b_0/predictions'],
+                  '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s3_vicon_proba1_shuffled_b_0/predictions'],
+                  '4': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s4_vicon_proba1_shuffled_b_0/predictions'],
+                  'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/bovw_vicon_proba1_shuffled_b_2/predictions']}
+
+euroc_clr_undistorted_same_motion_p1 = {'1': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_undistorted/s1_vicon_same_motion_b_0/predictions'],
+                  '2': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_undistorted/s2_vicon_same_motion_b_0/predictions'],
+                  '3': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_undistorted/s3_vicon_same_motion_b_0/predictions'],
+                  '4': ['/dbstore/datasets/robotics/mlflow/odometry/artifacts/euroc_x_undistorted/s4_vicon_same_motion_b_0/predictions'],
+                  'loops': ['']}
+
+
+euroc_clr_undistorted_p0 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s1_vicon_b_0/predictions'],
+                  '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s2_vicon_b_0/predictions'],
+                  '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s3_vicon_b_4/predictions'],
+                  '4': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s4_vicon_b_2/predictions'],
+                  'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/bovw_vicon_b_1/predictions']}
+
+euroc_clr_undistorted_p0_p75 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s1_vicon_b_0/predictions'],
+                  '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s2_vicon_b_0/predictions'],
+                  '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s3_vicon_b_4/predictions'],
+                  '4': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s4_vicon_b_2/predictions'],
+                  'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/bovw_vicon_proba075_shuffled_b_2/predictions']}
+
+euroc_clr_undistorted_p75 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s1_vicon_proba075_shuffled_b_1/predictions'],
+                  '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s2_vicon_proba075_shuffled_b_3/predictions'],
+                  '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s3_vicon_proba075_shuffled_b_2/predictions'],
+                  '4': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted/s4_vicon_proba075_shuffled_b_4/predictions'],
+                  'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/bovw_vicon_proba075_shuffled_b_2/predictions']}
+
+
+euroc_x_1_2_3_undistorted_p0_b0 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_0/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_0/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_0/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/baseline_p0_b_0/predictions']}
+
+euroc_x_1_2_3_undistorted_p0_b1 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_1/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_1/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_1/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/baseline_p0_b_1/predictions']}
+
+euroc_x_1_2_3_undistorted_p0_b2 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_2/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_2/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_2/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/baseline_p0_b_2/predictions']}
+
+euroc_x_1_2_3_undistorted_p0_b3 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_3/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_3/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_3/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/baseline_p0_b_3/predictions']}
+
+euroc_x_1_2_3_undistorted_p0_b4 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_4/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_4/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/baseline_p0_b_4/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/baseline_p0_b_4/predictions']}
+
+
+
+euroc_x_1_2_3_undistorted_p1_b0 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_0/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_0/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_0/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_student_b_0/predictions']}
+
+euroc_x_1_2_3_undistorted_p1_b1 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_1/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_1/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_1/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_student_b_1/predictions']}
+
+euroc_x_1_2_3_undistorted_p1_b2 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_2/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_2/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_2/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_student_b_2/predictions']}
+
+euroc_x_1_2_3_undistorted_p1_b3 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_3/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_3/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_3/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_student_b_3/predictions']}
+
+euroc_x_1_2_3_undistorted_p1_b4 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_4/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_4/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_student_b_4/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_student_b_4/predictions']}
+
+
+
+
+
+kitti_4_6_binocular_depth_p0_b0 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_0/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_0/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_0/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/baseline_p0_b_0/predictions']}
+
+kitti_4_6_binocular_depth_p0_b1 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_1/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_1/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_1/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/baseline_p0_b_1/predictions']}
+
+kitti_4_6_binocular_depth_p0_b2 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_2/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_2/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_2/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/baseline_p0_b_2/predictions']}
+
+kitti_4_6_binocular_depth_p0_b3 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_3/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_3/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_3/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/baseline_p0_b_3/predictions']}
+
+kitti_4_6_binocular_depth_p0_b4 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_4/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_4/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/baseline_s1_p0_b_4/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/baseline_p0_b_4/predictions']}
+
+
+
+kitti_4_6_binocular_depth_p1_b0 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_0/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_0/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_0/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_student_b_0/predictions']}
+
+kitti_4_6_binocular_depth_p1_b1 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_1/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_1/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_1/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_student_b_1/predictions']}
+
+kitti_4_6_binocular_depth_p1_b2 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_2/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_2/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_2/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_student_b_2/predictions']}
+
+kitti_4_6_binocular_depth_p1_b3 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_3/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_3/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_3/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_student_b_3/predictions']}
+
+kitti_4_6_binocular_depth_p1_b4 = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_4/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_4/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_student_b_4/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_student_b_4/predictions']}
+
+
+
+euroc_x_1_2_3_undistorted_p1_b0_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_0/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_0/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_0/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_normal_b_0/predictions']}
+
+euroc_x_1_2_3_undistorted_p1_b1_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_1/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_1/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_1/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_normal_b_1/predictions']}
+
+euroc_x_1_2_3_undistorted_p1_b2_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_2/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_2/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_2/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_normal_b_2/predictions']}
+
+euroc_x_1_2_3_undistorted_p1_b3_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_3/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_3/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_3/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_normal_b_3/predictions']}
+
+euroc_x_1_2_3_undistorted_p1_b4_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_4/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_4/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_undistorted_1_2_3/p1_normal_b_4/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/euroc_x_bovw_undistorted/p1_normal_b_4/predictions']}
+
+
+
+kitti_4_6_binocular_depth_p1_b0_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_0/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_0/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_0/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_normal_b_0/predictions']}
+
+kitti_4_6_binocular_depth_p1_b1_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_1/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_1/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_1/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_normal_b_1/predictions']}
+
+kitti_4_6_binocular_depth_p1_b2_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_2/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_2/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_2/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_normal_b_2/predictions']}
+
+kitti_4_6_binocular_depth_p1_b3_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_3/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_3/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_3/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_normal_b_3/predictions']}
+
+kitti_4_6_binocular_depth_p1_b4_student = {'1': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_4/predictions'],
+                                '2': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_4/predictions'],
+                                '3': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_binocular_depth/s1_p1_normal_b_4/predictions'],
+                                'loops': ['/Vol0/user/i.slynko/projects/odometry2/experiments/kitti_4_6_bovw_binocular_depth/p1_normal_b_4/predictions']}
+
+
+
+
 euroc_best_clr_depth = {'1': ['/Vol0/user/d.zhukov/Projects/odometry/experiments/euroc_x_sintel_g/flexible2_clr_s1_b_4/predictions'],
                   '2': ['/Vol0/user/d.zhukov/Projects/odometry/experiments/euroc_x_sintel_g/flexible2_clr_s2_b_1/predictions'],
                   '3': ['/Vol0/user/d.zhukov/Projects/odometry/experiments/euroc_x_sintel_g/flexible2_clr_s3_b_3/predictions'],

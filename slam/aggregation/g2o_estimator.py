@@ -88,6 +88,8 @@ class G2OEstimator(BaseEstimator):
 
         records = list()
         for i, (gt_trajectory, predicted_trajectory) in enumerate(zip(y, preds)):
+            predicted_trajectory.to_dataframe().to_csv(f'pred_{trajectory_names[i]}.csv')
+            gt_trajectory.to_dataframe().to_csv(f'gt_{trajectory_names[i]}.csv')
             record = calculate_metrics(gt_trajectory, predicted_trajectory, self.rpe_indices)
             if visualize:
                 trajectory_metrics_as_str = ', '.join([f'{key}: {value:.6f}' for key, value in record.items()])
