@@ -87,6 +87,13 @@ class BaseSlamRunner(BaseTrainer):
             mlflow.log_metrics(total_metrics)
 
     def run(self):
+        if self.use_mlflow:
+            self.client = mlflow.tracking.MlflowClient(self.tracking_uri)
+            mlflow.set_tracking_uri(self.tracking_uri)
+            self.set_experiment()
+            self.start_run()
+
+        self.set_run_dir()
 
         dataset = self.get_dataset()
 
