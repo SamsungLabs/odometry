@@ -109,7 +109,9 @@ class GridSearch(Search):
 
         log = pd.DataFrame()
         log = self.find_best_coef_loop(X_split, y_split, param_distributions, log)
+        print(log)
         log = self.find_best_coef(X_split, y_split, log)
+        print(log)
         log = self.find_best_rotation_scale(X_split, y_split, param_distributions, log)
         self.visualize(X, y, log, trajectory_names)
         return log
