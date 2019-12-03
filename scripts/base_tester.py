@@ -1,15 +1,8 @@
 import os
-import shutil
 import mlflow
-import datetime
-import argparse
 import re
-from functools import partial
-from pathlib import Path
 
-import env
-
-from slam.base_trainer import BaseTrainer
+from scripts.base_trainer import BaseTrainer
 from slam.models import PretrainedModelFactory
 from slam.evaluation import Predict, MlflowLogger
 from slam.preprocessing import DATASET_TYPES

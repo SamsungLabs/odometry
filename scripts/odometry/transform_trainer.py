@@ -1,12 +1,6 @@
-import os
-import mlflow
 from functools import partial
-from sklearn.model_selection import train_test_split
 
-import __init_path__
-import env
-
-from slam.base_trainer import BaseTrainer
+from scripts.base_trainer import BaseTrainer
 
 
 class TransformTrainer(BaseTrainer):

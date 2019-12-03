@@ -1,10 +1,6 @@
-import os
 from functools import partial
 
-import __init_path__
-import env
-
-from slam.base_trainer import BaseTrainer
+from scripts.base_trainer import BaseTrainer
 from slam.models import construct_sequential_rt_model
 from slam.linalg import Intrinsics
 

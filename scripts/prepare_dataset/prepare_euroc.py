@@ -1,24 +1,24 @@
-import argparse
 import os
 
 import __init_path__
 import env
 
-from slam.preprocessing import DatasetPreparator, get_default_dataset_parser
+from scripts.prepare_dataset.prepare_general import DatasetPreparator, get_default_dataset_parser
 
 
 if __name__ == '__main__':
     parser = get_default_dataset_parser()
     parser.add_argument('--dataset_root', type=str,
-                        default=os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012/dataset/sequences/'))
+                        default=os.path.join(env.DATASET_PATH, 'EuRoC')),
     args = parser.parse_args()
-    width = 320
-    height = 96
+    width = 188
+    height = 120
 
-    DatasetPreparator(dataset_type='KITTI',
+    DatasetPreparator(dataset_type='EuRoC',
                       dataset_root=args.dataset_root,
                       output_root=args.output_dir,
                       target_size=(height, width),
+                      undistort=True,
                       optical_flow_checkpoint=args.of_checkpoint,
                       stride=args.stride,
                       depth_checkpoint=args.depth_checkpoint if args.depth else None,

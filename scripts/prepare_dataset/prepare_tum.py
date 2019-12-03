@@ -1,10 +1,9 @@
-import argparse
 import os
 
 import __init_path__
 import env
 
-from slam.preprocessing import DatasetPreparator, get_default_dataset_parser
+from scripts.prepare_dataset.prepare_general import DatasetPreparator, get_default_dataset_parser
 
 
 if __name__ == '__main__':
