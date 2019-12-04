@@ -7,10 +7,9 @@ from multiprocessing import Pool
 
 import keras
 from pathlib import Path
-from keras import backend as K
 
 from slam.evaluation import calculate_metrics, average_metrics, normalize_metrics, calculate_loops_metrics
-from slam.linalg import RelativeTrajectory, GlobalTrajectory, convert
+from slam.linalg import RelativeTrajectory, convert
 from slam.utils import (visualize_trajectory_with_gt,
                         visualize_trajectory,
                         create_vis_file_path,

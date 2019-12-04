@@ -2,7 +2,6 @@ import sys
 from typing import Dict
 from pathlib import Path
 
-import __init_path__
 import env
 
 

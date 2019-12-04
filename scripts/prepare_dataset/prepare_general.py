@@ -13,8 +13,11 @@ from slam.preprocessing import parsers, estimators, prepare_trajectory
 
 def get_default_dataset_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output_dir', type=str, required=True)
-    parser.add_argument('--of_checkpoint', type=str,
+    parser.add_argument('--dataset_type', type=str, help='Base name of parser.')
+    parser.add_argument('--dataset_root', type=str)
+    parser.add_argument('--output_root', type=str, required=True)
+    parser.add_argument('--target_size', type=int, nargs='+', help='Size of images')
+    parser.add_argument('--optical_flow_checkpoint', '--of_checkpoint', type=str,
                         default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/pwcnet.ckpt-84000'))
     parser.add_argument('--depth', action='store_true')
     parser.add_argument('--depth_checkpoint', type=str,
@@ -23,11 +26,24 @@ def get_default_dataset_parser():
     parser.add_argument('--binocular_depth_checkpoint', type=str,
                         default=os.path.join(env.DATASET_PATH, 'Odometry_team/weights/pwcnet.ckpt-84000'))
     parser.add_argument('--stride', type=int, default=1)
-    parser.add_argument('--indices_root', type=str, default=None,
-                        help='Path to directory with same structure as dataset. In trajectory subdirectories stored'
-                             'df.csv files with new pair indices.')
-    parser.add_argument('--matches_threshold', default=None, type=int)
     parser.add_argument('--trajectories', default=None, type=str, nargs='+', help='Name of trajectories')
+    parser.add_argument('--relocalization', action='store_true')
+    parser.add_argument('--max_matches', default=20, type=str,
+                        help='Maximum number of matches that relocalization'
+                             'estimator can find')
+    parser.add_argument('--keyframe_period', default=2, type=int,
+                        help='Keyframe are considered as every N-th frame,'
+                             'where N is keyframe period.')
+    parser.add_argument('--matches_threshold', default=40, type=int,
+                        help='This threshold of matched keypoints number'
+                             'needed for additional check how good two'
+                             'images are matched.'
+                             'General rule of thumb:'
+                             '    for KITTI 30,'
+                             '    for TUM 40, '
+                             '    for EuRoC 40')
+    parser.add_argument('--relocalization_weights_path', type=str,
+                        help='Weights for relocalization model')
     return parser
 
 
@@ -38,37 +54,51 @@ class DatasetPreparator:
                  output_root,
                  target_size,
                  undistort=False,
+                 relocalization=False,
                  optical_flow_checkpoint=None,
+                 depth=False,
                  depth_checkpoint=None,
+                 binocular_depth=None,
                  binocular_depth_checkpoint=None,
                  pwc_features=False,
                  stride=1,
                  swap_angles=False,
-                 indices_root=None,
+                 trajectories=None,
+                 max_matches=None,
+                 keyframe_period=None,
                  matches_threshold=None,
-                 trajectories=None):
-
-        if indices_root:
-            assert matches_threshold is not None
+                 relocalization_weights_path=None):
 
         self.dataset_type = dataset_type
         self.dataset_root = dataset_root
         self.output_root = output_root
         self.target_size = target_size
         self.undistort = undistort
+        self.relocalization = relocalization
         self.optical_flow_checkpoint = optical_flow_checkpoint
-        self.depth_checkpoint = depth_checkpoint
-        self.binocular_depth_checkpoint = binocular_depth_checkpoint
+        self.depth_checkpoint = depth_checkpoint if depth else None
+        self.binocular_depth_checkpoint = binocular_depth_checkpoint if binocular_depth else None
         self.pwc_features = pwc_features
         self.stride = stride
         self.swap_angles = swap_angles
-        self.indices_root = indices_root
-        self.matches_threshold = matches_threshold
         self.trajectories = trajectories
+        self.matches_threshold = matches_threshold
+        self.max_matches = max_matches
+        self.keyframe_period = keyframe_period
+        self.relocalization_weights_path = relocalization_weights_path
 
     def _initialize_estimators(self):
 
         single_frame_estimators = []
+
+        if self.relocalization:
+            relocalization_estimator = estimators.RelocalizationEstimator(input_col='path_to_rgb',
+                                                                          knn=self.max_matches,
+                                                                          matches_threshold=self.matches_threshold,
+                                                                          keyframe_period=self.keyframe_period,
+                                                                          weights_path=self.relocalization_weights_path,
+                                                                          target_size=self.target_size)
+            single_frame_estimators.append(relocalization_estimator)
 
         quaternion2euler_estimator = estimators.Quaternion2EulerEstimator(input_col=['q_w', 'q_x', 'q_y', 'q_z'],
                                                                           output_col=['euler_x', 'euler_y', 'euler_z'])
@@ -131,7 +161,6 @@ class DatasetPreparator:
         return single_frame_estimators, pair_frames_estimators
 
     def _initialize_parser(self):
-        # TODO: this is madness. We must get rid off getattr
         return getattr(parsers, f'{self.dataset_type}Parser')
 
     def _set_logger(self):
@@ -162,8 +191,7 @@ class DatasetPreparator:
                               'target_size': self.target_size,
                               'stride': self.stride,
                               'binocular_depth_checkpoint': self.binocular_depth_checkpoint,
-                              'matches_num': self.matches_threshold,
-                              'indices_root': self.indices_root}
+                              'matches_num': self.matches_threshold}
             json.dump(dataset_config, f)
 
         if self.trajectories is None:
@@ -180,20 +208,13 @@ class DatasetPreparator:
                 trajectory_name = trajectory[len(self.dataset_root) + int(self.dataset_root[-1] != '/'):]
                 output_dir = self.output_root.joinpath(trajectory_name)
 
-                indices_path = os.path.join(self.indices_root, trajectory_name + '.csv') if self.indices_root else ''
-
-                if self.indices_root is not None and not os.path.exists(indices_path):
-                    raise RuntimeError(f'Indices file {indices_path} not found')
-
-                logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}.'
-                            f'Indices path: {indices_path}')
+                logger.info(f'Preparing: {trajectory}. Output directory: {output_dir.as_posix()}.')
 
                 df = prepare_trajectory(output_dir,
                                         parser=trajectory_parser,
                                         single_frame_estimators=sf_estimators,
                                         pair_frames_estimators=pf_estimators,
                                         stride=self.stride,
-                                        path_to_pair_indices=indices_path,
                                         matches_threshold=self.matches_threshold)
                 df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
 

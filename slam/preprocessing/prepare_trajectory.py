@@ -35,7 +35,11 @@ def work_with_parser(root, parser):
 def work_with_estimator(root, df, estimator):
     enriched_rows = []
     for index, row in tqdm.tqdm(df.iterrows(), total=len(df), desc='{:<20}'.format(estimator.name)):
-        enriched_rows.append(estimator.run(row, root))
+        predict = estimator.run(row, root)
+        if isinstance(predict, list):
+            enriched_rows.extend(predict)
+        else:
+            enriched_rows.append(predict)
     enriched_df = pd.DataFrame(enriched_rows)
     return enriched_df
 

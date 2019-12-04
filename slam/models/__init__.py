@@ -17,10 +17,6 @@ from .odometry import construct_sequential_rt_model
 
 from .relocalization import BoVW
 
-from .slam import DummySlam
-from .slam import GraphSlam
-from .slam import RSlam
-
 __all__ = [
     'PretrainedModelFactory',
     'ModelFactory',
@@ -37,8 +33,5 @@ __all__ = [
     'construct_multiscale_model',
     'construct_rigidity_model',
     'construct_sequential_rt_model',
-    'BoVW',
-    'DummySlam',
-    'GraphSlam',
-    'RSlam'
+    'BoVW'
 ]

@@ -7,22 +7,13 @@ from scripts.prepare_dataset.prepare_general import DatasetPreparator, get_defau
 
 
 if __name__ == '__main__':
-    parser = get_default_dataset_parser()
-    parser.add_argument('--dataset_root', type=str,
-                        default=os.path.join(env.DATASET_PATH, 'EuRoC')),
-    args = parser.parse_args()
     width = 188
     height = 120
-
-    DatasetPreparator(dataset_type='EuRoC',
-                      dataset_root=args.dataset_root,
-                      output_root=args.output_dir,
-                      target_size=(height, width),
-                      undistort=True,
-                      optical_flow_checkpoint=args.of_checkpoint,
-                      stride=args.stride,
-                      depth_checkpoint=args.depth_checkpoint if args.depth else None,
-                      binocular_depth_checkpoint=args.binocular_depth_checkpoint if args.binocular_depth else None,
-                      indices_root=args.indices_root,
-                      matches_threshold=args.matches_threshold,
-                      trajectories=args.trajectories).prepare()
+    parser = get_default_dataset_parser()
+    parser.set_defaults(dataset_type='EuRoC',
+                        dataset_root=os.path.join(env.DATASET_PATH, 'EuRoC'),
+                        target_size=(height, width),
+                        matches_threshold=40,
+                        relocalization_weights_path=os.path.join(env.PROJECT_PATH, 'weights', 'euroc_vocabulary.pkl'))
+    args = parser.parse_args()
+    DatasetPreparator(**vars(args)).prepare()
