@@ -15,6 +15,6 @@ if __name__ == '__main__':
                         dataset_root=os.path.join(env.DATASET_PATH, 'KITTI_odometry_2012/dataset/sequences/'),
                         target_size=(height, width),
                         matches_threshold=30,
-                        relocalization_weights_path=os.path.join(env.PROJECT_PATH, 'weights', 'kitti_vocabulary,pkl'))
+                        relocalization_weights_path=os.path.join(env.PROJECT_PATH, 'weights', 'kitti_vocabulary.pkl'))
     args = parser.parse_args()
     DatasetPreparator(**vars(args)).prepare()

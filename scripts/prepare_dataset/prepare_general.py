@@ -91,15 +91,6 @@ class DatasetPreparator:
 
         single_frame_estimators = []
 
-        if self.relocalization:
-            relocalization_estimator = estimators.RelocalizationEstimator(input_col='path_to_rgb',
-                                                                          knn=self.max_matches,
-                                                                          matches_threshold=self.matches_threshold,
-                                                                          keyframe_period=self.keyframe_period,
-                                                                          weights_path=self.relocalization_weights_path,
-                                                                          target_size=self.target_size)
-            single_frame_estimators.append(relocalization_estimator)
-
         quaternion2euler_estimator = estimators.Quaternion2EulerEstimator(input_col=['q_w', 'q_x', 'q_y', 'q_z'],
                                                                           output_col=['euler_x', 'euler_y', 'euler_z'])
         single_frame_estimators.append(quaternion2euler_estimator)
@@ -133,6 +124,17 @@ class DatasetPreparator:
                 sub_dir='binocular_depth',
                 checkpoint=self.binocular_depth_checkpoint)
             single_frame_estimators.append(binocular_depth_estimator)
+
+        if self.relocalization:
+            relocalization_estimator = estimators.RelocalizationEstimator(input_col='path_to_rgb',
+                                                                          output_col='from_index',
+                                                                          sub_dir='reloc',
+                                                                          knn=self.max_matches,
+                                                                          matches_threshold=self.matches_threshold,
+                                                                          keyframe_period=self.keyframe_period,
+                                                                          checkpoint=self.relocalization_weights_path,
+                                                                          target_size=self.target_size)
+            single_frame_estimators.append(relocalization_estimator)
 
         cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         input_col = cols + [col + '_next' for col in cols]
@@ -214,8 +216,7 @@ class DatasetPreparator:
                                         parser=trajectory_parser,
                                         single_frame_estimators=sf_estimators,
                                         pair_frames_estimators=pf_estimators,
-                                        stride=self.stride,
-                                        matches_threshold=self.matches_threshold)
+                                        stride=self.stride)
                 df.to_csv(output_dir.joinpath('df.csv').as_posix(), index=False)
 
                 counter += 1

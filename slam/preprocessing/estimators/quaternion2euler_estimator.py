@@ -1,8 +1,3 @@
-import os
-import shutil
-import copy
-import numpy as np
-
 from pyquaternion import Quaternion
 
 from .base_estimator import BaseEstimator
