@@ -19,6 +19,7 @@ class G2OEstimator(BaseEstimator):
                  verbose=False,
                  rpe_indices='full',
                  vis_dir=None,
+                 pred_dir=None,
                  **kwargs):
         self.coef = coef
         self.coef_loop = coef_loop
@@ -33,6 +34,11 @@ class G2OEstimator(BaseEstimator):
             self.vis_dir = vis_dir
             if not os.path.isdir(self.vis_dir):
                 os.mkdir(self.vis_dir)
+
+        if pred_dir is not None:
+            self.pred_dir = pred_dir
+            if not os.path.isdir(self.pred_dir):
+                os.mkdir(self.pred_dir)
 
     @property
     def mean_cols(self):
@@ -101,9 +107,14 @@ class G2OEstimator(BaseEstimator):
                                              predicted_trajectory=predicted_trajectory,
                                              file_path=file_path,
                                              title=trajectory_metrics_as_str)
+
+            if visualize and self.pred_dir is not None:
+                predicted_trajectory.to_dataframe().to_csv(os.path.join(self.pred_dir, f'{trajectory_names[i]}.csv'))
+
             print(f'Trajectory len: {len(gt_trajectory)}')
             for k, v in normalize_metrics(record).items():
                 print(f'>>>{k}: {v}')
+
             records.append(record)
 
         averaged_metrics = average_metrics(records)
