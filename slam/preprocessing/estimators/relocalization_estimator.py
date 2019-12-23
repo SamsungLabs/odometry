@@ -34,7 +34,7 @@ class RelocalizationEstimator(NetworkEstimator):
         self.frame_index = 0
 
         super(RelocalizationEstimator, self).__init__(ext='csv',
-                                                      name='RelocalizationEstimator',
+                                                      name='Relocalization',
                                                       *args,
                                                       **kwargs)
 
