@@ -54,11 +54,5 @@ def update_logs_on_train_end(cls, logs=None):
         logs = callback.on_train_end(logs) or logs
 
 
-def update_logs_on_train_end(cls, logs=None):
-    logs = logs or {}
-    for callback in cls.callbacks:
-        logs = callback.on_train_end(logs) or logs
-
-
 keras.callbacks.CallbackList.on_epoch_end = update_logs_on_epoch_end
 keras.callbacks.CallbackList.on_train_end = update_logs_on_train_end

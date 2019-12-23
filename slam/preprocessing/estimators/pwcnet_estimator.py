@@ -7,15 +7,16 @@ from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPT
 from submodules.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
 
 from .network_estimator import NetworkEstimator
-from slam.utils import resize_image, resize_image_arr
+from slam.utils import resize_image_arr
 
 
 class PWCNetEstimator(NetworkEstimator):
 
     def __init__(self, batch_size=1, *args, **kwargs):
         self.batch_size = batch_size
-        super(PWCNetEstimator, self).__init__(*args, **kwargs)
-        self.name = 'PWCNet'
+        super(PWCNetEstimator, self).__init__(name='PWCNet',
+                                              *args,
+                                              **kwargs)
 
     def get_nn_opts(self):
         nn_opts = copy.deepcopy(_DEFAULT_PWCNET_TEST_OPTIONS)
@@ -24,7 +25,7 @@ class PWCNetEstimator(NetworkEstimator):
         nn_opts['batch_size'] = self.batch_size
 
         devices = device_lib.list_local_devices()
-        gpus = [device for device in devices if device.device_type=='GPU']
+        gpus = [device for device in devices if device.device_type == 'GPU']
         device = (gpus if len(gpus) else devices)[0].name
 
         nn_opts['gpu_devices'] = [device]

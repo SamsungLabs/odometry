@@ -1,13 +1,8 @@
-import os
 import mlflow
 from sklearn.model_selection import train_test_split
 
-import __init_path__
-import env
-
-from slam.base_trainer import BaseTrainer
+from scripts.base_trainer import BaseTrainer
 from slam.models import ModelWithConfidenceFactory
-from slam.data_manager import GeneratorFactory
 
 
 class ConfidenceTrainer(BaseTrainer):

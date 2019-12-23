@@ -1,6 +1,6 @@
 import mlflow
 
-from slam.base_trainer import BaseTrainer
+from scripts.base_trainer import BaseTrainer
 from slam.evaluation import (calculate_metrics,
                              average_metrics,
                              normalize_metrics)

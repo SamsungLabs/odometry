@@ -1,7 +1,6 @@
 import os
 import shutil
 import tqdm
-import numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -41,19 +40,18 @@ def work_with_estimator(root, df, estimator):
 
 
 def create_pair_indices(single_frame_df, stride):
-    first_part_indices = range(len(single_frame_df) - stride)
-    second_part_indices = range(stride, len(single_frame_df))
+    if 'from_index' in single_frame_df.columns:
+        first_part_indices = []
+        second_part_indices = []
+        for index, row in single_frame_df.iterrows():
+            from_indices = row.from_index
+            first_part_indices.extend(from_indices)
+            second_part_indices.extend([index] * len(from_indices))
+    else:
+        first_part_indices = range(len(single_frame_df) - stride)
+        second_part_indices = range(stride, len(single_frame_df))
     assert len(first_part_indices) == len(second_part_indices)
     return zip(first_part_indices, second_part_indices)
-
-
-def load_pair_indices(path, matches_threshold):
-    df = pd.read_csv(path)
-    if 'matches_num' not in df.columns:
-        print('WARNING: matches_num not in df.columns')
-    if matches_threshold is not None and 'matches_num' in df.columns:
-        df = df[np.isnan(df['matches_num'].values) | (df['matches_num'] >= matches_threshold)]
-    return df[['from_index', 'to_index']].values
 
 
 def transform_single_frame_df_to_paired(single_frame_df, pair_indices=None):
@@ -68,9 +66,7 @@ def prepare_trajectory(root,
                        parser,
                        single_frame_estimators=None,
                        pair_frames_estimators=None,
-                       stride=1,
-                       path_to_pair_indices=None,
-                       matches_threshold=None):
+                       stride=1):
     assert stride >= 1
 
     if not isinstance(root, Path):
@@ -87,10 +83,7 @@ def prepare_trajectory(root,
     for estimator in single_frame_estimators:
         single_frame_df = work_with_estimator(root.as_posix(), single_frame_df, estimator)
 
-    if path_to_pair_indices and os.path.exists(path_to_pair_indices):
-        pair_indices = load_pair_indices(path_to_pair_indices, matches_threshold)
-    else:
-        pair_indices = create_pair_indices(single_frame_df, stride)
+    pair_indices = create_pair_indices(single_frame_df, stride)
 
     paired_frame_df = transform_single_frame_df_to_paired(single_frame_df, pair_indices)
 

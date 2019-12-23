@@ -1,7 +1,5 @@
-import os
-import shutil
-import copy
 import numpy as np
+import pandas as pd
 
 from .base_estimator import BaseEstimator
 from slam.linalg import (form_se3,
@@ -14,10 +12,11 @@ from slam.linalg import (form_se3,
 class Global2RelativeEstimator(BaseEstimator):
 
     def __init__(self, *args, **kwargs):
-        super(Global2RelativeEstimator, self).__init__(*args, **kwargs)
-        self.name = 'Global2Relative'
+        super(Global2RelativeEstimator, self).__init__(name='Global2Relative',
+                                                       *args,
+                                                       **kwargs)
 
-    def run(self, row, dataset_root):
+    def run(self, row: pd.Series, dataset_root: str):
 
         if not set(self.input_col) <= set(dict(row).keys()):
             return row

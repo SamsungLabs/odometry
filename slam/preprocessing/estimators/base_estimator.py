@@ -1,12 +1,17 @@
+import pandas as pd
+
+
 class BaseEstimator:
 
     def __init__(self,
                  input_col,
-                 output_col):
+                 output_col,
+                 ext='npy',
+                 name='Base'):
         self.input_col = input_col
         self.output_col = output_col
-        self.ext = 'npy'
-        self.name = 'Base'
+        self.ext = ext
+        self.name = name
 
     def _add_output(self, row, values):
         for key, value in zip(self.output_col, values):
@@ -18,7 +23,7 @@ class BaseEstimator:
             del row[key]
         return row
 
-    def run(self, row, dataset_root):
+    def run(self, row: pd.Series, dataset_root: str):
         pass
 
     def __repr__(self):

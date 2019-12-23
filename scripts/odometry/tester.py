@@ -1,9 +1,4 @@
-import os
-
-import __init_path__
-import env
-
-from slam.base_tester import BaseTester
+from scripts.base_tester import BaseTester
 
 
 if __name__ == '__main__':

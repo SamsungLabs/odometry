@@ -1,24 +1,12 @@
-import os
-import shutil
-import copy
-import tqdm
-import numpy as np
-
-import tensorflow as tf
-from tensorflow.python.client import device_lib
-
-from submodules.tfoptflow.tfoptflow.model_pwcnet import _DEFAULT_PWCNET_TEST_OPTIONS
-from submodules.tfoptflow.tfoptflow.model_pwcnet import ModelPWCNet as pwc_net
-
 from .pwcnet_estimator import PWCNetEstimator
-from slam.utils import resize_image
 
 
 class PWCNetFeatureExtractor(PWCNetEstimator):
 
     def __init__(self, *args, **kwargs):
-        super(PWCNetFeatureExtractor, self).__init__(*args, **kwargs)
-        self.name = 'PWCNetExtractor'
+        super(PWCNetFeatureExtractor, self).__init__(name='PWCNetExtractor',
+                                                     *args,
+                                                     **kwargs)
 
     def get_nn_opts(self):
         nn_opts = super(PWCNetFeatureExtractor, self).get_nn_opts()

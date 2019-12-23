@@ -1,19 +1,20 @@
 import numpy as np
 import tensorflow as tf
 
-from submodules.tf_models.research.struct2depth.model import Model as struct2depth_net
 from submodules.tf_models.research.struct2depth.nets import RESNET
+from submodules.tf_models.research.struct2depth.model import Model as struct2depth_net
 from submodules.tf_models.research.struct2depth.util import get_vars_to_save_and_restore
 
-from .network_estimator import NetworkEstimator
 from slam.utils import resize_image
+from .network_estimator import NetworkEstimator
 
 
 class Struct2DepthEstimator(NetworkEstimator):
 
     def __init__(self, *args, **kwargs):
-        super(Struct2DepthEstimator, self).__init__(*args, **kwargs)
-        self.name = 'Struct2Depth'
+        super(Struct2DepthEstimator, self).__init__(name='Struct2Depth',
+                                                    *args,
+                                                    **kwargs)
 
     def _load_model(self):
         assert self.input_size is not None

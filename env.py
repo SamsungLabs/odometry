@@ -19,7 +19,6 @@ warnings.simplefilter('ignore')
 TRACKING_URI = 'postgresql://odometry:YyXr9f8R@airuhead02:6432/slamdb'
 ARTIFACT_PATH = '/dbstore/datasets/robotics/mlflow/odometry/artifacts'
 mlflow.set_tracking_uri(TRACKING_URI)
-
 TUM_PATH = '/dbstore/datasets/Odometry_team/tum_rgbd/'
 TUM_BOVW_PATH = '/dbstore/datasets/Odometry_team/tum_bovw_p2/'
 TUM_SINTEL_PATH = '/dbstore/datasets/Odometry_team/tum_sintel_mixed/'

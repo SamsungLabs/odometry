@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 
 from .pwcnet_estimator import PWCNetEstimator
 
@@ -8,8 +9,9 @@ class BinocularDepthEstimator(PWCNetEstimator):
 
     def __init__(self, batch_size=1, *args, **kwargs):
         self.batch_size = batch_size
-        super().__init__(*args, **kwargs)
-        self.name = 'BinocularDepth'
+        super().__init__(name='BinocularDepth',
+                         *args,
+                         **kwargs)
 
     def _convert_model_output_to_prediction(self, optical_flow, row):
         final_optical_flow = super()._convert_model_output_to_prediction(optical_flow)
@@ -28,7 +30,7 @@ class BinocularDepthEstimator(PWCNetEstimator):
         filepath = row[self.input_col[0]]
         return '.'.join((os.path.splitext(os.path.basename(filepath))[0], self.ext))
 
-    def run(self, row, dataset_root):
+    def run(self, row: pd.Series, dataset_root: str):
         model_input = self._load_model_input(row[self.input_col[0:2]], dataset_root)
         prediction = self.predict(model_input, row)
         output_path = self._save_model_prediction(prediction[0], row, dataset_root)

@@ -1,22 +1,24 @@
 import os
 import numpy as np
+import pandas as pd
 import cv2
 
 from .network_estimator import NetworkEstimator
-from slam.utils import load_image, undistort_image, save_image
+from slam.utils import load_image, undistort_image
 
 
 class UndistortionEstimator(NetworkEstimator):
 
     def __init__(self, *args, **kwargs):
         kwargs = dict(checkpoint=None, **kwargs)
-        super().__init__(*args, **kwargs)
-        self.name = 'Undistortion'
+        super().__init__(name='Undistortion',
+                         *args,
+                         **kwargs)
 
     def _load_model(self):
         pass
 
-    def run(self, row, dataset_root):
+    def run(self, row: pd.Series, dataset_root: str):
         image_filepath = row[self.input_col[0]]
         image = load_image(os.path.join(dataset_root, image_filepath))
 

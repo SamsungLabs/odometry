@@ -12,6 +12,8 @@ from .binocular_depth_estimator import BinocularDepthEstimator
 
 from .undistortion_estimator import UndistortionEstimator
 
+from .relocalization_estimator import RelocalizationEstimator
+
 #from .senet_estimator import SENetEstimator
 
 
@@ -22,4 +24,5 @@ __all__ = [
     'PWCNetEstimator',
     'BinocularDepthEstimator',
     'UndistortionEstimator',
+    'RelocalizationEstimator'
 ]

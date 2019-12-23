@@ -1,9 +1,4 @@
-import os
-
-import __init_path__
-import env
-
-from slam.base_trainer import BaseTrainer
+from scripts.base_trainer import BaseTrainer
 from slam.models import construct_st_vo_model
 
 

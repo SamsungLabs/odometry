@@ -1,10 +1,7 @@
 import os
 import mlflow
 
-import __init_path__
-import env
-
-from slam.base_trainer import BaseTrainer
+from scripts.base_trainer import BaseTrainer
 from slam.models.relocalization import BoVW
 from slam.data_manager.generator_factory import GeneratorFactory
 

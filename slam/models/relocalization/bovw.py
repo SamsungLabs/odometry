@@ -1,4 +1,5 @@
 import cv2
+import copy
 import mlflow
 import pickle
 import numpy as np
@@ -44,6 +45,11 @@ class BoVW:
         self.matches = None
         self.counter = None
 
+        self.empty_predict = pd.DataFrame(columns=['to_db_index',
+                                                   'from_db_index',
+                                                   'to_index',
+                                                   'from_index',
+                                                   'matches_num'])
         self.clear()
 
         self.index_mapping = dict()
@@ -51,12 +57,6 @@ class BoVW:
         self.run_dir = run_dir
 
         self.min_descriptors_num = min_descriptors_num
-
-        self.empty_predict = pd.DataFrame(columns=['to_db_index',
-                                                   'from_db_index',
-                                                   'to_index',
-                                                   'from_index',
-                                                   'matches_num'])
 
     def fit(self, generator):
 
@@ -187,5 +187,5 @@ class BoVW:
     def clear(self):
         self.histograms = list()
         self.images = list()
-        self.matches = self.empty_predict
+        self.matches = copy.deepcopy(self.empty_predict)
         self.counter = 0
