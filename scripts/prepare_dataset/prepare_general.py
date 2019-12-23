@@ -188,12 +188,19 @@ class DatasetPreparator:
         parser_class = self._initialize_parser()
 
         with open(self.output_root.joinpath('prepare_dataset.json').as_posix(), mode='w+') as f:
-            dataset_config = {'depth_checkpoint': self.depth_checkpoint,
+            dataset_config = {'dataset_root': self.dataset_root,
+                              'undistort': self.undistort,
+                              'relocalization': self.relocalization,
+                              'pwc_features': self.pwc_features,
+                              'swap_angles': self.swap_angles,
+                              'depth_checkpoint': self.depth_checkpoint,
                               'optical_flow_checkpoint': self.optical_flow_checkpoint,
                               'target_size': self.target_size,
                               'stride': self.stride,
                               'binocular_depth_checkpoint': self.binocular_depth_checkpoint,
-                              'matches_num': self.matches_threshold}
+                              'relocalization_checkpoint': self.relocalization_weights_path,
+                              'matches_num': self.matches_threshold,
+                              'keyframe_period': self.keyframe_period}
             json.dump(dataset_config, f)
 
         if self.trajectories is None:
