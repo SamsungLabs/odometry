@@ -8,8 +8,9 @@ from slam.linalg import convert_rotation_matrix_to_euler_angles
 class Quaternion2EulerEstimator(BaseEstimator):
 
     def __init__(self, *args, **kwargs):
-        super(Quaternion2EulerEstimator, self).__init__(*args, **kwargs)
-        self.name = 'Quaternion2Euler'
+        super(Quaternion2EulerEstimator, self).__init__(name='Quaternion2Euler',
+                                                        *args,
+                                                        **kwargs)
 
     def run(self, row: pd.Series, dataset_root: str):
         if not set(self.input_col) <= set(dict(row).keys()):

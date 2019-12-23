@@ -4,8 +4,9 @@ from .pwcnet_estimator import PWCNetEstimator
 class PWCNetFeatureExtractor(PWCNetEstimator):
 
     def __init__(self, *args, **kwargs):
-        super(PWCNetFeatureExtractor, self).__init__(*args, **kwargs)
-        self.name = 'PWCNetExtractor'
+        super(PWCNetFeatureExtractor, self).__init__(name='PWCNetExtractor',
+                                                     *args,
+                                                     **kwargs)
 
     def get_nn_opts(self):
         nn_opts = super(PWCNetFeatureExtractor, self).get_nn_opts()

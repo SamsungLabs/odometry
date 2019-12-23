@@ -12,8 +12,9 @@ from slam.linalg import (form_se3,
 class Global2RelativeEstimator(BaseEstimator):
 
     def __init__(self, *args, **kwargs):
-        super(Global2RelativeEstimator, self).__init__(*args, **kwargs)
-        self.name = 'Global2Relative'
+        super(Global2RelativeEstimator, self).__init__(name='Global2Relative',
+                                                       *args,
+                                                       **kwargs)
 
     def run(self, row: pd.Series, dataset_root: str):
 

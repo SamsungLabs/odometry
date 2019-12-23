@@ -11,8 +11,9 @@ class UndistortionEstimator(NetworkEstimator):
 
     def __init__(self, *args, **kwargs):
         kwargs = dict(checkpoint=None, **kwargs)
-        super().__init__(*args, **kwargs)
-        self.name = 'Undistortion'
+        super().__init__(name='Undistortion',
+                         *args,
+                         **kwargs)
 
     def _load_model(self):
         pass

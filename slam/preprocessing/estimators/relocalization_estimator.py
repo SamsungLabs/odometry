@@ -33,19 +33,15 @@ class RelocalizationEstimator(NetworkEstimator):
 
         self.frame_index = 0
 
-        super(RelocalizationEstimator, self).__init__(*args, **kwargs)
-        self.ext = 'csv'
-        self.name = 'RelocalizationEstimator'
-
-    def init(self, image):
-        self.last_frame = image
-        self.last_keyframe = image
-
-        self.reloc_model.add(self.last_keyframe, 0)
-        self.frame_index = 1
+        super(RelocalizationEstimator, self).__init__(ext='csv',
+                                                      name='RelocalizationEstimator',
+                                                      *args,
+                                                      **kwargs)
 
     def _load_model(self):
-        self.reloc_model = BoVW(knn=self.knn, matches_threshold=self.matches_threshold, matcher_type=self.matcher_type)
+        self.reloc_model = BoVW(knn=self.knn,
+                                matches_threshold=self.matches_threshold,
+                                matcher_type=self.matcher_type)
         self.reloc_model.load(self.checkpoint)
         self.keyframe_selector = self._get_keyframe_selector()
 
@@ -55,7 +51,11 @@ class RelocalizationEstimator(NetworkEstimator):
 
     def _run_model_inference(self, model_input):
         if self.frame_index == 0:
-            self.init(model_input)
+            self.last_frame = model_input
+            self.last_keyframe = model_input
+
+            self.reloc_model.add(self.last_keyframe, 0)
+            self.frame_index = 1
             return pd.DataFrame({'to_index': [], 'from_index': []})
 
         matches = pd.DataFrame({'to_index': [self.frame_index], 'from_index': [self.frame_index - 1]})

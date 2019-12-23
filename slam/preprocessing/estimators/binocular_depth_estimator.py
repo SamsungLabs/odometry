@@ -9,8 +9,9 @@ class BinocularDepthEstimator(PWCNetEstimator):
 
     def __init__(self, batch_size=1, *args, **kwargs):
         self.batch_size = batch_size
-        super().__init__(*args, **kwargs)
-        self.name = 'BinocularDepth'
+        super().__init__(name='BinocularDepth',
+                         *args,
+                         **kwargs)
 
     def _convert_model_output_to_prediction(self, optical_flow, row):
         final_optical_flow = super()._convert_model_output_to_prediction(optical_flow)

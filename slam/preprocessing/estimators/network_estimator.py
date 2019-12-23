@@ -14,8 +14,13 @@ class NetworkEstimator(BaseEstimator):
                  checkpoint,
                  sub_dir,
                  input_size=None,
-                 target_size=None):
-        super(NetworkEstimator, self).__init__(input_col, output_col)
+                 target_size=None,
+                 name='Network',
+                 ext='npy'):
+        super(NetworkEstimator, self).__init__(input_col=input_col,
+                                               output_col=output_col,
+                                               ext=ext,
+                                               name=name)
 
         self.input_size = input_size
         self.target_size = target_size
@@ -24,8 +29,6 @@ class NetworkEstimator(BaseEstimator):
 
         self.checkpoint = checkpoint
         self._load_model()
-
-        self.name = 'Network'
 
     def _load_model(self):
         raise NotImplementedError

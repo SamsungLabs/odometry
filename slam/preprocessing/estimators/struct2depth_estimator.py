@@ -12,8 +12,9 @@ from .network_estimator import NetworkEstimator
 class Struct2DepthEstimator(NetworkEstimator):
 
     def __init__(self, *args, **kwargs):
-        super(Struct2DepthEstimator, self).__init__(*args, **kwargs)
-        self.name = 'Struct2Depth'
+        super(Struct2DepthEstimator, self).__init__(name='Struct2Depth',
+                                                    *args,
+                                                    **kwargs)
 
     def _load_model(self):
         assert self.input_size is not None

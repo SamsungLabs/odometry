@@ -14,8 +14,9 @@ class PWCNetEstimator(NetworkEstimator):
 
     def __init__(self, batch_size=1, *args, **kwargs):
         self.batch_size = batch_size
-        super(PWCNetEstimator, self).__init__(*args, **kwargs)
-        self.name = 'PWCNet'
+        super(PWCNetEstimator, self).__init__(name='PWCNet',
+                                              *args,
+                                              **kwargs)
 
     def get_nn_opts(self):
         nn_opts = copy.deepcopy(_DEFAULT_PWCNET_TEST_OPTIONS)
