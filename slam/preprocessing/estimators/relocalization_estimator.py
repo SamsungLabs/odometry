@@ -1,11 +1,10 @@
-import numpy as np
 import os
 import pandas as pd
 from slam.models import BoVW
-from slam.keyframe_selector import CounterKeyFrameSelector
 
+from slam.utils import load_image_arr
 from .network_estimator import NetworkEstimator
-from slam.utils import load_image_arr, resize_image_arr
+from slam.keyframe_selector import CounterKeyFrameSelector
 
 
 class RelocalizationEstimator(NetworkEstimator):
@@ -58,6 +57,7 @@ class RelocalizationEstimator(NetworkEstimator):
         if self.frame_index == 0:
             self.init(model_input)
             return pd.DataFrame({'to_index': [], 'from_index': []})
+
         matches = pd.DataFrame({'to_index': [self.frame_index], 'from_index': [self.frame_index - 1]})
         new_key_frame = self.keyframe_selector.is_key_frame(self.last_keyframe, model_input, self.frame_index)
         if new_key_frame:

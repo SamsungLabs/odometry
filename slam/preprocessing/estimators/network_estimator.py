@@ -1,8 +1,9 @@
 import os
 import numpy as np
+import pandas as pd
 
-from .base_estimator import BaseEstimator
 from slam.utils import load_image
+from .base_estimator import BaseEstimator
 
 
 class NetworkEstimator(BaseEstimator):
@@ -61,7 +62,7 @@ class NetworkEstimator(BaseEstimator):
     def _run_model_inference(self, model_input):
         raise NotImplementedError
 
-    def run(self, row, dataset_root):
+    def run(self, row: pd.Series, dataset_root: str):
         model_input = self._load_model_input(row, dataset_root)
         prediction = self.predict(model_input)
         output_path = self._save_model_prediction(prediction[0], row, dataset_root)

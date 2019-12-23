@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 class BaseEstimator:
 
     def __init__(self,
@@ -18,7 +21,7 @@ class BaseEstimator:
             del row[key]
         return row
 
-    def run(self, row, dataset_root):
+    def run(self, row: pd.Series, dataset_root: str):
         pass
 
     def __repr__(self):
