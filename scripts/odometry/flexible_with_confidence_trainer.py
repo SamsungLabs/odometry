@@ -1,3 +1,5 @@
+import __init_path__
+
 import os
 from functools import partial
 

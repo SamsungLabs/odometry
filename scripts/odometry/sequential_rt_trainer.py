@@ -1,3 +1,5 @@
+import __init_path__
+
 from functools import partial
 
 from scripts.base_trainer import BaseTrainer

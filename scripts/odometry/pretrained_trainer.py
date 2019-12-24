@@ -1,3 +1,5 @@
+import __init_path__
+
 from scripts.base_trainer import BaseTrainer
 from slam.models import PretrainedModelFactory
 

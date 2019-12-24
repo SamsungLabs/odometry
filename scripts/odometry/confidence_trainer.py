@@ -1,3 +1,5 @@
+import __init_path__
+
 import mlflow
 from sklearn.model_selection import train_test_split
 
