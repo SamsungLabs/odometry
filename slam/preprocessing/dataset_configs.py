@@ -7,9 +7,10 @@ import env
 
 DATASET_PATHS = {'kitti_8/3': env.KITTI_MIXED_PATH,
                  'kitti_4/6': env.KITTI_MIXED_PATH,
-                 'kitti_4/6_mixed': env.KITTI_MIXED_PATH,
-                 'kitti_4/6_mixed_1+2+4': env.KITTI_MIXED_PATH,
                  'kitti_4/6_bovw': env.KITTI_BOVW_PATH,
+                 'kitti_4/6_mixed': env.KITTI_MIXED_PATH,
+                 'kitti_4/6_bovw_mixed': env.KITTI_BOVW_PATH,
+                 'kitti_4/6_mixed_1+2+4': env.KITTI_MIXED_PATH,
                  'kitti_4_6_binocular_depth': env.KITTI_BINOCULAR_DEPTH_MIXED_PATH,
                  'kitti_4_6_bovw_binocular_depth': env.KITTI_BINOCULAR_DEPTH_BOVW_PATH,
                  'kitti_4/6_binocular_depth': env.KITTI_BINOCULAR_DEPTH_MIXED_PATH,
@@ -363,6 +364,7 @@ def get_euroc_x_undistorted_config(dataset_root, stride):
 def get_euroc_x_undistorted_1_2_3_config(dataset_root, stride):
     return get_euroc_x_mixed_1_2_3_config(dataset_root, stride, pwc_mode='sintel_g')
 
+
 def get_euroc_x_bovw_undistorted_config(dataset_root, _stride):
     config = get_euroc_x_config(dataset_root, None)
     config['exp_name'] = 'euroc_x_bovw_undistorted'
@@ -407,7 +409,19 @@ def get_kitti_4_6_config(_dataset_root, stride):
                                    '06',
                                    '07',
                                    '10'],
-              'test_trajectories': None,
+              # It is possible to set 'test_trajectories': None, to skip test
+              'test_trajectories': ['11',
+                                    '12',
+                                    '13',
+                                    '14',
+                                    '15',
+                                    '16',
+                                    '17',
+                                    '18',
+                                    '19',
+                                    '20',
+                                    '21'],
+
               'exp_name': exp_name,
               'target_size': (96, 320),
               'depth_multiplicator': 1.0,
@@ -417,6 +431,12 @@ def get_kitti_4_6_config(_dataset_root, stride):
               'test_strides': stride or 1,
               }
     config = add_stride_to_path(config, stride)
+    return config
+
+
+def get_kitti_4_6_bovw_config(dataset, _stride):
+    config = get_kitti_4_6_config(dataset, None)
+    config['exp_name'] = 'kitti_4/6_bovw'
     return config
 
 
@@ -435,7 +455,18 @@ def get_kitti_4_6_mixed_config(_dataset_root, _stride):
                                    '1/06',
                                    '1/07',
                                    '1/10'],
-              'test_trajectories': None,
+              # It is possible to set 'test_trajectories': None, to skip test
+              'test_trajectories': ['1/11',
+                                    '1/12',
+                                    '1/13',
+                                    '1/14',
+                                    '1/15',
+                                    '1/16',
+                                    '1/17',
+                                    '1/18',
+                                    '1/19',
+                                    '1/20',
+                                    '1/21'],
               'exp_name': 'kitti_4/6_mixed',
               'target_size': (96, 320),
               'depth_multiplicator': 1.0,
@@ -443,6 +474,12 @@ def get_kitti_4_6_mixed_config(_dataset_root, _stride):
               }
 
     config = gen_strides_from_path(config)
+    return config
+
+
+def get_kitti_4_6_bovw_mixed_config(dataset, _stride):
+    config = get_kitti_4_6_mixed_config(dataset, None)
+    config['exp_name'] = 'kitti_4/6_bovw_mixed'
     return config
 
 
@@ -465,7 +502,18 @@ def get_kitti_4_6_mixed_1_2_4_config(_dataset_root, _stride):
                                    '1/06',
                                    '1/07',
                                    '1/10'],
-              'test_trajectories': None,
+              # It is possible to set 'test_trajectories': None, to skip test
+              'test_trajectories': ['1/11',
+                                    '1/12',
+                                    '1/13',
+                                    '1/14',
+                                    '1/15',
+                                    '1/16',
+                                    '1/17',
+                                    '1/18',
+                                    '1/19',
+                                    '1/20',
+                                    '1/21'],
               'exp_name': 'kitti_4/6_mixed_1+2+4',
               'target_size': (96, 320),
               'depth_multiplicator': 1.0,
@@ -473,12 +521,6 @@ def get_kitti_4_6_mixed_1_2_4_config(_dataset_root, _stride):
               }
 
     config = gen_strides_from_path(config)
-    return config
-
-
-def get_kitti_4_6_bovw_config(dataset, _stride):
-    config = get_kitti_4_6_config(dataset, None)
-    config['exp_name'] = 'kitti_4/6_bovw'
     return config
 
 
