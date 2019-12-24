@@ -19,6 +19,9 @@ DATASET_PATHS = {'kitti_8/3': env.KITTI_MIXED_PATH,
                  'kitti_4/6_bovw_T': env.KITTI_T_BOVW_PATH,
                  'kitti_4/6_T_mixed': env.KITTI_T_MIXED_PATH,
                  'kitti_4/6_bovw_T_mixed': env.KITTI_T_BOVW_PATH,
+                 'kitti_contest': env.KITTI_T_MIXED_PATH,
+                 'kitti_contest_bovw': env.KITTI_T_BOVW_PATH,
+                 'kitti_contest_mixed': env.KITTI_T_MIXED_PATH,
                  'discoman_v10': env.DISCOMAN_V10_PATH,
                  'discoman_v10_mixed': env.DISCOMAN_V10_MIXED_PATH,
                  'discoman_v10_bovw': env.DISCOMAN_V10_BOVW_PATH,
@@ -525,6 +528,70 @@ def get_kitti_4_6_T_mixed_config(dataset_root, stride):
 def get_kitti_4_6_bovw_T_mixed_config(dataset, _stride):
     config = get_kitti_4_6_mixed_config(dataset, None)
     config['exp_name'] = 'kitti_4/6_bovw_T_mixed'
+    return config
+
+
+def get_kitti_contest_config(_dataset_root, stride):
+    exp_name = 'kitti_contest'
+    if stride is not None and stride > 1:
+        exp_name += f'_stride{stride}'
+    config = {'train_trajectories': ['00',
+                                     '02',
+                                     '03',
+                                     '04',
+                                     '06',
+                                     '07',
+                                     '08',
+                                     '09',
+                                     '10'],
+              'val_trajectories': ['05'],
+              'test_trajectories': None,
+              'exp_name': exp_name,
+              'target_size': (96, 320),
+              'depth_multiplicator': 1.0,
+              'rpe_indices': 'kitti',
+              'train_strides': stride or 1,
+              'val_strides': stride or 1,
+              'test_strides': stride or 1,
+              }
+    config = add_stride_to_path(config, stride)
+    return config
+
+
+def get_kitti_contest_bovw_config(dataset, _stride):
+    config = get_kitti_contest_config(dataset, None)
+    config['exp_name'] = 'kitti_contest_bovw'
+    return config
+
+
+def get_kitti_contest_mixed_config(_dataset_root, _stride):
+    config = {'train_trajectories': ['1/00',
+                                     '1/02',
+                                     '1/03',
+                                     '1/04',
+                                     '1/06',
+                                     '1/07',
+                                     '1/08',
+                                     '1/09',
+                                     '1/10',
+                                     '2/00',
+                                     '2/02',
+                                     '2/03',
+                                     '2/04',
+                                     '2/06',
+                                     '2/07',
+                                     '2/08',
+                                     '2/09',
+                                     '2/10'],
+              'val_trajectories': ['1/05'],
+              'test_trajectories': None,
+              'exp_name': 'kitti_contest_mixed',
+              'target_size': (96, 320),
+              'depth_multiplicator': 1.0,
+              'rpe_indices': 'kitti',
+              }
+
+    config = gen_strides_from_path(config)
     return config
 
 
