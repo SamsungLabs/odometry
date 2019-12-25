@@ -84,7 +84,8 @@ class BaseTrainer:
 
         self.x_col = None
 
-        if predict_only:
+        self.predict_only = predict_only
+        if self.predict_only:
             self.y_col = []
             self.evaluate = False
         else:

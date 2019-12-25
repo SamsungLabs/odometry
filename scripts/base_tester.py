@@ -71,6 +71,10 @@ class BaseTester(BaseTrainer):
             setattr(self, attr_name, value)
             print(f'Set {attr_name}:={value}')
 
+        if self.predict_only:
+            self.y_col = []
+            self.evaluate = False
+
         self.agnostic = self.get_value(run_data, key='params.model.agnostic', default=True)
 
         self.model_name = self.get_value(run_data, key='params.model.name', default='Unknown')
