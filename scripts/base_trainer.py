@@ -42,7 +42,8 @@ class BaseTrainer:
                  max_frame_ind_diff=float('inf'),
                  train_generator_args=None,
                  val_generator_args=None,
-                 test_generator_args=None):
+                 test_generator_args=None,
+                 predict_only=False):
 
         self.tracking_uri = env.TRACKING_URI
         self.artifact_path = env.ARTIFACT_PATH
@@ -82,7 +83,14 @@ class BaseTrainer:
         self.scale_rotation = None
 
         self.x_col = None
-        self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+
+        if predict_only:
+            self.y_col = []
+            self.evaluate = False
+        else:
+            self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+            self.evaluate = True
+
         self.image_col = None
         self.load_mode = None
         self.preprocess_mode = None
@@ -314,6 +322,7 @@ class BaseTrainer:
         self.fit_generator(model=self.model,
                            dataset=dataset,
                            epochs=self.epochs,
+                           evaluate=self.evaluate,
                            save_metric='val_RPE_t')
 
         if self.use_mlflow:
@@ -367,5 +376,8 @@ class BaseTrainer:
                             help='Minimum allowed stride between frames.')
         parser.add_argument('--max_frame_ind_diff', type=float, default=float('inf'),
                             help='Maximum allowed stride between frames.')
+
+        parser.add_argument('--predict_only', action='store_true',
+                            help='If true predicts output without metric evaluation')
 
         return parser

@@ -115,6 +115,33 @@ class GeneratorFactory:
                 mlflow.log_param('depth_checkpoint', None)
                 mlflow.log_param('optical_flow_checkpoint', None)
 
+    def transform_to_camera_coordinate_system(self, current_df):
+        assert current_df['T_body_cam'].nunique() == 1
+
+        if not (set(self.dof_col) <= set(current_df.columns)):
+            return current_df
+
+        T_body_cam_as_str = current_df['T_body_cam'].values[0]
+        T_body_cam = np.array(re.sub(r'\n|\[|\]', '', T_body_cam_as_str).strip().split(), dtype=float)
+        T_body_cam = T_body_cam.reshape((4, 4))
+        T_cam_body = np.linalg.inv(T_body_cam)
+
+        current_df['T_body_cam'] = [T_body_cam] * len(current_df)
+        current_df['T_cam_body'] = [T_cam_body] * len(current_df)
+
+        for index, row in current_df.iterrows():
+            dofs = row[self.dof_col].values
+            current_df.loc[index, self.dof_col] = convert(dofs, T=T_body_cam)
+            dofs_converted_back = convert(current_df.loc[index, self.dof_col].values, T=T_cam_body)
+            assert np.allclose(np.array(dofs).astype(float), dofs_converted_back)
+
+        return current_df
+
+    def set_samples_weights(self, current_df):
+        current_df[self.weight_col] = current_df.apply(self.weight_fn, axis=1)
+        current_df[self.weight_col] /= current_df[self.weight_col].mean()
+        return current_df
+
     def _get_multi_df_dataset(self, trajectories, subset, strides=1):
         df = None
         df_as_is = None
@@ -134,26 +161,12 @@ class GeneratorFactory:
 
             current_df['trajectory_id'] = trajectory_name
             current_df['stride'] = stride
+
             if self.weight_col:
-                current_df[self.weight_col] = current_df.apply(self.weight_fn, axis=1)
-                current_df[self.weight_col] /= current_df[self.weight_col].mean()
+                current_df = self.set_samples_weights(current_df)
 
             if 'T_body_cam' in current_df.columns:
-                assert current_df['T_body_cam'].nunique() == 1
-
-                T_body_cam_as_str = current_df['T_body_cam'].values[0]
-                T_body_cam = np.array(re.sub(r'\n|\[|\]', '', T_body_cam_as_str).strip().split(), dtype=float)
-                T_body_cam = T_body_cam.reshape((4, 4))
-                T_cam_body = np.linalg.inv(T_body_cam)
-
-                current_df['T_body_cam'] = [T_body_cam] * len(current_df)
-                current_df['T_cam_body'] = [T_cam_body] * len(current_df)
-
-                for index, row in current_df.iterrows():
-                    dofs = row[self.dof_col].values
-                    current_df.loc[index, self.dof_col] = convert(dofs, T=T_body_cam)
-                    dofs_converted_back = convert(current_df.loc[index, self.dof_col].values, T=T_cam_body)
-                    assert np.allclose(np.array(dofs).astype(float), dofs_converted_back)
+                current_df = self.transform_to_camera_coordinate_system(current_df)
 
             df = current_df if df is None else df.append(current_df, sort=False)
 
