@@ -300,7 +300,7 @@ class Predict(keras.callbacks.Callback):
             self.template = 'final'
 
         reuse = ((self.epochs_since_last_predict == 0 and self.last_prediction_id is not None)
-                 or not self.evaluate)
+                 or (not self.evaluate and self.last_logs is not None))
         if reuse:
             logs = self.last_logs
             final_prediction_id = self.template.format(epoch=self.epoch, **logs)
