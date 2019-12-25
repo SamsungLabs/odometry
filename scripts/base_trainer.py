@@ -198,9 +198,10 @@ class BaseTrainer:
                                 placeholder=self.placeholder,
                                 min_frame_ind_diff=self.min_frame_ind_diff,
                                 max_frame_ind_diff=self.max_frame_ind_diff,
-                                train_generator_args = self.train_generator_args,
-                                val_generator_args = self.val_generator_args,
-                                test_generator_args = self.test_generator_args,
+                                train_generator_args=self.train_generator_args,
+                                val_generator_args=self.val_generator_args,
+                                test_generator_args=self.test_generator_args,
+                                evaluate_generator=not self.evaluate
                                 )
 
     def get_model_factory(self, input_shapes):
