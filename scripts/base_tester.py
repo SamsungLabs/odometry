@@ -134,13 +134,20 @@ class BaseTester(BaseTrainer):
     def get_model_factory(self, input_shapes):
         return PretrainedModelFactory(pretrained_path=self.pretrained_path)
 
-    def get_callbacks(self, model, dataset, evaluate=True, save_dir=None, prefix=None):
+    def get_callbacks(self,
+                      model,
+                      dataset,
+                      evaluate=True,
+                      save_dir=None,
+                      prefix=None,
+                      save_metric='val_loss'):
         callbacks = []
 
         save_dir = os.path.join(self.run_dir, save_dir or '.')
         predict_callback = Predict(model=model,
                                    dataset=dataset,
                                    save_dir=save_dir,
+                                   monitor=save_metric,
                                    period=1,
                                    evaluate=evaluate,
                                    save_best_only=False,
