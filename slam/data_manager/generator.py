@@ -71,6 +71,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                  augment_with_rectangle_proba=0,
                  augment_with_rectangle_mode='constant',
                  epochs=100,
+                 evaluate_generator=False,
                  **kwargs):
 
         if target_size == -1:
@@ -108,7 +109,11 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
         self.x_cols = [x_col] if isinstance(x_col, str) else x_col.copy()
         self.y_cols = [y_col] if isinstance(y_col, str) else y_col.copy()
-        assert (set(self.x_cols) | set(self.y_cols)) <= set(self.df.columns)
+
+        self.evaluate_generator = evaluate_generator
+        assert set(self.x_cols) <= set(self.df.columns)
+        if not self.evaluate_generator:
+            assert set(self.y_cols) <= set(self.df.columns)
 
         self.return_cols = self.y_cols[:]
 
@@ -342,7 +347,10 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
 
     def _get_batches_of_transformed_samples(self, index_array):
         batch_x = self._init_batch(self.x_cols, index_array)
-        batch_y = self._init_batch(self.y_cols, index_array, add_placeholder=len(self.placeholder) > 0)
+        if self.evaluate_generator:
+            batch_y = None
+        else:
+            batch_y = self._init_batch(self.y_cols, index_array, add_placeholder=len(self.placeholder) > 0)
         batch_w = self._init_batch(self.w_cols, index_array)
 
         generate_flow_by_rt_proba = self.generate_flow_by_rt_proba_fn(self.batches_seen)
@@ -379,7 +387,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                         targets_row_index = np.random.randint(len(self.df))
                         dofs = self.df_dofs.iloc[targets_row_index].values
                     else:
-                        raise f'{self.generate_distribution} generate_distribution is not supported'
+                        raise RuntimeError(f'{self.generate_distribution} generate_distribution is not supported')
 
                     rotation_vector, translation_vector = dofs[:3], dofs[3:]
 
@@ -408,16 +416,20 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
                         noise = np.random.uniform(-0.1, 0.1)
                         image_arr[y_dst:y_dst + h, x_dst:x_dst + w] = rectangle_src + noise
 
-                    for dof_name, dof_value in zip(self.dof_cols, dofs):
-                        batch_y[self.y_cols.index(dof_name)][index_in_batch] = dof_value
+                    if not self.evaluate_generator:
+                        for dof_name, dof_value in zip(self.dof_cols, dofs):
+                            batch_y[self.y_cols.index(dof_name)][index_in_batch] = dof_value
 
                 if col in self.x_cols:
                     batch_x[self.x_cols.index(col)][index_in_batch] = image_arr
-                if col in self.y_cols:
+
+                if not self.evaluate_generator and col in self.y_cols:
                     batch_y[self.y_cols.index(col)][index_in_batch] = image_arr
 
         batch_x = [features[valid_samples] for features in batch_x]
-        batch_y = [target[valid_samples] for target in batch_y]
+
+        if not self.evaluate_generator:
+            batch_y = [target[valid_samples] for target in batch_y]
 
         if np.sum(valid_samples) < 0.5 * len(index_array):
             print('Batch is too small: {} samples'.format(np.sum(valid_samples)))
@@ -425,10 +437,15 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.batches_seen += 1
 
         if batch_w:
+            if batch_w and self.evaluate_generator:
+                raise RuntimeError('Can not output batch_w without batch_y')
             batch_w = [batch_w[0][valid_samples] for target in batch_y]
             return batch_x, batch_y, batch_w
         else:
-            return batch_x, batch_y
+            if self.evaluate_generator:
+                return batch_x
+            else:
+                return batch_x, batch_y
 
     def next(self):
         """For python 2.x.

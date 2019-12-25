@@ -86,12 +86,11 @@ class BaseTrainer:
 
         self.predict_only = predict_only
         if self.predict_only:
-            self.y_col = []
             self.evaluate = False
         else:
-            self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
             self.evaluate = True
 
+        self.y_col = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         self.image_col = None
         self.load_mode = None
         self.preprocess_mode = None
@@ -201,7 +200,8 @@ class BaseTrainer:
                                 max_frame_ind_diff=self.max_frame_ind_diff,
                                 train_generator_args = self.train_generator_args,
                                 val_generator_args = self.val_generator_args,
-                                test_generator_args = self.test_generator_args)
+                                test_generator_args = self.test_generator_args,
+                                )
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,
