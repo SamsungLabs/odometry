@@ -1,4 +1,4 @@
-# Deep_SLAM (STAR-MOS)
+# Deep_SLAM (SAIC-MOS)
 
 SLAM based on deep learning odometry for camera position estimation.
 
