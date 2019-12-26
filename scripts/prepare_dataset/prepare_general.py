@@ -42,8 +42,8 @@ def get_default_dataset_parser():
                              '    for KITTI 30,'
                              '    for TUM 40, '
                              '    for EuRoC 40')
-    parser.add_argument('--relocalization_weights_path', type=str,
-                        help='Weights for relocalization model')
+    parser.add_argument('--relocalization_vocab_path', type=str,
+                        help='Vocabulary for relocalization model')
     return parser
 
 
@@ -67,7 +67,7 @@ class DatasetPreparator:
                  max_matches=None,
                  keyframe_period=None,
                  matches_threshold=None,
-                 relocalization_weights_path=None):
+                 relocalization_vocab_path=None):
 
         self.dataset_type = dataset_type
         self.dataset_root = dataset_root
@@ -85,7 +85,7 @@ class DatasetPreparator:
         self.matches_threshold = matches_threshold
         self.max_matches = max_matches
         self.keyframe_period = keyframe_period
-        self.relocalization_weights_path = relocalization_weights_path
+        self.relocalization_vocab_path = relocalization_vocab_path
 
     def _initialize_estimators(self):
 
@@ -132,7 +132,7 @@ class DatasetPreparator:
                                                                           knn=self.max_matches,
                                                                           matches_threshold=self.matches_threshold,
                                                                           keyframe_period=self.keyframe_period,
-                                                                          checkpoint=self.relocalization_weights_path,
+                                                                          checkpoint=self.relocalization_vocab_path,
                                                                           target_size=self.target_size)
             single_frame_estimators.append(relocalization_estimator)
 
@@ -198,7 +198,7 @@ class DatasetPreparator:
                               'target_size': self.target_size,
                               'stride': self.stride,
                               'binocular_depth_checkpoint': self.binocular_depth_checkpoint,
-                              'relocalization_checkpoint': self.relocalization_weights_path,
+                              'relocalization_vocabulary': self.relocalization_vocab_path,
                               'matches_num': self.matches_threshold,
                               'keyframe_period': self.keyframe_period}
             json.dump(dataset_config, f)

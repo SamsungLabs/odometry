@@ -17,5 +17,5 @@ if __name__ == '__main__':
 
     DatasetPreparator(dataset_type='ZJU',
                       target_size=(height, width),
-                      relocalization_weights_path=os.path.join(env.PROJECT_PATH, 'weights', 'euroc_vocabulary.pkl'),
+                      relocalization_vocab_path=os.path.join(env.PROJECT_PATH, 'weights', 'euroc_vocabulary.pkl'),
                       **vars(args)).prepare()
