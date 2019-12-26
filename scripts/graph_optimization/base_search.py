@@ -48,7 +48,7 @@ class BaseSearch:
         self.std_cols = [c + '_confidence' for c in self.mean_cols]
 
     @staticmethod
-    def get_stride_sigmas_values():
+    def get_sigma_values():
         return [1., 2., 4.] + list(np.logspace(1, 6, num=6)) + [1e12]
 
     @staticmethod
@@ -241,12 +241,12 @@ class BaseSearch:
                                      dataset_root=dataset_root,
                                      trajectory_names=trajectory_names)
 
-        stride_sigmas_values = self.get_stride_sigmas_values()
-        strides_sigmas = self.get_strides_sigmas(stride_sigmas_values, 1, len(config.keys()) - 1)
+        sigma_values = self.get_sigma_values()
+        strides_sigmas = self.get_strides_sigmas(sigma_values, 1, len(config.keys()) - 1)
 
         param_distributions = {
-            'strides_sigmas': [dict(zip(strides, c)) for c in strides_sigmas],
-            'loop_sigmas': stride_sigmas_values,
+            'strides_sigmas': [dict(zip(strides, sigma)) for sigma in strides_sigmas],
+            'loop_sigmas': sigma_values,
             'loop_threshold': [50, 100],
             'rotation_scale': np.logspace(-10, 0, 11, base=2),
             'max_iterations': [1000]

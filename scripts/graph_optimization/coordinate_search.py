@@ -56,7 +56,7 @@ class GridSearch(BaseSearch):
         return dict(results.iloc[best_run_ind])
 
     def find_best_loop_sigma(self, X, y, param_distributions, log):
-        for c in self.get_stride_sigmas_values():
+        for c in self.get_sigma_values():
             for threshold in param_distributions['loop_threshold']:
                 estimator = TrajectoryEstimator(strides_sigmas={self.best_stride: 1},
                                                 loop_sigma=c,
@@ -78,8 +78,8 @@ class GridSearch(BaseSearch):
         stride = min(available_strides)
 
         local_log = pd.DataFrame()
-        for c in self.get_stride_sigmas_values():
-            best_params['strides_sigmas'] = {**best_params['strides_sigmas'], **{stride: c}}
+        for sigma in self.get_sigma_values():
+            best_params['strides_sigmas'] = {**best_params['strides_sigmas'], **{stride: sigma}}
             estimator = TrajectoryEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
             local_log = local_log.append(self.log_predict(estimator, X, y))
 
