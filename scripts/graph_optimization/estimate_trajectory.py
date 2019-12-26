@@ -8,7 +8,8 @@ from slam.graph_optimization import TrajectoryEstimator
 
 
 def main(config_type,
-         stride_std_weights,
+         strides,
+         strides_std_weights,
          loop_std_weight,
          loop_threshold,
          rotation_weight,
@@ -16,6 +17,8 @@ def main(config_type,
          vis_dir,
          pred_dir):
 
+    assert len(strides) == len(strides_std_weights)
+    strides_std_weights = {stride: weight for stride, weight in zip(strides, strides_std_weights)}
     config = getattr(g2o_configs, config_type)
     trajectory_names = Search().get_trajectory_names(config['1'][0])
     rpe_indices = Search().get_rpe_mode(config)
@@ -24,7 +27,7 @@ def main(config_type,
                                      trajectory_names,
                                      std_mode='const',
                                      val_mode='last')
-    estimator = TrajectoryEstimator(stride_std_weights=stride_std_weights,
+    estimator = TrajectoryEstimator(strides_std_weights=strides_std_weights,
                                     loop_std_weight=loop_std_weight,
                                     loop_threshold=loop_threshold,
                                     rotation_weight=rotation_weight,
@@ -40,7 +43,8 @@ def main(config_type,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_type', type=str, help='Name of config defined in g2o_configs.py')
-    parser.add_argument('--stride_std_weights', type=int, nargs='+',
+    parser.add_argument('--strides', type=int, help='List of strides. For these strides weights must be provided')
+    parser.add_argument('--strides_std_weights', type=int, nargs='+',
                         help='Std weights of predictions from networks trained on different strides')
     parser.add_argument('--loop_std_weight', type=int,
                         help='Std weight of prediction from network trained on relocalization estimator results')

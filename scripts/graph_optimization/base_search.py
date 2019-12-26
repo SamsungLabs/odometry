@@ -41,6 +41,10 @@ class Search:
     gt_trajectories configs for optimization.
     Child classes just need to implement abstract method "search".
     """
+    def __init__(self):
+        self.mean_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+        self.std_cols = [c + '_confidence' for c in self.mean_cols]
+
     @staticmethod
     def get_coef_values():
         return [1., 2., 4.] + list(np.logspace(1, 6, num=6)) + [1e12]
@@ -58,6 +62,8 @@ class Search:
         parser.add_argument('--loop_threshold', type=int, nargs='*', default=None)
         parser.add_argument('--rotation_scale', type=float, nargs='*', default=None)
         parser.add_argument('--max_iterations', type=int, nargs='*', default=None)
+        parser.add_argument('--std_mode', type=str, default='predicted_std')
+        parser.add_argument('--val_mode', type=str, default='last')
         return parser
 
     @staticmethod
@@ -66,12 +72,49 @@ class Search:
         gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
         return gt_trajectory
 
-    @staticmethod
-    def get_predicted_df(multistride_paths):
+    def get_predicted_df(self, multistride_paths, std_mode='predicted_std'):
+        """std_modes = {'const', 'predicted_mean', 'predicted_std', 'predicted_std_squared', 'log_predicted_std',
+        'log_predicted_std_squared'}
+        """
         df_list = list()
         for stride, monostride_paths in multistride_paths.items():
             for path in monostride_paths:
+                print(path)
                 df = read_csv(path)
+                if std_mode == 'const':
+                    print('const')
+                    for c in self.std_cols:
+                        df[c] = 1
+                elif std_mode == 'predicted_mean':
+                    t_norm = np.mean(np.linalg.norm(df[['t_x', 't_y', 't_z']].values, axis=1)) / 2
+                    print(t_norm)
+
+                    df['t_x_confidence'] = t_norm
+                    df['t_y_confidence'] = t_norm
+                    df['t_z_confidence'] = t_norm
+
+                    df['euler_x_confidence'] = np.abs(df['euler_x']) ** 2
+                    df['euler_x_confidence'] /= np.max(df['euler_x_confidence'])
+                    df['euler_y_confidence'] = np.abs(df['euler_y']) ** 2
+                    df['euler_y_confidence'] /= np.max(df['euler_y_confidence'])
+                    df['euler_z_confidence'] = np.abs(df['euler_z']) ** 2
+                    df['euler_z_confidence'] /= np.max(df['euler_z_confidence'])
+                elif std_mode == 'predicted_std':
+                    pass
+                elif std_mode == 'predicted_std_squared':
+                    print('squared')
+                    for c in self.std_cols:
+                        df[c] = df[c] ** 2
+                elif std_mode == 'log_predicted_std':
+                    print('log')
+                    for c in self.std_cols:
+                        df[c] = np.exp(df[c])
+                elif std_mode == 'log_predicted_std_squared':
+                    print('log squared')
+                    for c in self.std_cols:
+                        df[c] = np.exp(df[c]) ** 2
+                else:
+                    raise RuntimeError(f'Unknown std mode. Got {std_mode}')
                 if stride == 'loops':
                     df = df[df['diff'] > 49].reset_index()
                 df_list.append(df)
@@ -91,17 +134,13 @@ class Search:
         return group_id
 
     def get_trajectory_names(self, prefix):
-        val_dirs = list(Path(prefix).glob(f'*val*'))
-        paths = [val_dir.as_posix() for val_dir in val_dirs]
-        try:
-            last_dir = max(paths, key=lambda x: self.get_epoch_from_dirname(x))
-        except Exception as e:
-            raise RuntimeError(f'Could not find val directories in paths: {paths}', e)
-        val_trajectory_names = Path(last_dir).joinpath('val').glob('*.csv')
+        predictions = list(Path(prefix).rglob(f'*.csv'))
+        last_dir = self.get_val_trajectory_path(predictions, mode='last').parent.parent
+        print('last_dir', last_dir)
+        val_trajectory_names = last_dir.joinpath('val').glob('*.csv')
         test_trajectory_names = Path(prefix).joinpath('test/test').glob('*.csv')
         trajectory_names = list(val_trajectory_names) + list(test_trajectory_names)
         trajectory_names = [trajectory_name.stem for trajectory_name in trajectory_names]
-        # Handaling bug with strides in names of trajectory
         handled_trajectory_names = list()
         for trajectory_name in trajectory_names:
             split = trajectory_name.split('_')
@@ -113,10 +152,17 @@ class Search:
 
     @staticmethod
     def get_epoch_from_dirname(dirname):
-        position = dirname.find('_val_RPE')
+        position = dirname.find('_val')
         if position == -1:
             raise RuntimeError(f'Could not find epoch number in {dirname}')
         return int(dirname[position - 3: position])
+
+    @staticmethod
+    def get_metric_from_dirname(dirname: str):
+        position = dirname.find('_val')
+        if position == -1:
+            raise RuntimeError(f'Could not find epoch number in {dirname}')
+        return dirname.split('_')[-1]
 
     @staticmethod
     def is_test(paths):
@@ -143,21 +189,36 @@ class Search:
         else:
             raise RuntimeError('Found more than one trajectory in test')
 
-    def get_val_trajectory_path(self, paths):
-        return max(paths, key=lambda x: self.get_epoch_from_dirname(x.parent.parent.name)).as_posix()
+    def get_val_trajectory_path(self, paths, mode):
+        """Modes: 'last' or 'best'"""
+        if mode == 'last':
+            last_dir = None
+            max_epoch = 0
+            for path in paths:
+                current_dir = path.parent.parent.name
+                if current_dir == 'final':
+                    return path
+                epoch = self.get_epoch_from_dirname(current_dir)
+                if epoch > max_epoch:
+                    max_epoch = epoch
+                    last_dir = path
+            return last_dir
+        elif mode == 'best':
+            return min(paths, key=lambda x: self.get_metric_from_dirname(x.parent.parent.name))
+        else:
+            raise RuntimeError(f'Wrong mode for get_val_trajectory_path. Expected "last" or "best". Got {mode}.')
 
-    def get_path(self, prefix, trajectory_name, stride):
+    def get_path(self, prefix, trajectory_name, stride, val_mode):
         paths = list(Path(prefix).rglob(f'{stride}_{trajectory_name}.csv'))
         if len(paths) == 0:
             paths = list(Path(prefix).rglob(f'*{trajectory_name}.csv'))
-
         if len(paths) == 0:
             raise RuntimeError(f'Could not find trajectory {trajectory_name} in dir {prefix}')
 
         if self.is_test(paths):
             return self.get_test_trajectory_path(paths)
         else:
-            return self.get_val_trajectory_path(paths)
+            return self.get_val_trajectory_path(paths, mode=val_mode).as_posix()
 
     def get_coefs(self, vals, current_level, max_depth):
         if current_level == max_depth:
@@ -194,9 +255,10 @@ class Search:
         for trajectory_name in trajectory_names:
             trajectory_paths = dict()
             for stride in config.keys():
-                trajectory_paths[stride] = [self.get_path(prefix, trajectory_name, stride) for prefix in config[stride]]
+                trajectory_paths[stride] = [self.get_path(prefix, trajectory_name, stride, val_mode) for prefix in
+                                            config[stride]]
 
-            predicted_df = self.get_predicted_df(trajectory_paths)
+            predicted_df = self.get_predicted_df(trajectory_paths, std_mode)
             group_id = self.get_group_id(trajectory_paths)
             gt_trajectory = self.get_gt_trajectory(dataset_root, trajectory_name)
 
@@ -221,7 +283,6 @@ class Search:
         X, y, groups = self.get_data(config=config,
                                      dataset_root=dataset_root,
                                      trajectory_names=trajectory_names)
-
         coef_values = self.get_coef_values()
         if kwargs['coef']:
             coefs = [kwargs['coef']]
@@ -249,6 +310,7 @@ class Search:
 
         if output_path:
             result.to_csv(output_path)
+        return result
 
     def search(self,
                X,

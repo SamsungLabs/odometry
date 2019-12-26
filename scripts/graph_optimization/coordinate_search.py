@@ -59,7 +59,7 @@ class GridSearch(Search):
     def find_best_coef_loop(self, X, y, param_distributions, log):
         for c in self.get_coef_values():
             for threshold in param_distributions['loop_threshold']:
-                estimator = TrajectoryEstimator(stride_std_weights={self.best_stride: 1},
+                estimator = TrajectoryEstimator(strides_std_weights={self.best_stride: 1},
                                                 loop_std_weight=c,
                                                 loop_threshold=threshold,
                                                 rotation_weight=param_distributions['rotation_scale'][0],

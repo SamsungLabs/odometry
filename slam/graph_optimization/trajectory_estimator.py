@@ -9,7 +9,7 @@ from slam.evaluation import calculate_metrics, normalize_metrics, average_metric
 class TrajectoryEstimator:
 
     def __init__(self,
-                 stride_std_weights,
+                 strides_std_weights,
                  loop_std_weight=0,
                  loop_threshold=0,
                  rotation_weight=1,
@@ -18,9 +18,8 @@ class TrajectoryEstimator:
                  verbose=False,
                  rpe_indices='full',
                  vis_dir=None,
-                 pred_dir=None,
-                 **kwargs):
-        self.stride_std_weights = stride_std_weights
+                 pred_dir=None):
+        self.strides_std_weights = strides_std_weights
         self.loop_std_weight = loop_std_weight
         self.loop_threshold = loop_threshold
         self.rotation_weight = rotation_weight
@@ -52,7 +51,7 @@ class TrajectoryEstimator:
         return ['from_index', 'to_index'] + self.mean_cols + self.std_cols
 
     def log_params(self):
-        params = {'coef': [self.stride_std_weights],
+        params = {'coef': [self.strides_std_weights],
                   'coef_loop': [self.loop_std_weight],
                   'loop_threshold': [self.loop_threshold],
                   'rotation_scale': [self.rotation_weight],
@@ -62,8 +61,8 @@ class TrajectoryEstimator:
     def _apply_g2o_coef(self, row):
         diff = row['diff']
 
-        if diff in self.stride_std_weights:
-            std_coef = self.stride_std_weights[diff]
+        if diff in self.strides_std_weights:
+            std_coef = self.strides_std_weights[diff]
         else:
             is_loop = diff > self.loop_threshold
             std_coef = self.loop_std_weight if is_loop else 1e15
