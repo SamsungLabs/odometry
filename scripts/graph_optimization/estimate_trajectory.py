@@ -44,7 +44,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_root', type=str)
     parser.add_argument('--config_type', type=str, help='Name of config defined in g2o_configs.py')
-    parser.add_argument('--strides', type=int, nargs='+',
+    parser.add_argument('--strides', type=str, nargs='+',
                         help='List of strides. For these strides weights must be provided')
     parser.add_argument('--strides_sigmas', type=int, nargs='+',
                         help='Std of predictions from networks trained on different strides')

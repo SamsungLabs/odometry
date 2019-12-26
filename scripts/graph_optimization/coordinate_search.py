@@ -23,11 +23,11 @@ class GridSearch(BaseSearch):
     3. For every other prediction add it to graph and optimize weight for that prediction.
     4. Optimize rotation weight in graph constraints.
     """
-    def __init__(self, vis_dir,
+    def __init__(self,
                  rank_metric,
                  best_stride,
                  **kwargs):
-        self.vis_dir = vis_dir
+        super().__init__(**kwargs)
         self.rank_column = f'val_{rank_metric}'
         self.best_stride = best_stride
         self.rpe_indices = None
@@ -38,7 +38,6 @@ class GridSearch(BaseSearch):
     def get_default_parser():
         parser = BaseSearch.get_default_parser()
         parser.add_argument('--rank_metric', type=str, choices=['ATE', 'RPE'])
-        parser.add_argument('--vis_dir', type=str)
         parser.add_argument('--best_stride', type=int, default=1)
         return parser
 
@@ -56,8 +55,8 @@ class GridSearch(BaseSearch):
         best_run_ind = np.argmin(results[self.rank_column].values)
         return dict(results.iloc[best_run_ind])
 
-    def find_best_coef_loop(self, X, y, param_distributions, log):
-        for c in self.get_coef_values():
+    def find_best_loop_sigma(self, X, y, param_distributions, log):
+        for c in self.get_stride_sigmas_values():
             for threshold in param_distributions['loop_threshold']:
                 estimator = TrajectoryEstimator(strides_sigmas={self.best_stride: 1},
                                                 loop_sigma=c,
@@ -70,21 +69,21 @@ class GridSearch(BaseSearch):
                 log = log.append(self.log_predict(estimator, X, y))
         return log
 
-    def find_best_coef(self, X, y, parent_log):
+    def find_best_strides_sigmas(self, X, y, parent_log):
         best_params = self.get_best_params(parent_log)
-        available_strides = list(set(self.strides) - set(best_params['coef'].keys()))
+        available_strides = list(set(self.strides) - set(best_params['strides_sigmas'].keys()))
         if len(available_strides) == 0:
             return parent_log
 
         stride = min(available_strides)
 
         local_log = pd.DataFrame()
-        for c in self.get_coef_values():
-            best_params['coef'] = {**best_params['coef'], **{stride: c}}
+        for c in self.get_stride_sigmas_values():
+            best_params['strides_sigmas'] = {**best_params['strides_sigmas'], **{stride: c}}
             estimator = TrajectoryEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
             local_log = local_log.append(self.log_predict(estimator, X, y))
 
-        child_log = self.find_best_coef(X, y, local_log)
+        child_log = self.find_best_strides_sigmas(X, y, local_log)
         parent_log = parent_log.append(child_log)
         return parent_log
 
@@ -115,16 +114,16 @@ class GridSearch(BaseSearch):
                **kwargs):
 
         self.rpe_indices = rpe_indices
-        self.strides = param_distributions['coef'][0].keys()
+        self.strides = param_distributions['strides_sigmas'][0].keys()
 
         val_ind, test_ind = next(DisabledCV().split(X, y, groups))
         X_split = ([X[ind] for ind in val_ind], [X[ind] for ind in test_ind])
         y_split = ([y[ind] for ind in val_ind], [y[ind] for ind in test_ind])
 
         log = pd.DataFrame()
-        log = self.find_best_coef_loop(X_split, y_split, param_distributions, log)
+        log = self.find_best_loop_sigma(X_split, y_split, param_distributions, log)
         print(log)
-        log = self.find_best_coef(X_split, y_split, log)
+        log = self.find_best_strides_sigmas(X_split, y_split, log)
         print(log)
         log = self.find_best_rotation_scale(X_split, y_split, param_distributions, log)
         self.visualize(X, y, log, trajectory_names)
@@ -134,4 +133,8 @@ class GridSearch(BaseSearch):
 if __name__ == '__main__':
     parser = GridSearch.get_default_parser()
     args = parser.parse_args()
-    GridSearch(args.vis_dir, args.rank_metric, args.best_stride).start(**vars(args))
+    search = GridSearch(vis_dir=args.vis_dir,
+                        pred_dir=args.pred_dir,
+                        rank_metric=args.rank_metric,
+                        best_stride=args.best_stride)
+    search.start(**vars(args))
