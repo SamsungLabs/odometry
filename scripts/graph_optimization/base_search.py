@@ -3,9 +3,8 @@ import argparse
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from typing import Dict
 
-from scripts.aggregation import configs
+from scripts.graph_optimization import g2o_configs
 from slam.utils import is_int
 from slam.utils import read_csv
 
@@ -37,7 +36,11 @@ class DisabledCV:
 
 
 class Search:
-
+    """
+    This class is base for any g2o optimization algorithm. It defines all function that load predictions,
+    gt_trajectories configs for optimization.
+    Child classes just need to implement abstract method "search".
+    """
     @staticmethod
     def get_coef_values():
         return [1., 2., 4.] + list(np.logspace(1, 6, num=6)) + [1e12]
@@ -170,22 +173,20 @@ class Search:
                     new_coefs.append([v] + c)
             return new_coefs
 
-    def start(self,
-              dataset_root,
-              config_type,
-              n_jobs,
-              n_iter,
-              output_path=None,
-              **kwargs):
-
-        config = getattr(configs, config_type)
-        trajectory_names = self.get_trajectory_names(config['1'][0])
-        strides = [int(stride) for stride in config.keys() if stride != 'loops']
+    @staticmethod
+    def get_rpe_mode(config):
         if 'kitti' in config['1'][0]:
             rpe_indices = 'kitti'
         else:
             rpe_indices = 'full'
+        return rpe_indices
 
+    def get_data(self,
+                 config,
+                 dataset_root,
+                 trajectory_names,
+                 std_mode='const',
+                 val_mode='last'):
         X = []
         y = []
         groups = []
@@ -202,6 +203,24 @@ class Search:
             X.append(predicted_df)
             y.append(gt_trajectory)
             groups.append(group_id)
+        return X, y, groups
+
+    def start(self,
+              dataset_root,
+              config_type,
+              n_jobs,
+              n_iter,
+              output_path=None,
+              **kwargs):
+
+        config = getattr(g2o_configs, config_type)
+        trajectory_names = self.get_trajectory_names(config['1'][0])
+        strides = [int(stride) for stride in config.keys() if stride != 'loops']
+        rpe_indices = self.get_rpe_mode(config)
+
+        X, y, groups = self.get_data(config=config,
+                                     dataset_root=dataset_root,
+                                     trajectory_names=trajectory_names)
 
         coef_values = self.get_coef_values()
         if kwargs['coef']:

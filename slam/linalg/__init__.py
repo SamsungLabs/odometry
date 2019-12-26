@@ -29,7 +29,7 @@ __all__ = [
     'get_covariance_matrix_from_euler_uncertainty',
     'euler_to_quaternion',
     'shortest_path_with_normalization',
-    'QuaternionWithTranslation'
+    'QuaternionWithTranslation',
     'Intrinsics',
     'create_optical_flow_from_rt',
     'convert'

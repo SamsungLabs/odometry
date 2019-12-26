@@ -1,19 +1,18 @@
 import os
 import time
-from sklearn.base import BaseEstimator
 
-from slam.aggregation import GraphOptimizer
-from slam.evaluation import calculate_metrics, normalize_metrics, average_metrics
+from slam.graph_optimization import GraphOptimizer
 from slam.utils import visualize_trajectory_with_gt
+from slam.evaluation import calculate_metrics, normalize_metrics, average_metrics
 
 
-class G2OEstimator(BaseEstimator):
+class TrajectoryEstimator:
 
     def __init__(self,
-                 coef,
-                 coef_loop=0,
+                 stride_std_weights,
+                 loop_std_weight=0,
                  loop_threshold=0,
-                 rotation_scale=1,
+                 rotation_weight=1,
                  max_iterations=100,
                  online=False,
                  verbose=False,
@@ -21,10 +20,10 @@ class G2OEstimator(BaseEstimator):
                  vis_dir=None,
                  pred_dir=None,
                  **kwargs):
-        self.coef = coef
-        self.coef_loop = coef_loop
+        self.stride_std_weights = stride_std_weights
+        self.loop_std_weight = loop_std_weight
         self.loop_threshold = loop_threshold
-        self.rotation_scale = rotation_scale
+        self.rotation_weight = rotation_weight
         self.max_iterations = max_iterations
         self.online = online
         self.verbose = verbose
@@ -53,28 +52,25 @@ class G2OEstimator(BaseEstimator):
         return ['from_index', 'to_index'] + self.mean_cols + self.std_cols
 
     def log_params(self):
-        params = {'coef': [self.coef],
-                  'coef_loop': [self.coef_loop],
+        params = {'coef': [self.stride_std_weights],
+                  'coef_loop': [self.loop_std_weight],
                   'loop_threshold': [self.loop_threshold],
-                  'rotation_scale': [self.rotation_scale],
+                  'rotation_scale': [self.rotation_weight],
                   'max_iterations': [self.max_iterations]}
         return params
 
     def _apply_g2o_coef(self, row):
         diff = row['diff']
 
-        if diff in self.coef:
-            std_coef = self.coef[diff]
+        if diff in self.stride_std_weights:
+            std_coef = self.stride_std_weights[diff]
         else:
             is_loop = diff > self.loop_threshold
-            std_coef = self.coef_loop if is_loop else 1e15
+            std_coef = self.loop_std_weight if is_loop else 1e15
 
         row[self.std_cols] *= std_coef
-        row[['euler_x_confidence', 'euler_y_confidence', 'euler_z_confidence']] *= self.rotation_scale
+        row[['euler_x_confidence', 'euler_y_confidence', 'euler_z_confidence']] *= self.rotation_weight
         return row
-
-    def fit(self, X, y, sample_weight=None):
-        print(f'Running {self}\n')
 
     def predict(self, X, y, visualize=False, trajectory_names=None):
         if self.verbose:

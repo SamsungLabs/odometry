@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from pyquaternion import Quaternion
 
-from slam.aggregation.base_aggregator import BaseAggregator
 from slam.linalg import (GlobalTrajectory,
                          QuaternionWithTranslation,
                          get_covariance_matrix_from_euler_uncertainty,
@@ -14,7 +13,7 @@ from slam.utils import mlflow_logging
 
 
 @mlflow_logging(prefix='aggregator', name='GraphOptimizer')
-class GraphOptimizer(BaseAggregator):
+class GraphOptimizer:
     def __init__(self, max_iterations=100, verbose=False, online=False):
         solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
         solver = g2o.OptimizationAlgorithmLevenberg(solver)
@@ -37,11 +36,11 @@ class GraphOptimizer(BaseAggregator):
         self.current_pose = np.identity(6)
 
     def load(self, path):
-        optimizer.load(path)
-        print(f'Loaded {len(optimizer.vertices())} vertices')
-        print(f'Loaded {len(optimizer.edges())} edges', end='\n\n')
+        self.optimizer.load(path)
+        print(f'Loaded {len(self.optimizer.vertices())} vertices')
+        print(f'Loaded {len(self.optimizer.edges())} edges', end='\n\n')
 
-        raw_trajectory = self.get_trajectory(raw)
+        raw_trajectory = self.get_trajectory(raw=True)
 
         if self.online:
             self.optimize()

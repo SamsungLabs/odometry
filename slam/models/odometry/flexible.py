@@ -35,14 +35,14 @@ def construct_encoder(inputs,
     x = inputs
     for i in range(layers):
         x = conv(x,
-                  64,
-                  kernel_size=kernel_sizes[i],
-                  strides=strides[i],
-                  dilation_rate=dilation_rates[i],
-                  padding='same',
-                  batch_norm=use_batch_norm and i == 0,
-                  activation=activation,
-                  kernel_initializer=kernel_initializer)
+                 64,
+                 kernel_size=kernel_sizes[i],
+                 strides=strides[i],
+                 dilation_rate=dilation_rates[i],
+                 padding='same',
+                 batch_norm=use_batch_norm and i == 0,
+                 activation=activation,
+                 kernel_initializer=kernel_initializer)
 
     flatten = Flatten()(x)
     return flatten

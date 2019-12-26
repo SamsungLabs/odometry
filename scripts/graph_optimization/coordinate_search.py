@@ -4,11 +4,25 @@ import pandas as pd
 import __init_path__
 import env
 
-from scripts.aggregation.base_search import Search, DisabledCV
-from slam.aggregation import G2OEstimator
+from scripts.graph_optimization.base_search import Search, DisabledCV
+from slam.graph_optimization import TrajectoryEstimator
 
 
 class GridSearch(Search):
+    """
+    This class optimizes g2o parameters on validation trajectories.
+
+    Input:
+        predicted csv files from networks trained on different strides. I.e. 1_df.csv  and loops_df.csv --
+        predictions from networks trained on stride 1 and results of relocalization estimators.
+
+    In class implemented strategy of coordinate optimization. Algorithm:
+    1. Pick reference prediction (defined by "best_stride" arg) and initialize graph
+    2. Add prediction from networks train on relocalization estimator (loops_df.csv in example) to graph and optimize
+     weight for that prediction that leads to the best metric (defined by 'rank_metric' arg)
+    3. For every other prediction add it to graph and optimize weight for that prediction.
+    4. Optimize rotation weight in graph constraints.
+    """
     def __init__(self, vis_dir,
                  rank_metric,
                  best_stride,
@@ -45,14 +59,14 @@ class GridSearch(Search):
     def find_best_coef_loop(self, X, y, param_distributions, log):
         for c in self.get_coef_values():
             for threshold in param_distributions['loop_threshold']:
-                estimator = G2OEstimator(coef={self.best_stride: 1},
-                                         coef_loop=c,
-                                         loop_threshold=threshold,
-                                         rotation_scale=param_distributions['rotation_scale'][0],
-                                         max_iterations=param_distributions['max_iterations'][0],
-                                         rpe_indices=self.rpe_indices,
-                                         verbose=True
-                                         )
+                estimator = TrajectoryEstimator(stride_std_weights={self.best_stride: 1},
+                                                loop_std_weight=c,
+                                                loop_threshold=threshold,
+                                                rotation_weight=param_distributions['rotation_scale'][0],
+                                                max_iterations=param_distributions['max_iterations'][0],
+                                                rpe_indices=self.rpe_indices,
+                                                verbose=True
+                                                )
                 log = log.append(self.log_predict(estimator, X, y))
         return log
 
@@ -67,7 +81,7 @@ class GridSearch(Search):
         local_log = pd.DataFrame()
         for c in self.get_coef_values():
             best_params['coef'] = {**best_params['coef'], **{stride: c}}
-            estimator = G2OEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
+            estimator = TrajectoryEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
             local_log = local_log.append(self.log_predict(estimator, X, y))
 
         child_log = self.find_best_coef(X, y, local_log)
@@ -78,16 +92,16 @@ class GridSearch(Search):
         best_params = self.get_best_params(log)
         for rotation_scale in param_distributions['rotation_scale'][1:]:
             best_params['rotation_scale'] = rotation_scale
-            estimator = G2OEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
+            estimator = TrajectoryEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
             log = log.append(self.log_predict(estimator, X, y))
         return log
 
     def visualize(self, X, y, log, trajectory_names):
         best_params = self.get_best_params(log)
-        estimator = G2OEstimator(**best_params,
-                                 rpe_indices=self.rpe_indices,
-                                 verbose=True,
-                                 vis_dir=self.vis_dir)
+        estimator = TrajectoryEstimator(**best_params,
+                                        rpe_indices=self.rpe_indices,
+                                        verbose=True,
+                                        vis_dir=self.vis_dir)
 
         estimator.predict(X, y, visualize=True, trajectory_names=trajectory_names)
 
