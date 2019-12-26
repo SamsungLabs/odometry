@@ -4,11 +4,11 @@ import pandas as pd
 import __init_path__
 import env
 
-from scripts.graph_optimization.base_search import Search, DisabledCV
+from scripts.graph_optimization.base_search import BaseSearch, DisabledCV
 from slam.graph_optimization import TrajectoryEstimator
 
 
-class GridSearch(Search):
+class GridSearch(BaseSearch):
     """
     This class optimizes g2o parameters on validation trajectories.
 
@@ -16,7 +16,7 @@ class GridSearch(Search):
         predicted csv files from networks trained on different strides. I.e. 1_df.csv  and loops_df.csv --
         predictions from networks trained on stride 1 and results of relocalization estimators.
 
-    In class implemented strategy of coordinate optimization. Algorithm:
+    In class implements strategy of coordinate optimization. Algorithm:
     1. Pick reference prediction (defined by "best_stride" arg) and initialize graph
     2. Add prediction from networks train on relocalization estimator (loops_df.csv in example) to graph and optimize
      weight for that prediction that leads to the best metric (defined by 'rank_metric' arg)
@@ -36,7 +36,7 @@ class GridSearch(Search):
 
     @staticmethod
     def get_default_parser():
-        parser = Search.get_default_parser()
+        parser = BaseSearch.get_default_parser()
         parser.add_argument('--rank_metric', type=str, choices=['ATE', 'RPE'])
         parser.add_argument('--vis_dir', type=str)
         parser.add_argument('--best_stride', type=int, default=1)
@@ -59,8 +59,8 @@ class GridSearch(Search):
     def find_best_coef_loop(self, X, y, param_distributions, log):
         for c in self.get_coef_values():
             for threshold in param_distributions['loop_threshold']:
-                estimator = TrajectoryEstimator(strides_std_weights={self.best_stride: 1},
-                                                loop_std_weight=c,
+                estimator = TrajectoryEstimator(strides_sigmas={self.best_stride: 1},
+                                                loop_sigma=c,
                                                 loop_threshold=threshold,
                                                 rotation_weight=param_distributions['rotation_scale'][0],
                                                 max_iterations=param_distributions['max_iterations'][0],

@@ -35,7 +35,7 @@ class DisabledCV:
         return self.n_splits
 
 
-class Search:
+class BaseSearch:
     """
     This class is base for any g2o optimization algorithm. It defines all function that load predictions,
     gt_trajectories configs for optimization.
@@ -193,7 +193,8 @@ class Search:
 
     @staticmethod
     def get_rpe_mode(config):
-        if 'kitti' in config['1'][0]:
+        random_stride = list(config.values())[0]
+        if 'kitti' in config[random_stride][0]:
             rpe_indices = 'kitti'
         else:
             rpe_indices = 'full'
@@ -232,7 +233,8 @@ class Search:
               **kwargs):
 
         config = getattr(g2o_configs, config_type)
-        trajectory_names = self.get_trajectory_names(config['1'][0])
+        random_stride = list(config.values())[0]
+        trajectory_names = self.get_trajectory_names(config[random_stride][0])
         strides = [int(stride) for stride in config.keys() if stride != 'loops']
         rpe_indices = self.get_rpe_mode(config)
 
