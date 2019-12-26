@@ -25,7 +25,6 @@ def main(config_type,
     X, y, groups = Search().get_data(config,
                                      '/dbstore/datasets/Odometry_team/KITTI_odometry_2012_mixed/1/',
                                      trajectory_names,
-                                     std_mode='const',
                                      val_mode='last')
     estimator = TrajectoryEstimator(strides_std_weights=strides_std_weights,
                                     loop_std_weight=loop_std_weight,
@@ -43,7 +42,8 @@ def main(config_type,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_type', type=str, help='Name of config defined in g2o_configs.py')
-    parser.add_argument('--strides', type=int, help='List of strides. For these strides weights must be provided')
+    parser.add_argument('--strides', type=int, nargs='+',
+                        help='List of strides. For these strides weights must be provided')
     parser.add_argument('--strides_std_weights', type=int, nargs='+',
                         help='Std weights of predictions from networks trained on different strides')
     parser.add_argument('--loop_std_weight', type=int,

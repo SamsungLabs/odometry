@@ -55,14 +55,6 @@ class Search:
         parser.add_argument('--dataset_root', type=str, required=True)
         parser.add_argument('--output_path', type=str, required=True)
         parser.add_argument('--config_type', type=str, required=True)
-        parser.add_argument('--n_jobs', type=int, default=3)
-        parser.add_argument('--n_iter', type=int, default=1)
-        parser.add_argument('--coef', type=int, nargs='*', default=None)
-        parser.add_argument('--coef_loop', type=int, nargs='*', default=None)
-        parser.add_argument('--loop_threshold', type=int, nargs='*', default=None)
-        parser.add_argument('--rotation_scale', type=float, nargs='*', default=None)
-        parser.add_argument('--max_iterations', type=int, nargs='*', default=None)
-        parser.add_argument('--std_mode', type=str, default='predicted_std')
         parser.add_argument('--val_mode', type=str, default='last')
         return parser
 
@@ -72,49 +64,14 @@ class Search:
         gt_trajectory = RelativeTrajectory.from_dataframe(gt_df).to_global()
         return gt_trajectory
 
-    def get_predicted_df(self, multistride_paths, std_mode='predicted_std'):
-        """std_modes = {'const', 'predicted_mean', 'predicted_std', 'predicted_std_squared', 'log_predicted_std',
-        'log_predicted_std_squared'}
-        """
+    def get_predicted_df(self, multistride_paths):
         df_list = list()
         for stride, monostride_paths in multistride_paths.items():
             for path in monostride_paths:
                 print(path)
                 df = read_csv(path)
-                if std_mode == 'const':
-                    print('const')
-                    for c in self.std_cols:
-                        df[c] = 1
-                elif std_mode == 'predicted_mean':
-                    t_norm = np.mean(np.linalg.norm(df[['t_x', 't_y', 't_z']].values, axis=1)) / 2
-                    print(t_norm)
-
-                    df['t_x_confidence'] = t_norm
-                    df['t_y_confidence'] = t_norm
-                    df['t_z_confidence'] = t_norm
-
-                    df['euler_x_confidence'] = np.abs(df['euler_x']) ** 2
-                    df['euler_x_confidence'] /= np.max(df['euler_x_confidence'])
-                    df['euler_y_confidence'] = np.abs(df['euler_y']) ** 2
-                    df['euler_y_confidence'] /= np.max(df['euler_y_confidence'])
-                    df['euler_z_confidence'] = np.abs(df['euler_z']) ** 2
-                    df['euler_z_confidence'] /= np.max(df['euler_z_confidence'])
-                elif std_mode == 'predicted_std':
-                    pass
-                elif std_mode == 'predicted_std_squared':
-                    print('squared')
-                    for c in self.std_cols:
-                        df[c] = df[c] ** 2
-                elif std_mode == 'log_predicted_std':
-                    print('log')
-                    for c in self.std_cols:
-                        df[c] = np.exp(df[c])
-                elif std_mode == 'log_predicted_std_squared':
-                    print('log squared')
-                    for c in self.std_cols:
-                        df[c] = np.exp(df[c]) ** 2
-                else:
-                    raise RuntimeError(f'Unknown std mode. Got {std_mode}')
+                for c in self.std_cols:
+                    df[c] = 1
                 if stride == 'loops':
                     df = df[df['diff'] > 49].reset_index()
                 df_list.append(df)
@@ -246,7 +203,6 @@ class Search:
                  config,
                  dataset_root,
                  trajectory_names,
-                 std_mode='const',
                  val_mode='last'):
         X = []
         y = []
@@ -258,7 +214,7 @@ class Search:
                 trajectory_paths[stride] = [self.get_path(prefix, trajectory_name, stride, val_mode) for prefix in
                                             config[stride]]
 
-            predicted_df = self.get_predicted_df(trajectory_paths, std_mode)
+            predicted_df = self.get_predicted_df(trajectory_paths)
             group_id = self.get_group_id(trajectory_paths)
             gt_trajectory = self.get_gt_trajectory(dataset_root, trajectory_name)
 
