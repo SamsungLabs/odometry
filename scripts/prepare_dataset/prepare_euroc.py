@@ -14,6 +14,6 @@ if __name__ == '__main__':
                         dataset_root=os.path.join(env.DATASET_PATH, 'EuRoC'),
                         target_size=(height, width),
                         matches_threshold=40,
-                        relocalization_weights_path=os.path.join(env.PROJECT_PATH, 'weights', 'euroc_vocabulary.pkl'))
+                        relocalization_vocab_path=os.path.join(env.PROJECT_PATH, 'weights', 'euroc_vocabulary.pkl'))
     args = parser.parse_args()
     DatasetPreparator(**vars(args)).prepare()

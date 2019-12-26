@@ -17,7 +17,7 @@ if __name__ == '__main__':
                         swap_angles=True,
                         matches_threshold=3,
                         # This number is random should be refined with relocalization_visualization.ipnb
-                        relocalization_weights_path=os.path.join(env.PROJECT_PATH, 'weights', 'kitti_vocabulary.pkl'))
+                        relocalization_vocab_path=os.path.join(env.PROJECT_PATH, 'weights', 'kitti_vocabulary.pkl'))
     args = parser.parse_args()
 
     DatasetPreparator(**vars(args)).prepare()

@@ -4,6 +4,7 @@ from .computation_utils import make_memory_safe
 from .file_utils import chmod
 from .file_utils import create_vis_file_path
 from .file_utils import create_prediction_file_path
+from .file_utils import read_csv
 
 from .image_utils import resize_image
 from .image_utils import save_image

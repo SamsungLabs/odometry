@@ -2,8 +2,8 @@ import argparse
 
 import __init_path__
 
-from . import g2o_configs
-from .base_search import Search
+from scripts.graph_optimization import g2o_configs
+from scripts.graph_optimization.base_search import Search
 from slam.graph_optimization import TrajectoryEstimator
 
 

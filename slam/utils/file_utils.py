@@ -1,4 +1,6 @@
 import os
+import pandas as pd
+from pathlib import Path
 
 
 def chmod(path):
@@ -31,3 +33,21 @@ def create_prediction_file_path(save_dir, trajectory_id, prediction_id='', subse
                              prediction_id=prediction_id,
                              subset=subset,
                              ext='csv')
+
+
+def read_csv(path):
+    df = pd.read_csv(path)
+    df.rename(columns={'path_to_rgb': 'from_path',
+                       'path_to_rgb_next': 'to_path'},
+              inplace=True)
+
+    df['to_index'] = df['to_path'].apply(lambda x: int(Path(x).stem))
+    df['from_index'] = df['from_path'].apply(lambda x: int(Path(x).stem))
+    df['diff'] = df['to_index'] - df['from_index']
+
+    mean_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
+    std_cols = [c + '_confidence' for c in mean_cols]
+
+    df = pd.concat((df, pd.DataFrame(columns=std_cols)), axis=1)
+    df.fillna(1., inplace=True)
+    return df
