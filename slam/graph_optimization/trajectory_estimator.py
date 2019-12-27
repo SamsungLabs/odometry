@@ -18,7 +18,9 @@ class TrajectoryEstimator:
                  verbose=False,
                  rpe_indices='full',
                  vis_dir=None,
-                 pred_dir=None):
+                 pred_dir=None,
+                 **kwargs):
+
         self.strides_sigmas = strides_sigmas
         self.loop_sigma = loop_sigma
         self.loop_threshold = loop_threshold
