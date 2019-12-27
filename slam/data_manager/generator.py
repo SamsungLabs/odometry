@@ -151,6 +151,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         for p in self.placeholder:
             self.return_cols.extend([col + '_' + p for col in self.y_cols])
 
+        self.dof_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         # augmentation
         self.generate_flow_by_rt_proba_fn = get_proba_fn(generate_flow_by_rt_mode,
                                                          generate_flow_by_rt_proba,
@@ -159,7 +160,6 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.generate_percentile = generate_percentile
 
         if self.generate_distribution is not None:
-            self.dof_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
             self.df_dofs = self.df[self.dof_cols]
             assert 'path_to_optical_flow' in self.x_cols
             assert any([col.endswith('depth') for col in self.image_cols])
