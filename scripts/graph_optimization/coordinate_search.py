@@ -61,7 +61,7 @@ class GridSearch(BaseSearch):
                 estimator = TrajectoryEstimator(strides_sigmas={self.best_stride: 1},
                                                 loop_sigma=c,
                                                 loop_threshold=threshold,
-                                                rotation_weight=param_distributions['rotation_scale'][0],
+                                                rotation_weight=param_distributions['rotation_weight'][0],
                                                 max_iterations=param_distributions['max_iterations'][0],
                                                 rpe_indices=self.rpe_indices,
                                                 verbose=True
@@ -87,10 +87,10 @@ class GridSearch(BaseSearch):
         parent_log = parent_log.append(child_log)
         return parent_log
 
-    def find_best_rotation_scale(self, X, y, param_distributions, log):
+    def find_best_rotation_weight(self, X, y, param_distributions, log):
         best_params = self.get_best_params(log)
-        for rotation_scale in param_distributions['rotation_scale'][1:]:
-            best_params['rotation_scale'] = rotation_scale
+        for rotation_weight in param_distributions['rotation_weight'][1:]:
+            best_params['rotation_weight'] = rotation_weight
             estimator = TrajectoryEstimator(**best_params, rpe_indices=self.rpe_indices, verbose=True)
             log = log.append(self.log_predict(estimator, X, y))
         return log
@@ -125,7 +125,7 @@ class GridSearch(BaseSearch):
         print(log)
         log = self.find_best_strides_sigmas(X_split, y_split, log)
         print(log)
-        log = self.find_best_rotation_scale(X_split, y_split, param_distributions, log)
+        log = self.find_best_rotation_weight(X_split, y_split, param_distributions, log)
         self.visualize(X, y, log, trajectory_names)
         return log
 

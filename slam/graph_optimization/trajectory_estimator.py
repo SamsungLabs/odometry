@@ -51,10 +51,10 @@ class TrajectoryEstimator:
         return ['from_index', 'to_index'] + self.mean_cols + self.std_cols
 
     def log_params(self):
-        params = {'coef': [self.strides_sigmas],
-                  'coef_loop': [self.loop_sigma],
+        params = {'strides_sigmas': [self.strides_sigmas],
+                  'loop_sigma': [self.loop_sigma],
                   'loop_threshold': [self.loop_threshold],
-                  'rotation_scale': [self.rotation_weight],
+                  'rotation_weight': [self.rotation_weight],
                   'max_iterations': [self.max_iterations]}
         return params
 

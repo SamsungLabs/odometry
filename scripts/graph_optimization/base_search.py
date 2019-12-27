@@ -248,7 +248,7 @@ class BaseSearch:
             'strides_sigmas': [dict(zip(strides, sigma)) for sigma in strides_sigmas],
             'loop_sigmas': sigma_values,
             'loop_threshold': [50, 100],
-            'rotation_scale': np.logspace(-10, 0, 11, base=2),
+            'rotation_weight': np.logspace(-10, 0, 11, base=2),
             'max_iterations': [1000]
         }
 
