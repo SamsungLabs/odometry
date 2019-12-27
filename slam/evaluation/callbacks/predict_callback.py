@@ -91,7 +91,11 @@ class Predict(keras.callbacks.Callback):
         self.y_cols = self.train_generator.y_cols[:]
         self.dof_cols = self.train_generator.dof_cols[:]
 
-    def _create_trajectory(self, df):
+    def _create_trajectory(self, df, T=None):
+        if T is not None:
+            df[self.dof_cols] = df[self.dof_cols].apply(lambda row: convert(row[self.dof_cols].values, T), axis=1)
+
+
         df['to_index'] = df['path_to_rgb_next'].apply(lambda x: int(Path(x).stem))
         df['from_index'] = df['path_to_rgb'].apply(lambda x: int(Path(x).stem))
         index_difference = df.to_index - df.from_index
@@ -170,6 +174,7 @@ class Predict(keras.callbacks.Callback):
         predictions['path_to_rgb_next'] = generator.df.path_to_rgb_next
         return predictions
 
+
     def _create_tasks(self, generator, subset):
         tasks = []
 
@@ -180,21 +185,22 @@ class Predict(keras.callbacks.Callback):
         predictions = self._predict_generator(generator)
 
         for trajectory_id, indices in gt.groupby(by='trajectory_id').indices.items():
+
             predicted_df = predictions.iloc[indices].copy()
             gt_df = gt.iloc[indices].copy()
 
             if 'T_cam_body' in gt_df.columns:
-                T_cam_body = gt_df['T_cam_body'].values[0]
+                T_cam_body = gt_df.get('T_cam_body', None).values[0]
+            else:
+                T_cam_body = None
 
-                for index, row in predicted_df.iterrows():
-                    predicted_dofs = row[self.dof_cols].values
-                    predicted_df.loc[index, self.dof_cols] = convert(predicted_dofs, T=T_cam_body)
+            predicted_trajectory = self._create_trajectory(predicted_df, T=T_cam_body)
 
-                    gt_dofs = gt_df.loc[index, self.dof_cols].values
-                    gt_df.loc[index, self.dof_cols] = convert(gt_dofs, T=T_cam_body)
-
-            predicted_trajectory = self._create_trajectory(predicted_df)
-            gt_trajectory = self._create_trajectory(gt_df) if self.evaluate else None
+            if self.evaluate:
+                gt_trajectory = self._create_trajectory(gt_df, T=T_cam_body)
+            else:
+                gt_df = None
+                gt_trajectory = None
 
             tasks.append({'predicted_df': predicted_df,
                           'gt_df': gt_df,
