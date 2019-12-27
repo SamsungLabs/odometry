@@ -93,8 +93,9 @@ class Predict(keras.callbacks.Callback):
 
     def _create_trajectory(self, df, T=None):
         if T is not None:
-            df[self.dof_cols] = df[self.dof_cols].apply(lambda row: convert(row[self.dof_cols].values, T), axis=1)
-
+            for index, row in df.iterrows():
+                dofs = row[self.dof_cols].values
+                df.loc[index, self.dof_cols] = convert(dofs, T=T)
 
         df['to_index'] = df['path_to_rgb_next'].apply(lambda x: int(Path(x).stem))
         df['from_index'] = df['path_to_rgb'].apply(lambda x: int(Path(x).stem))
@@ -167,13 +168,14 @@ class Predict(keras.callbacks.Callback):
         data = np.stack(model_output).transpose(1, 2, 0)
         data = data.reshape((len(data), -1))
 
+        print('index', generator.df.index)
+        print('return', generator.return_cols)
         predictions = pd.DataFrame(data=data,
                                    index=generator.df.index,
                                    columns=generator.return_cols).astype(float)
         predictions['path_to_rgb'] = generator.df.path_to_rgb
         predictions['path_to_rgb_next'] = generator.df.path_to_rgb_next
         return predictions
-
 
     def _create_tasks(self, generator, subset):
         tasks = []

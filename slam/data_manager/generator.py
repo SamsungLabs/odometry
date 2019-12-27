@@ -115,6 +115,7 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         if not self.predict_generator:
             assert set(self.y_cols) <= set(self.df.columns)
 
+        print('y columns', self.return_cols)
         self.return_cols = self.y_cols[:]
 
         weight_col = weight_col or []
@@ -150,6 +151,8 @@ class ExtendedDataFrameIterator(keras_image.iterator.BatchFromFilesMixin, keras_
         self.placeholder = placeholder or []
         for p in self.placeholder:
             self.return_cols.extend([col + '_' + p for col in self.y_cols])
+
+        print('return columns', self.return_cols)
 
         self.dof_cols = ['euler_x', 'euler_y', 'euler_z', 't_x', 't_y', 't_z']
         # augmentation

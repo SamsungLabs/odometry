@@ -201,8 +201,7 @@ class BaseTrainer:
                                 train_generator_args=self.train_generator_args,
                                 val_generator_args=self.val_generator_args,
                                 test_generator_args=self.test_generator_args,
-                                evaluate_generator=not self.evaluate
-                                )
+                                predict_generator=self.predict_only)
 
     def get_model_factory(self, input_shapes):
         return ModelFactory(self.construct_model_fn,

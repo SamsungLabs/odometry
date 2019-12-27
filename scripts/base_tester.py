@@ -72,7 +72,6 @@ class BaseTester(BaseTrainer):
             print(f'Set {attr_name}:={value}')
 
         if self.predict_only:
-            self.y_col = []
             self.evaluate = False
 
         self.agnostic = self.get_value(run_data, key='params.model.agnostic', default=True)
