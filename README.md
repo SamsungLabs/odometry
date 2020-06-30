@@ -29,3 +29,19 @@ git clone --recursive https://github.sec.samsung.net/AIMC-TSU/odometry.git
 
 ### How to test
 python -m unittest discover -s tests
+
+### License
+The code is released under the MPL 2.0 License. MPL is a copyleft license that is easy to comply with. You must make the source code for any of your changes available under MPL, but you can combine the MPL software with proprietary code, as long as you keep the MPL code in separate files.
+
+### Citation
+If you use this code for your research, please site our paper:
+```
+@misc{slinko2019training,
+    title={Training Deep SLAM on Single Frames},
+    author={Igor Slinko and Anna Vorontsova and Dmitry Zhukov and Olga Barinova and Anton Konushin},
+    year={2019},
+    eprint={1912.05405},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
+}
+```
